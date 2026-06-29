@@ -2824,9 +2824,13 @@ async function cargarVentas() {
             tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-shopping-cart" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay ventas registradas</p><a href="/venta_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-cart-plus"></i> Registrar Venta</a></div></td></tr>';
         } else {
             tbody.innerHTML = ventas.map(function(v) {
-                var estadoClass = (v.Estado === 'completada' || v.Estado === 1) ? 'badge-success' : 'badge-warning';
-                var estadoText = (v.Estado === 'completada' || v.Estado === 1) ? 'Completada' : 'Pendiente';
-                return '<tr><td><strong>' + (v.IdVenta || v.id || '') + '</strong></td><td>' + (v.cliente || v.Cliente || '') + '</td><td>' + (v.producto || v.Producto || '') + '</td><td>' + (v.cantidad || v.Cantidad || 0) + '</td><td>$' + Number(v.precioUnitario || v.PrecioUnitario || 0).toLocaleString() + '</td><td><strong>$' + Number(v.total || v.Total || 0).toLocaleString() + '</strong></td><td>' + (v.fecha || v.Fecha || '') + '</td><td><span class="badge ' + estadoClass + '">' + estadoText + '</span></td><td class="table-actions"><button onclick="eliminarVenta(' + (v.IdVenta || v.id) + ')" class="btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button><a href="/venta_detalle?id=' + (v.IdVenta || v.id) + '" class="btn-view" title="Ver Detalle"><i class="fas fa-eye"></i></a></td></tr>';
+                // Como no hay columna Estado en la tabla Ventas, consideramos todas las registradas como 'Completada'
+                var estadoClass = (v.Estado === 'completada' || v.Estado === 1 || v.Estado === undefined) ? 'badge-success' : 'badge-warning';
+                var estadoText = (v.Estado === 'completada' || v.Estado === 1 || v.Estado === undefined) ? 'Completada' : 'Pendiente';
+                var nombreCliente = (v.PrimerNombre || '') + ' ' + (v.PrimerApellido || '');
+                var nombreProducto = v.NombreProducto || '';
+                var fechaVenta = v.FechaVenta || '';
+                return '<tr><td><strong>' + (v.IdVenta || v.id || '') + '</strong></td><td>' + nombreCliente + '</td><td>' + nombreProducto + '</td><td>' + (v.cantidad || v.Cantidad || 0) + '</td><td>$' + Number(v.precioUnitario || v.PrecioUnitario || 0).toLocaleString() + '</td><td><strong>$' + Number(v.total || v.Total || 0).toLocaleString() + '</strong></td><td>' + fechaVenta + '</td><td><span class="badge ' + estadoClass + '">' + estadoText + '</span></td><td class="table-actions"><button onclick="eliminarVenta(' + (v.IdVenta || v.id) + ')" class="btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button><a href="/venta_detalle?id=' + (v.IdVenta || v.id) + '" class="btn-view" title="Ver Detalle"><i class="fas fa-eye"></i></a></td></tr>';
             }).join('');
         }
     } catch (error) {
