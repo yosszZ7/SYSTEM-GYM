@@ -506,6 +506,20 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Persistir el scroll del sidebar
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                // Recuperar scroll guardado
+                var savedScroll = localStorage.getItem('sidebarScrollPosition');
+                if (savedScroll) {
+                    sidebar.scrollTop = savedScroll;
+                }
+                // Guardar scroll al desplazarse
+                sidebar.addEventListener('scroll', function() {
+                    localStorage.setItem('sidebarScrollPosition', sidebar.scrollTop);
+                });
+            }
+
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
