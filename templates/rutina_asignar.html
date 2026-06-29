@@ -31,10 +31,11 @@
                         </label>
                         <select id="IdCliente" name="IdCliente" required>
                             <option value="">Seleccionar cliente...</option>
-                            <!-- Estos valores vienen de la base de datos -->
-                            <option value="1">Juan Pérez</option>
-                            <option value="2">Ana Gómez</option>
-                            <option value="3">Carlos Rodríguez</option>
+                            {% for c in clientes %}
+                            <option value="{{ c.IdCliente }}">
+                                {{ c.PrimerNombre }} {% if c.SegundoNombre and c.SegundoNombre != '-' %}{{ c.SegundoNombre }}{% endif %} {{ c.PrimerApellido }} {% if c.SegundoApellido and c.SegundoApellido != '-' %}{{ c.SegundoApellido }}{% endif %}
+                            </option>
+                            {% endfor %}
                         </select>
                         <small class="help-text">Cliente que recibirá la rutina</small>
                     </div>

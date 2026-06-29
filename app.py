@@ -1582,7 +1582,15 @@ def rutina_asignar():
             flash(f'Error: {res}', 'error')
             
     _, clientes = ListarClientes()
-    return render_template('rutina_asignar.html', usuario=session.get('usuario_nombre'), clientes=clientes or [])
+    clientes_filtrados = []
+    if clientes:
+        clientes_filtrados = [
+            c for c in clientes 
+            if c.get('RequiereEntrenador') == 1 
+            or c.get('RequiereEntrenador') is True 
+            or str(c.get('RequiereEntrenador')) == '1'
+        ]
+    return render_template('rutina_asignar.html', usuario=session.get('usuario_nombre'), clientes=clientes_filtrados)
 
 @app.route('/rutina_hoy')
 @login_required
