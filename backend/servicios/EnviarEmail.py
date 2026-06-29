@@ -98,7 +98,10 @@ def EnviarEmailReporteError(id_reporte, modulo, nivel, descripcion, ruta, usuari
     </html>
     """
 
-    if smtp_server and smtp_user and smtp_pass:
+    # Render bloquea puertos SMTP en el plan gratuito. Si estamos en Render, omitimos SMTP directo para evitar timeouts.
+    es_render = os.environ.get('RENDER') == 'true'
+    
+    if smtp_server and smtp_user and smtp_pass and not es_render:
         try:
             msg = MIMEMultipart('alternative')
             msg['Subject'] = f"[GYM SISTEM] Reporte de Error: {nivel} - Módulo {modulo}"
@@ -108,7 +111,8 @@ def EnviarEmailReporteError(id_reporte, modulo, nivel, descripcion, ruta, usuari
             part = MIMEText(html_body, 'html', 'utf-8')
             msg.attach(part)
             
-            server = smtplib.SMTP(smtp_server, smtp_port)
+            # Establecemos un timeout corto de 3 segundos para evitar colgar la petición
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=3)
             if smtp_port == 587:
                 server.starttls()
             server.login(smtp_user, smtp_pass)
