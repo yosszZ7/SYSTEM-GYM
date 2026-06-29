@@ -2985,9 +2985,11 @@ async function cargarMaquinaria() {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-microchip" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay equipos registrados</p></div></td></tr>';
         } else {
             tbody.innerHTML = maquinaria.map(function(m) {
-                var estadoClass = (m.Estado === 'operativo') ? 'badge-success' : 'badge-danger';
-                var estadoText = m.Estado || m.estado || 'Desconocido';
-                return '<tr><td><strong>' + (m.IdMaquina || m.id || '') + '</strong></td><td>' + (m.Nombre || m.nombre || '') + '</td><td>' + (m.Tipo || m.tipo || '') + '</td><td><span class="badge ' + estadoClass + '">' + estadoText + '</span></td><td>' + (m.FechaCompra || m.fechaCompra || '') + '</td><td class="table-actions"><a href="/maquinaria_editar?id=' + (m.IdMaquina || m.id) + '" class="btn-edit" title="Editar"><i class="fas fa-edit"></i></a><button onclick="eliminarMaquina(' + (m.IdMaquina || m.id) + ')" class="btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button></td></tr>';
+                var estaOperativo = (m.Estado === true || m.Estado === 1 || m.Estado === 'operativo' || m.Estado === 'Operativo' || m.estado === 1 || m.estado === true);
+                var estadoClass = estaOperativo ? 'badge-success' : 'badge-danger';
+                var estadoText = estaOperativo ? 'Operativo' : 'Fuera de Servicio';
+                var nombreMaquina = m.NombreMaquinaria || m.Nombre || m.nombre || '';
+                return '<tr><td><strong>' + (m.IdMaquina || m.id || '') + '</strong></td><td>' + nombreMaquina + '</td><td>' + (m.Tipo || m.tipo || '') + '</td><td><span class="badge ' + estadoClass + '">' + estadoText + '</span></td><td>' + (m.FechaCompra || m.fechaCompra || '') + '</td><td class="table-actions"><a href="/maquinaria_editar?id=' + (m.IdMaquina || m.id) + '" class="btn-edit" title="Editar"><i class="fas fa-edit"></i></a><button onclick="eliminarMaquina(' + (m.IdMaquina || m.id) + ')" class="btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button></td></tr>';
             }).join('');
         }
     } catch (error) {
