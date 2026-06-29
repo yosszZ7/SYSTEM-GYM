@@ -1,32 +1,38 @@
-# Usar una imagen oficial de Python slim
+# Usar una imagen oficial de Python slim (Debian 12 Bookworm)
 FROM python:3.10-slim
 
-# Instalar dependencias para el controlador ODBC de Microsoft SQL Server de forma dinámica
+# Instalar herramientas básicas necesarias y dependencias unixODBC
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    gnupg2 \
+    gnupg \
+    apt-transport-https \
     unixodbc-dev \
     unixodbc \
     g++ \
-    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-    && curl https://packages.microsoft.com/config/debian/$(. /etc/os-release && echo $VERSION_ID)/prod.list > /etc/apt/sources.list.d/mssql-release.list \
-    && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y msodbcsql17 \
-    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Descargar la clave GPG de Microsoft de forma segura y convertirla a formato binario
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+
+# Agregar el repositorio de Microsoft SQL Server para Debian 12 (Bookworm) usando la clave firmada
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list
+
+# Actualizar repositorios e instalar msodbcsql17 de forma no interactiva
+RUN apt-get update && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql17 \
     && rm -rf /var/lib/apt/lists/*
 
 # Establecer el directorio de trabajo
 WORKDIR /app
 
-# Copiar los requisitos e instalarlos
+# Copiar dependencias de Python e instalarlas
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el código del proyecto
+# Copiar el resto del código del proyecto
 COPY . .
 
-# Exponer el puerto de Flask
+# Exponer el puerto del servidor Flask
 EXPOSE 5000
 
-# Comando para ejecutar la aplicación usando Gunicorn
+# Comando para iniciar la aplicación mediante Gunicorn
 CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:5000", "app:app"]
