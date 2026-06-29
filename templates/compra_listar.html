@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Compras{% endblock %}
+{% block breadcrumb %}Compras / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-truck"></i> Lista de Compras</h1>
+            <p>Gestión completa de todas las compras realizadas</p>
+        </div>
+        <a href="/compra_registrar" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Nueva Compra
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Compras Registradas</h2>
+            <span class="badge badge-info">{{ compras|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Proveedor</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Compra</th>
+                            <th>Total</th>
+                            <th>Fecha Compra</th>
+                            <th>Estado</th>
+                            <th>Observación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for compra in compras %}
+                        <tr>
+                            <td>{{ compra.IdCompra }}</td>
+                            <td>{{ compra.Nombre }}</td>
+                            <td>{{ compra.NombreProducto }}</td>
+                            <td>{{ compra.Cantidad }}</td>
+                            <td>${{ compra.PrecioCompra }}</td>
+                            <td><strong>${{ compra.Total }}</strong></td>
+                            <td>{{ compra.FechaCompra }}</td>
+                            <td>
+                                <span class="badge {% if compra.Estado == 'Recibida' %}badge-success{% else %}badge-warning{% endif %}">
+                                    {{ compra.Estado }}
+                                </span>
+                            </td>
+                            <td>{{ compra.Observacion or '-' }}</td>
+                             <td class="table-actions">
+                                 {% if compra.Estado != 'Cancelada' %}
+                                 <button onclick="anularCompra({{ compra.IdCompra }})" class="btn-delete-item" title="Anular Compra" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 8px; font-size: 14px; transition: transform 0.2s ease;">
+                                     <i class="fas fa-ban"></i>
+                                 </button>
+                                 {% else %}
+                                 <span style="color: var(--text-secondary); font-size: 12px; font-style: italic;">Anulada</span>
+                                 {% endif %}
+                             </td>
+                         </tr>
+                         {% else %}
+                         <tr>
+                             <td colspan="10" class="text-center">No hay compras registradas</td>
+                         </tr>
+                         {% endfor %}
+                     </tbody>
+                 </table>
+             </div>
+         </div>
+     </div>
+ </div>
+
+<script>
+function anularCompra(id) {
+    if (confirm('¿Está seguro de que desea anular esta compra? Esta acción no se puede deshacer.')) {
+        fetch('/api/compras/eliminar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ IdCompra: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al anular compra: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Ocurrió un error al procesar la solicitud.');
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuario{% endblock %}
+{% block breadcrumb %}Usuarios / Editar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-user-edit"></i> Editar Usuario</h1>
+            <p>Modifique los datos del usuario seleccionado</p>
+        </div>
+        <a href="/usuario_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-users-cog"></i> Datos del Usuario</h2>
+            <span class="badge badge-info"><i class="fas fa-edit"></i> Edición</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/usuario_editar/{{ usuario.IdUsuario }}">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="NombreUsuario">
+                            <i class="fas fa-user"></i> Nombre de Usuario <span class="required">*</span>
+                        </label>
+                        <input type="text" id="NombreUsuario" name="NombreUsuario" 
+                               value="{{ usuario.NombreUsuario }}" placeholder="Ej: juan.perez" maxlength="50" required>
+                        <small class="help-text">Máximo 50 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdRol">
+                            <i class="fas fa-user-tag"></i> Rol <span class="required">*</span>
+                        </label>
+                        <select id="IdRol" name="IdRol" required>
+                            <option value="">Seleccionar rol...</option>
+                            {% for r in roles %}
+                            <option value="{{ r.IdRol }}" {% if r.IdRol == usuario.IdRol %}selected{% endif %}>{{ r.NombreRol }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="help-text">Rol del usuario en el sistema</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Estado">
+                            <i class="fas fa-toggle-on"></i> Estado <span class="required">*</span>
+                        </label>
+                        <select id="Estado" name="Estado" required>
+                            <option value="1" {% if usuario.Estado %}selected{% endif %}>Activo</option>
+                            <option value="0" {% if not usuario.Estado %}selected{% endif %}>Inactivo</option>
+                        </select>
+                        <small class="help-text">Estado de acceso al sistema</small>
+                    </div>
+                </div>
+
+                <!-- Asignación Cliente o Empleado -->
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="IdCliente">
+                            <i class="fas fa-user"></i> Cliente Asociado
+                        </label>
+                        <select id="IdCliente" name="IdCliente">
+                            <option value="">Ninguno</option>
+                            {% for c in clientes %}
+                            <option value="{{ c.IdCliente }}" {% if c.IdCliente == usuario.IdCliente %}selected{% endif %}>
+                                {{ c.PrimerNombre }} {{ c.PrimerApellido }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="help-text">Cliente asociado al usuario</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdEmpleado">
+                            <i class="fas fa-user-tie"></i> Empleado Asociado
+                        </label>
+                        <select id="IdEmpleado" name="IdEmpleado">
+                            <option value="">Ninguno</option>
+                            {% for emp in empleados %}
+                            <option value="{{ emp.IdEmpleado }}" {% if emp.IdEmpleado == usuario.IdEmpleado %}selected{% endif %}>
+                                {{ emp.PrimerNombre }} {{ emp.PrimerApellido }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="help-text">Empleado asociado al usuario</small>
+                    </div>
+                </div>
+
+                <!-- Aviso importante -->
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">Importante</div>
+                        <div class="alert-message">Debe asignar solo un cliente O un empleado, no ambos. Para modificar la contraseña, utilice la opción "Cambiar Contraseña" en la lista de usuarios.</div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

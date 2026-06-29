@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Reportar Error{% endblock %}
+{% block breadcrumb %}Soporte / Reportar Error{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-bug" style="color: #ef4444;"></i> Reportar un Error</h1>
+            <p>Registra cualquier fallo detectado en el sistema para su pronta resolución</p>
+        </div>
+        <a href="/error_listar" class="btn btn-secondary">
+            <i class="fas fa-list"></i> Ver Bandeja de Errores
+        </a>
+    </div>
+
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header">
+            <h2><i class="fas fa-edit"></i> Formulario de Reporte de Fallos</h2>
+        </div>
+        <div class="card-body">
+            <form action="/error_reportar" method="POST" id="errorReportForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="Modulo">Módulo Afectado <span style="color: #ef4444;">*</span></label>
+                        <select name="Modulo" id="Modulo" required class="form-control">
+                            <option value="" disabled selected>Seleccione el módulo...</option>
+                            <option value="Dashboard">Dashboard</option>
+                            <option value="Clientes">Clientes</option>
+                            <option value="Empleados">Empleados</option>
+                            <option value="Rutinas / Ejercicios">Rutinas / Ejercicios</option>
+                            <option value="Ventas">Ventas</option>
+                            <option value="Compras">Compras</option>
+                            <option value="Inventario / Maquinaria">Inventario / Maquinaria</option>
+                            <option value="Seguridad / Usuarios">Seguridad / Usuarios</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Nivel">Prioridad / Severidad <span style="color: #ef4444;">*</span></label>
+                        <select name="Nivel" id="Nivel" required class="form-control">
+                            <option value="Bajo">Bajo (Fallo cosmético o menor)</option>
+                            <option value="Medio" selected>Medio (Fallo funcional alternativo)</option>
+                            <option value="Crítico">Crítico (Fallo bloqueante o error 500)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="CorreoDestinatario">Correo Destinatario <span style="color: #ef4444;">*</span></label>
+                    <input type="email" name="CorreoDestinatario" id="CorreoDestinatario" value="suarezyostin967@gmail.com" required class="form-control" placeholder="ejemplo@correo.com">
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="Descripcion">Descripción del Error <span style="color: #ef4444;">*</span></label>
+                    <textarea name="Descripcion" id="Descripcion" required class="form-control" rows="6" placeholder="Escriba brevemente cuál es el fallo detectado..."></textarea>
+                </div>
+
+                <div class="form-actions" style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Enviar Reporte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

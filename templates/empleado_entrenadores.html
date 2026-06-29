@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Lista de Entrenadores</h1>
+
+<table class="data-table">
+    <thead><tr><th>IdEmpleado</th><th>NombreCompleto</th><th>NombreCargo</th></tr></thead>
+    <tbody>
+        {% for e in entrenadores %}
+        <tr><td>{{ e.IdEmpleado }}</td><td>{{ e.NombreCompleto }}</td><td>{{ e.NombreCargo }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Venta{% endblock %}
+{% block breadcrumb %}Ventas / Registrar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-cart-plus"></i> Registrar Venta</h1>
+            <p>Complete los datos para registrar una nueva venta</p>
+        </div>
+        <a href="/venta_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-shopping-cart"></i> Datos de la Venta</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nueva</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/venta_registrar">
+                <!-- SpRegistrarVenta: IdCliente, IdProducto, Cantidad -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="IdCliente">
+                            <i class="fas fa-user"></i> Cliente <span class="required">*</span>
+                        </label>
+                        <select id="IdCliente" name="IdCliente" required>
+                            <option value="">Seleccionar cliente...</option>
+                            <!-- Estos valores vienen de la base de datos -->
+                            <option value="1">Juan Pérez</option>
+                            <option value="2">Ana Gómez</option>
+                            <option value="3">Carlos Rodríguez</option>
+                            <option value="4">María López</option>
+                        </select>
+                        <small class="help-text">Cliente que realiza la compra</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdProducto">
+                            <i class="fas fa-box"></i> Producto <span class="required">*</span>
+                        </label>
+                        <select id="IdProducto" name="IdProducto" required>
+                            <option value="">Seleccionar producto...</option>
+                            <!-- Estos valores vienen de la base de datos -->
+                            <option value="1">Proteína Whey</option>
+                            <option value="2">Creatina</option>
+                            <option value="3">BCAA</option>
+                            <option value="4">Pre-entreno</option>
+                        </select>
+                        <small class="help-text">Producto a vender</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Cantidad">
+                            <i class="fas fa-hashtag"></i> Cantidad <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Cantidad" name="Cantidad" 
+                               placeholder="Ej: 1" min="1" required>
+                        <small class="help-text">Cantidad de unidades (debe ser mayor a 0)</small>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Registrar Venta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

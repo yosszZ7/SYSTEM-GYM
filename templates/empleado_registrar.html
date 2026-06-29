@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Empleado{% endblock %}
+{% block breadcrumb %}Empleados / Registrar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-user-tie"></i> Registrar Empleado</h1>
+            <p>Complete los datos para agregar un nuevo empleado al sistema</p>
+        </div>
+        <a href="/empleado_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-user"></i> Datos del Empleado</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/empleado_registrar">
+                <!-- SpRegistrarEmpleado: PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido, Telefono, Correo, FechaContratacion, IdCargo, Salario -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="PrimerNombre">
+                            <i class="fas fa-user"></i> Primer Nombre <span class="required">*</span>
+                        </label>
+                        <input type="text" id="PrimerNombre" name="PrimerNombre" 
+                               placeholder="Ej: Juan" maxlength="30" required>
+                        <small class="help-text">Máximo 30 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="SegundoNombre">
+                            <i class="fas fa-user"></i> Segundo Nombre
+                        </label>
+                        <input type="text" id="SegundoNombre" name="SegundoNombre" 
+                               placeholder="Ej: Carlos" maxlength="30">
+                        <small class="help-text">Opcional - Máximo 30 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="PrimerApellido">
+                            <i class="fas fa-user"></i> Primer Apellido <span class="required">*</span>
+                        </label>
+                        <input type="text" id="PrimerApellido" name="PrimerApellido" 
+                               placeholder="Ej: Pérez" maxlength="35" required>
+                        <small class="help-text">Máximo 35 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="SegundoApellido">
+                            <i class="fas fa-user"></i> Segundo Apellido
+                        </label>
+                        <input type="text" id="SegundoApellido" name="SegundoApellido" 
+                               placeholder="Ej: García" maxlength="35">
+                        <small class="help-text">Opcional - Máximo 35 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Datos de Contacto -->
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="Telefono">
+                            <i class="fas fa-phone"></i> Teléfono <span class="required">*</span>
+                        </label>
+                        <input type="tel" id="Telefono" name="Telefono" 
+                               placeholder="Ej: 3001234567" maxlength="15" required>
+                        <small class="help-text">Máximo 15 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Correo">
+                            <i class="fas fa-envelope"></i> Correo Electrónico <span class="required">*</span>
+                        </label>
+                        <input type="email" id="Correo" name="Correo" 
+                               placeholder="empleado@ejemplo.com" maxlength="120" required>
+                        <small class="help-text">Máximo 120 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Datos Laborales -->
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="IdCargo">
+                            <i class="fas fa-briefcase"></i> Cargo <span class="required">*</span>
+                        </label>
+                        <select id="IdCargo" name="IdCargo" required>
+                            <option value="">Seleccionar cargo...</option>
+                            <!-- Estos valores vienen de la base de datos -->
+                            <option value="1">Entrenador</option>
+                            <option value="2">Recepcionista</option>
+                            <option value="3">Administrador</option>
+                            <option value="4">Mantenimiento</option>
+                            <option value="5">Gerente</option>
+                        </select>
+                        <small class="help-text">Cargo del empleado</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Salario">
+                            <i class="fas fa-money-bill"></i> Salario <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Salario" name="Salario" 
+                               placeholder="Ej: 1500000" step="1000" min="0" required>
+                        <small class="help-text">Salario mensual en pesos (no puede ser negativo)</small>
+                    </div>
+                </div>
+
+                <!-- Fecha Contratación -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="FechaContratacion">
+                        <i class="fas fa-calendar-alt"></i> Fecha de Contratación <span class="required">*</span>
+                    </label>
+                    <input type="date" id="FechaContratacion" name="FechaContratacion" required>
+                    <small class="help-text">Fecha de inicio del empleado</small>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Empleado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

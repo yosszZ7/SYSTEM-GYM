@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Compra{% endblock %}
+{% block breadcrumb %}Compras / Registrar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-truck"></i> Registrar Compra</h1>
+            <p>Complete los datos para registrar una nueva compra al proveedor</p>
+        </div>
+        <a href="/compra_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-shopping-cart"></i> Datos de la Compra</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nueva</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/compra_registrar">
+                <!-- SpRegistrarCompra: IdProveedor, IdProducto, Cantidad, PrecioCompra, Estado, Observacion -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="IdProveedor">
+                            <i class="fas fa-building"></i> Proveedor <span class="required">*</span>
+                        </label>
+                        <select id="IdProveedor" name="IdProveedor" required>
+                            <option value="">Seleccionar proveedor...</option>
+                            {% for p in proveedores %}
+                            <option value="{{ p.IdProveedor }}">{{ p.Nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="help-text">Proveedor del producto</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdProducto">
+                            <i class="fas fa-box"></i> Producto <span class="required">*</span>
+                        </label>
+                        <select id="IdProducto" name="IdProducto" required>
+                            <option value="">Seleccionar producto...</option>
+                            {% for p in productos %}
+                            <option value="{{ p.IdProducto }}">{{ p.NombreProducto }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="help-text">Producto a comprar</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Cantidad">
+                            <i class="fas fa-hashtag"></i> Cantidad <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Cantidad" name="Cantidad" 
+                               placeholder="Ej: 10" min="1" required>
+                        <small class="help-text">Cantidad de unidades (debe ser mayor a 0)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="PrecioCompra">
+                            <i class="fas fa-dollar-sign"></i> Precio de Compra <span class="required">*</span>
+                        </label>
+                        <input type="number" id="PrecioCompra" name="PrecioCompra" 
+                               placeholder="Ej: 80000" step="100" min="0" required>
+                        <small class="help-text">Precio por unidad al proveedor (no puede ser negativo)</small>
+                    </div>
+                </div>
+
+                <!-- Estado y Observación -->
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="Estado">
+                            <i class="fas fa-circle"></i> Estado <span class="required">*</span>
+                        </label>
+                        <select id="Estado" name="Estado" required>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Recibida">Recibida</option>
+                            <option value="Cancelada">Cancelada</option>
+                        </select>
+                        <small class="help-text">Estado actual de la compra</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Observacion">
+                            <i class="fas fa-comment"></i> Observación
+                        </label>
+                        <input type="text" id="Observacion" name="Observacion" 
+                               placeholder="Notas adicionales sobre la compra" maxlength="250">
+                        <small class="help-text">Opcional - Máximo 250 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Registrar Compra
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

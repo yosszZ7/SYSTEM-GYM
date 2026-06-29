@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Asignar Rutina{% endblock %}
+{% block breadcrumb %}Rutinas / Asignar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-clipboard-list"></i> Asignar Rutina</h1>
+            <p>Asigne una rutina a un cliente</p>
+        </div>
+        <a href="/rutina_hoy" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-clipboard-list"></i> Datos de la Rutina</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nueva</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/rutina_asignar">
+                <!-- SpAsignarRutinaCliente: IdCliente, FechaInicio, DuracionDias, FrecuenciaSemanal, NombreRutina -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="IdCliente">
+                            <i class="fas fa-user"></i> Cliente <span class="required">*</span>
+                        </label>
+                        <select id="IdCliente" name="IdCliente" required>
+                            <option value="">Seleccionar cliente...</option>
+                            <!-- Estos valores vienen de la base de datos -->
+                            <option value="1">Juan Pérez</option>
+                            <option value="2">Ana Gómez</option>
+                            <option value="3">Carlos Rodríguez</option>
+                        </select>
+                        <small class="help-text">Cliente que recibirá la rutina</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="NombreRutina">
+                            <i class="fas fa-tag"></i> Nombre de la Rutina
+                        </label>
+                        <input type="text" id="NombreRutina" name="NombreRutina" 
+                               placeholder="Ej: Rutina de Fuerza" maxlength="100">
+                        <small class="help-text">Opcional - Nombre descriptivo</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="FechaInicio">
+                            <i class="fas fa-calendar-alt"></i> Fecha de Inicio <span class="required">*</span>
+                        </label>
+                        <input type="date" id="FechaInicio" name="FechaInicio" required>
+                        <small class="help-text">Fecha de inicio de la rutina</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="DuracionDias">
+                            <i class="fas fa-calendar-day"></i> Duración (días) <span class="required">*</span>
+                        </label>
+                        <input type="number" id="DuracionDias" name="DuracionDias" 
+                               placeholder="Ej: 30" min="1" required>
+                        <small class="help-text">Duración de la rutina en días</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="FrecuenciaSemanal">
+                            <i class="fas fa-calendar-week"></i> Frecuencia Semanal <span class="required">*</span>
+                        </label>
+                        <select id="FrecuenciaSemanal" name="FrecuenciaSemanal" required>
+                            <option value="1">1 día a la semana</option>
+                            <option value="2">2 días a la semana</option>
+                            <option value="3" selected>3 días a la semana</option>
+                            <option value="4">4 días a la semana</option>
+                            <option value="5">5 días a la semana</option>
+                            <option value="6">6 días a la semana</option>
+                            <option value="7">7 días a la semana</option>
+                        </select>
+                        <small class="help-text">Frecuencia semanal (1-7 días)</small>
+                    </div>
+                </div>
+
+                <!-- Aviso -->
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">Información</div>
+                        <div class="alert-message">La rutina anterior activa se finalizará automáticamente al asignar una nueva.</div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Asignar Rutina
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

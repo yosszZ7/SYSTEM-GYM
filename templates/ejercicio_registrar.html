@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Ejercicio{% endblock %}
+{% block breadcrumb %}Ejercicios / Registrar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-dumbbell"></i> Registrar Ejercicio</h1>
+            <p>Complete los datos para agregar un nuevo ejercicio al sistema</p>
+        </div>
+        <a href="/ejercicio_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-dumbbell"></i> Datos del Ejercicio</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/ejercicio_registrar">
+                <!-- SpRegistrarEjercicio: NombreEjercicio, Descripcion, VideoUrl, IdGrupoMuscular -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="NombreEjercicio">
+                            <i class="fas fa-tag"></i> Nombre del Ejercicio <span class="required">*</span>
+                        </label>
+                        <input type="text" id="NombreEjercicio" name="NombreEjercicio" 
+                               placeholder="Ej: Press de Banca" maxlength="100" required>
+                        <small class="help-text">Máximo 100 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdGrupoMuscular">
+                            <i class="fas fa-muscle"></i> Grupo Muscular <span class="required">*</span>
+                        </label>
+                        <select id="IdGrupoMuscular" name="IdGrupoMuscular" required>
+                            <option value="">Seleccionar grupo...</option>
+                            <!-- Estos valores vienen de la base de datos -->
+                            <option value="1">Pecho</option>
+                            <option value="2">Espalda</option>
+                            <option value="3">Piernas</option>
+                            <option value="4">Hombros</option>
+                            <option value="5">Bíceps</option>
+                            <option value="6">Tríceps</option>
+                            <option value="7">Abdomen</option>
+                            <option value="8">Glúteos</option>
+                        </select>
+                        <small class="help-text">Grupo muscular principal</small>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="Descripcion">
+                        <i class="fas fa-align-left"></i> Descripción
+                    </label>
+                    <textarea id="Descripcion" name="Descripcion" 
+                              rows="3" placeholder="Descripción detallada del ejercicio..." maxlength="500"></textarea>
+                    <small class="help-text">Opcional - Máximo 500 caracteres</small>
+                </div>
+
+                <!-- Video URL -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="VideoUrl">
+                        <i class="fas fa-video"></i> URL del Video
+                    </label>
+                    <input type="url" id="VideoUrl" name="VideoUrl" 
+                           placeholder="https://www.youtube.com/watch?v=xxxxx" maxlength="255">
+                    <small class="help-text">Opcional - Enlace a video demostrativo</small>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Ejercicio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

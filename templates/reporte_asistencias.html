@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Reporte de Asistencias Mensuales</h1>
+<div id="reporteAsistencias" style="margin-bottom: 25px;"></div>
+
+<table class="data-table">
+    <thead><tr><th>Anio</th><th>Mes</th><th>TotalAsistencias</th></tr></thead>
+    <tbody>
+        {% for asistencia in asistencias %}
+        <tr><td>{{ asistencia.Anio }}</td><td>{{ asistencia.Mes }}</td><td>{{ asistencia.TotalAsistencias }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

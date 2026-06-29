@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Ventas{% endblock %}
+{% block breadcrumb %}Ventas / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-shopping-cart"></i> Lista de Ventas</h1>
+            <p>Gestión completa de todas las ventas realizadas</p>
+        </div>
+        <a href="/venta_registrar" class="btn btn-primary">
+            <i class="fas fa-cart-plus"></i> Nueva Venta
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Ventas Registradas</h2>
+            <span class="badge badge-info">{{ ventas|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Total</th>
+                            <th>Fecha Venta</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venta in ventas %}
+                        <tr>
+                            <td>{{ venta.IdVenta }}</td>
+                            <td>{{ venta.PrimerNombre }} {{ venta.PrimerApellido }}</td>
+                            <td>{{ venta.NombreProducto }}</td>
+                            <td>{{ venta.Cantidad }}</td>
+                            <td>${{ venta.PrecioUnitario }}</td>
+                            <td><strong>${{ venta.Total }}</strong></td>
+                            <td>{{ venta.FechaVenta }}</td>
+                            <td>
+                                <span class="badge {% if venta.Estado == 'Completada' %}badge-success{% else %}badge-warning{% endif %}">
+                                    {{ venta.Estado }}
+                                </span>
+                            </td>
+                            <td class="table-actions">
+                                <!-- ✅ CORRECTO -->
+                                <a href="/venta_detalle/{{ venta.IdVenta }}" class="btn-view" title="Ver Detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center">No hay ventas registradas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}s

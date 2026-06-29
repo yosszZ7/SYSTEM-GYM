@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Reporte de Rutinas Activas</h1>
+<div id="reporteRutinas" style="margin-bottom: 25px;"></div>
+
+<table class="data-table">
+    <thead><tr><th>IdCliente</th><th>Cliente</th><th>NombreRutina</th><th>FechaInicio</th><th>FechaFin</th><th>FrecuenciaSemanal</th><th>TotalEjerciciosAsignados</th></tr></thead>
+    <tbody>
+        {% for rutina in rutinas_activas %}
+        <tr><td>{{ rutina.IdCliente }}</td><td>{{ rutina.Cliente }}</td><td>{{ rutina.NombreRutina }}</td><td>{{ rutina.FechaInicio }}</td><td>{{ rutina.FechaFin }}</td><td>{{ rutina.FrecuenciaSemanal }}</td><td>{{ rutina.TotalEjerciciosAsignados }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

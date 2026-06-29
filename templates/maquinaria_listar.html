@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Maquinaria{% endblock %}
+{% block breadcrumb %}Equipos / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-dumbbell"></i> Lista de Maquinaria</h1>
+            <p>Gestión y monitoreo de todos los equipos y maquinarias del gimnasio</p>
+        </div>
+        <a href="/maquinaria_registrar" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Nueva Máquina
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Equipos Registrados</h2>
+            <span class="badge badge-info">{{ maquinaria|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Máquina</th>
+                            <th>Tipo / Categoría</th>
+                            <th>Estado</th>
+                            <th>Fecha Compra</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in maquinaria %}
+                        <tr>
+                            <td>{{ m.IdMaquina }}</td>
+                            <td><strong>{{ m.NombreMaquinaria }}</strong></td>
+                            <td><span class="badge-category" style="background: var(--bg-primary); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">{{ m.Tipo }}</span></td>
+                            <td>
+                                {% if m.Estado %}
+                                <span class="badge-status active" style="font-size: 12px; font-weight: bold; background: var(--success-light); color: var(--success); padding: 4px 10px; border-radius: 12px;">
+                                    <i class="fas fa-check-circle" style="margin-right: 4px;"></i> Operativo
+                                </span>
+                                {% else %}
+                                <span class="badge-status inactive" style="font-size: 12px; font-weight: bold; background: var(--danger-light); color: var(--danger); padding: 4px 10px; border-radius: 12px;">
+                                    <i class="fas fa-exclamation-triangle" style="margin-right: 4px;"></i> Fuera de Servicio
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ m.FechaCompra or '—' }}</td>
+                            <td class="table-actions">
+                                <a href="/maquinaria_editar/{{ m.IdMaquina }}" class="btn-edit" title="Editar Equipo">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="eliminarMaquina({{ m.IdMaquina }})" class="btn-delete-item" title="Eliminar Equipo" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 8px; font-size: 14px; transition: transform 0.2s ease;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center" style="color: var(--text-secondary); padding: 2rem;">No hay maquinaria registrada</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function eliminarMaquina(id) {
+    if (confirm('¿Está seguro de que desea eliminar esta máquina del inventario? Esta acción no se puede deshacer.')) {
+        fetch('/api/maquinaria/eliminar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ IdMaquina: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Recargar la página
+                location.reload();
+            } else {
+                alert('Error al eliminar máquina: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Ocurrió un error al procesar la solicitud.');
+        });
+    }
+}
+</script>
+
+<style>
+.btn-delete-item:hover {
+    transform: scale(1.15);
+    color: #dc2626 !important;
+}
+</style>
+{% endblock %}

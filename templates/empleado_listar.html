@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Empleados{% endblock %}
+{% block breadcrumb %}Empleados / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-user-tie"></i> Lista de Empleados</h1>
+            <p>Gestión completa de todos los empleados registrados</p>
+        </div>
+        <a href="/empleado_registrar" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Nuevo Empleado
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Empleados Registrados</h2>
+            <span class="badge badge-info">{{ empleados|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Primer Nombre</th>
+                            <th>Segundo Nombre</th>
+                            <th>Primer Apellido</th>
+                            <th>Segundo Apellido</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th>Cargo</th>
+                            <th>Salario</th>
+                            <th>Fecha Contratación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empleado in empleados %}
+                        <tr>
+                            <td>{{ empleado.IdEmpleado }}</td>
+                            <td>{{ empleado.PrimerNombre }}</td>
+                            <td>{{ empleado.SegundoNombre or '-' }}</td>
+                            <td>{{ empleado.PrimerApellido }}</td>
+                            <td>{{ empleado.SegundoApellido or '-' }}</td>
+                            <td>{{ empleado.Telefono }}</td>
+                            <td>{{ empleado.Correo }}</td>
+                            <td>{{ empleado.NombreCargo }}</td>
+                            <td>${{ empleado.Salario }}</td>
+                            <td>{{ empleado.FechaContratacion }}</td>
+                            <td class="table-actions">
+                                <!--  CORRECTO -->
+                                <a href="/empleado_actualizar/{{ empleado.IdEmpleado }}" class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="11" class="text-center">No hay empleados registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

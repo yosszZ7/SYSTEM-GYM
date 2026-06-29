@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Bandeja de Errores{% endblock %}
+{% block breadcrumb %}Soporte / Errores Reportados{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-bug"></i> Bandeja de Errores</h1>
+            <p>Monitoreo y resolución de fallos reportados en el sistema</p>
+        </div>
+        <a href="/error_reportar" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Reportar Nuevo Error
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <h2><i class="fas fa-list"></i> Fallos Registrados</h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="filtroEstado" style="font-size: 0.9rem; color: var(--text-secondary);">Filtrar por Estado:</label>
+                <select id="filtroEstado" class="form-control" style="width: 150px; display: inline-block;" onchange="filtrarTablaErrores()">
+                    <option value="todos">Todos</option>
+                    <option value="Pendiente" selected>Pendiente</option>
+                    <option value="Revisado">Revisado</option>
+                    <option value="Resuelto">Resuelto</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table" id="tablaErrores">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Módulo</th>
+                            <th>Criticidad</th>
+                            <th>Reportado Por</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reportes %}
+                        <tr data-estado="{{ r.Estado }}">
+                            <td><strong>#{{ r.IdReporteError }}</strong></td>
+                            <td>{{ r.Modulo }}</td>
+                            <td>
+                                <span class="badge {% if r.Nivel == 'Crítico' %}badge-danger{% elif r.Nivel == 'Medio' %}badge-warning{% else %}badge-info{% endif %}">
+                                    {{ r.Nivel }}
+                                </span>
+                            </td>
+                            <td>{{ r.NombreUsuario if r.NombreUsuario else 'Anónimo' }}</td>
+                            <td>{{ r.FechaRegistro }}</td>
+                            <td>
+                                <select onchange="actualizarEstadoError({{ r.IdReporteError }}, this.value)" class="form-control" style="padding: 4px 8px; font-size: 0.85rem; border-radius: 4px; width: auto; display: inline-block;">
+                                    <option value="Pendiente" {% if r.Estado == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="Revisado" {% if r.Estado == 'Revisado' %}selected{% endif %}>Revisado</option>
+                                    <option value="Resuelto" {% if r.Estado == 'Resuelto' %}selected{% endif %}>Resuelto</option>
+                                </select>
+                            </td>
+                            <td class="table-actions">
+                                <button onclick="verDetalleError({{ r.IdReporteError }}, '{{ r.Modulo }}', '{{ r.Nivel }}', '{{ r.NombreUsuario if r.NombreUsuario else 'Anónimo' }}', '{{ r.FechaRegistro }}', `{{ r.Descripcion | replace('`','\\`') }}`)" class="btn-view" title="Ver Descripción">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="eliminarError({{ r.IdReporteError }})" class="btn-delete" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">No hay reportes de errores registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalErrorDetalle" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center;">
+    <div class="modal-content card" style="background-color: var(--card-bg); max-width: 600px; width: 90%; margin: 10% auto; padding: 25px; border-radius: 10px; border: 1px solid var(--border-color); color: var(--text-primary);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 15px;">
+            <h3 style="margin: 0; font-size: 1.3rem;" id="modalTitle">Detalle del Reporte</h3>
+            <span onclick="cerrarModalError()" style="font-size: 1.5rem; font-weight: bold; cursor: pointer; color: var(--text-secondary);">&times;</span>
+        </div>
+        <div id="modalBody">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 0.95rem;">
+                <p><strong>Módulo:</strong> <span id="detModulo"></span></p>
+                <p><strong>Criticidad:</strong> <span id="detNivel"></span></p>
+                <p><strong>Reportado Por:</strong> <span id="detUsuario"></span></p>
+                <p><strong>Fecha:</strong> <span id="detFecha"></span></p>
+            </div>
+            <div style="margin-top: 15px;">
+                <strong>Descripción Completa:</strong>
+                <pre id="detDescripcion" style="background-color: rgba(0,0,0,0.25); padding: 15px; border-radius: 6px; border-left: 4px solid var(--primary); white-space: pre-wrap; font-family: monospace; font-size: 0.9rem; margin-top: 8px; max-height: 250px; overflow-y: auto; color: var(--text-primary);"></pre>
+            </div>
+        </div>
+        <div style="text-align: right; margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+            <button class="btn btn-secondary" onclick="cerrarModalError()">Cerrar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filtrarTablaErrores() {
+        var filtro = document.getElementById('filtroEstado').value;
+        var filas = document.querySelectorAll('#tablaErrores tbody tr');
+        
+        filas.forEach(function(fila) {
+            var estado = fila.getAttribute('data-estado');
+            if (filtro === 'todos' || estado === filtro) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    }
+
+    function verDetalleError(id, modulo, nivel, usuario, fecha, descripcion) {
+        document.getElementById('modalTitle').textContent = 'Detalle de Reporte #' + id;
+        document.getElementById('detModulo').textContent = modulo;
+        document.getElementById('detNivel').textContent = nivel;
+        document.getElementById('detUsuario').textContent = usuario;
+        document.getElementById('detFecha').textContent = fecha;
+        document.getElementById('detDescripcion').textContent = descripcion;
+        
+        document.getElementById('modalErrorDetalle').style.display = 'flex';
+    }
+
+    function cerrarModalError() {
+        document.getElementById('modalErrorDetalle').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        var modal = document.getElementById('modalErrorDetalle');
+        if (event.target === modal) {
+            cerrarModalError();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        filtrarTablaErrores();
+    });
+</script>
+{% endblock %}

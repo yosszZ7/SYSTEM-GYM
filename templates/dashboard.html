@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="welcome-section">
+    <h1>Bienvenido, {{ usuario }}</h1>
+    <p>Panel de control de WORLD GYM</p>
+    <div class="welcome-date" id="currentDate"></div>
+</div>
+
+<div class="stats-grid" id="statsContainer">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+            <h3>Clientes</h3>
+            <div class="stat-number" id="totalClientes">0</div>
+            <div class="stat-trend positive"><i class="fas fa-arrow-up"></i> +12%</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+        <div class="stat-info">
+            <h3>Empleados</h3>
+            <div class="stat-number" id="totalEmpleados">0</div>
+            <div class="stat-trend stable"><i class="fas fa-minus"></i> Estable</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-box"></i></div>
+        <div class="stat-info">
+            <h3>Productos</h3>
+            <div class="stat-number" id="totalProductos">0</div>
+            <div class="stat-trend positive"><i class="fas fa-arrow-up"></i> +5%</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-info">
+            <h3>Ventas del Mes</h3>
+            <div class="stat-number" id="ventasMes">$0</div>
+            <div class="stat-trend positive"><i class="fas fa-arrow-up"></i> +23%</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-id-card"></i></div>
+        <div class="stat-info">
+            <h3>Membresías Activas</h3>
+            <div class="stat-number" id="membresiasActivas">0</div>
+            <div class="stat-trend positive"><i class="fas fa-arrow-up"></i> +8%</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-dumbbell"></i></div>
+        <div class="stat-info">
+            <h3>Ejercicios</h3>
+            <div class="stat-number" id="totalEjercicios">0</div>
+            <div class="stat-trend stable"><i class="fas fa-minus"></i> Estable</div>
+        </div>
+    </div>
+</div>
+
+<div class="charts-row">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fas fa-chart-line"></i> Ingresos Mensuales</h3>
+        </div>
+        <canvas id="ingresosChart" class="chart-container"></canvas>
+    </div>
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fas fa-chart-bar"></i> Ventas por Producto</h3>
+        </div>
+        <canvas id="ventasChart" class="chart-container"></canvas>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <div class="section-header">
+        <h2><i class="fas fa-bolt"></i> Acciones Rápidas</h2>
+        <a href="/cliente_registrar" class="btn-link">Ver todos →</a>
+    </div>
+    <div class="action-buttons" id="quickActions">
+        <a href="/cliente_registrar" class="action-card">
+            <div class="action-icon"><i class="fas fa-user-plus"></i></div>
+            <div class="action-info">
+                <h4>Registrar Cliente</h4>
+                <p>Nuevo cliente en el sistema</p>
+            </div>
+        </a>
+        <a href="/venta_registrar" class="action-card">
+            <div class="action-icon"><i class="fas fa-cart-plus"></i></div>
+            <div class="action-info">
+                <h4>Nueva Venta</h4>
+                <p>Registrar una venta</p>
+            </div>
+        </a>
+        <a href="/ejercicio_registrar" class="action-card">
+            <div class="action-icon"><i class="fas fa-dumbbell"></i></div>
+            <div class="action-info">
+                <h4>Nuevo Ejercicio</h4>
+                <p>Agregar ejercicio</p>
+            </div>
+        </a>
+        <a href="/empleado_registrar" class="action-card">
+            <div class="action-icon"><i class="fas fa-user-tie"></i></div>
+            <div class="action-info">
+                <h4>Nuevo Empleado</h4>
+                <p>Registrar empleado</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="recent-activity">
+    <div class="section-header">
+        <h2><i class="fas fa-clock"></i> Actividad Reciente</h2>
+        <a href="/venta_listar" class="btn-link">Ver todas →</a>
+    </div>
+    <div id="recentActivity" class="activity-list">
+        <div class="activity-item">
+            <div class="activity-icon"><i class="fas fa-shopping-cart"></i></div>
+            <div class="activity-details">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+<script>
+    // Fecha actual en el welcome
+    document.getElementById('currentDate').innerText = new Date().toLocaleDateString('es-ES', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+</script>
+{% endblock %}

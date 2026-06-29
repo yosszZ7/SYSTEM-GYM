@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Actualizar Ejercicio{% endblock %}
+{% block breadcrumb %}Ejercicios / Actualizar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-dumbbell-edit"></i> Actualizar Ejercicio</h1>
+            <p>Modifique los datos del ejercicio seleccionado</p>
+        </div>
+        <a href="/ejercicio_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-dumbbell"></i> Datos del Ejercicio</h2>
+            <span class="badge badge-warning"><i class="fas fa-edit"></i> ID: {{ ejercicio.IdEjercicio }}</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/ejercicio_actualizar/{{ ejercicio.IdEjercicio }}">
+                <!-- SpActualizarEjercicio: IdEjercicio, NombreEjercicio, Descripcion, VideoUrl, IdGrupoMuscular -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="NombreEjercicio">
+                            <i class="fas fa-tag"></i> Nombre del Ejercicio <span class="required">*</span>
+                        </label>
+                        <input type="text" id="NombreEjercicio" name="NombreEjercicio" 
+                               value="{{ ejercicio.NombreEjercicio }}" maxlength="100" required>
+                        <small class="help-text">Máximo 100 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdGrupoMuscular">
+                            <i class="fas fa-muscle"></i> Grupo Muscular <span class="required">*</span>
+                        </label>
+                        <select id="IdGrupoMuscular" name="IdGrupoMuscular" required>
+                            <option value="">Seleccionar grupo...</option>
+                            {% for grupo in grupos %}
+                            <option value="{{ grupo.IdGrupoMuscular }}" {% if ejercicio.IdGrupoMuscular == grupo.IdGrupoMuscular %}selected{% endif %}>
+                                {{ grupo.NombreGrupo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="help-text">Grupo muscular principal</small>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="Descripcion">
+                        <i class="fas fa-align-left"></i> Descripción
+                    </label>
+                    <textarea id="Descripcion" name="Descripcion" 
+                              rows="3" placeholder="Descripción detallada del ejercicio..." maxlength="500">{{ ejercicio.Descripcion or '' }}</textarea>
+                    <small class="help-text">Opcional - Máximo 500 caracteres</small>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="VideoUrl">
+                        <i class="fas fa-video"></i> URL del Video
+                    </label>
+                    <input type="url" id="VideoUrl" name="VideoUrl" 
+                           value="{{ ejercicio.VideoUrl or '' }}" maxlength="255">
+                    <small class="help-text">Opcional - Enlace a video demostrativo</small>
+                </div>
+
+                <div class="card-footer">
+                    <a href="/ejercicio_listar" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Actualizar Ejercicio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

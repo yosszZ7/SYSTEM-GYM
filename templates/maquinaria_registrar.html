@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Maquinaria{% endblock %}
+{% block breadcrumb %}Equipos / Registrar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-plus-circle"></i> Registrar Maquinaria</h1>
+            <p>Complete los datos para registrar una nueva máquina en el inventario</p>
+        </div>
+        <a href="/maquinaria_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Listado
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-dumbbell"></i> Datos del Equipo</h2>
+            <span class="badge badge-info"><i class="fas fa-plus-circle"></i> Nuevo</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/maquinaria_registrar" id="maquinariaForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="Nombre">
+                            <i class="fas fa-tag"></i> Nombre del Equipo <span class="required">*</span>
+                        </label>
+                        <input type="text" id="Nombre" name="Nombre" 
+                               placeholder="Ej: Caminadora Pro-Run 200" maxlength="100" required>
+                        <small class="help-text">Nombre descriptivo de la máquina</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Tipo">
+                            <i class="fas fa-cogs"></i> Tipo / Categoría <span class="required">*</span>
+                        </label>
+                        <input type="text" id="Tipo" name="Tipo" 
+                               placeholder="Ej: Cardio, Peso Libre, Fuerza" maxlength="50" required>
+                        <small class="help-text">Ejemplo: Cardio, Fuerza, Accesorios</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Estado">
+                            <i class="fas fa-heartbeat"></i> Estado de Funcionamiento <span class="required">*</span>
+                        </label>
+                        <select id="Estado" name="Estado" required style="width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text); font-size: 14px; cursor: pointer;">
+                            <option value="1">Operativo (Disponible)</option>
+                            <option value="0">Inactivo / En Mantenimiento</option>
+                        </select>
+                        <small class="help-text">Estado inicial de disponibilidad de la máquina</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="FechaCompra">
+                            <i class="fas fa-calendar-alt"></i> Fecha de Adquisición
+                        </label>
+                        <input type="date" id="FechaCompra" name="FechaCompra" style="width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text); font-size: 14px;">
+                        <small class="help-text">Fecha en la que se compró la máquina</small>
+                    </div>
+                </div>
+
+                <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Registrar Equipo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

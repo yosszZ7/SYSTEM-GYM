@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-search"></i> Buscar Cliente</h1>
+            <p>Búsqueda rápida de clientes registrados en el sistema</p>
+        </div>
+        <a href="/cliente_listar" class="btn btn-secondary">
+            <i class="fas fa-list"></i> Volver a la Lista
+        </a>
+    </div>
+
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-body">
+            <div class="search-box">
+                <div class="search-input-group">
+                    <input type="text" id="Nombre" placeholder="Nombre del cliente a buscar..." aria-label="Nombre del cliente">
+                    <button onclick="buscarCliente()" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <small class="form-text" style="display: block; margin-top: 0.5rem; color: var(--text-tertiary);">
+                    Presione Enter o haga clic en el botón para buscar
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultados" class="results-container"></div>
+</div>
+
+<style>
+    .search-box {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .search-input-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .search-input-group input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-tertiary);
+        color: var(--text);
+        font-size: 14px;
+        transition: all var(--transition-fast || 0.2s);
+    }
+    .search-input-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-glow || rgba(59,130,246,0.15));
+        background: var(--bg-secondary || var(--bg-tertiary));
+    }
+    .no-results-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: var(--bg-secondary);
+        border-radius: 10px;
+        border: 1px dashed var(--border-color);
+        color: var(--text-secondary);
+    }
+    .no-results-message i {
+        font-size: 3rem;
+        color: var(--text-tertiary);
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('Nombre').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            buscarCliente();
+        }
+    });
+    document.getElementById('Nombre').focus();
+});
+
+function buscarCliente() {
+    let nombre = document.getElementById('Nombre').value.trim();
+    if (!nombre) {
+        document.getElementById('resultados').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 12px;"></i>
+                <div class="alert-content">
+                    <div class="alert-message">Por favor ingrese un nombre para buscar</div>
+                </div>
+            </div>`;
+        return;
+    }
+
+    document.getElementById('resultados').innerHTML = `
+        <div class="loading-spinner" style="text-align: center; padding: 2.5rem 0;">
+            <div class="spinner-border" role="status" style="width: 2.5rem; height: 2.5rem; border: 3px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary);">
+                <span class="sr-only">Buscando...</span>
+            </div>
+            <p class="text-muted mt-2" style="font-size:0.9rem; color: var(--text-secondary);">Buscando clientes...</p>
+        </div>`;
+
+    fetch('/api/clientes/buscar?nombre=' + encodeURIComponent(nombre))
+        .then(r => r.json())
+        .then(data => {
+            if (data.length === 0) {
+                document.getElementById('resultados').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle" style="margin-right: 12px;"></i>
+                        <div class="alert-content">
+                            <div class="alert-message">No se encontraron clientes con el nombre "<strong>${nombre}</strong>"</div>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list"></i> Resultados de la Búsqueda</h2>
+                        <span class="badge badge-info">${data.length} registro${data.length > 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Primer Nombre</th>
+                                        <th>Segundo Nombre</th>
+                                        <th>Primer Apellido</th>
+                                        <th>Segundo Apellido</th>
+                                        <th>Teléfono</th>
+                                        <th>Correo</th>
+                                        <th>Fecha Registro</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+            data.forEach(c => {
+                let segundoNombre = c.SegundoNombre || '-';
+                let segundoApellido = c.SegundoApellido || '-';
+                let fechaRegistro = c.FechaRegistro || '-';
+                html += `
+                    <tr>
+                        <td>${c.IdCliente}</td>
+                        <td><strong>${c.PrimerNombre}</strong></td>
+                        <td>${segundoNombre}</td>
+                        <td>${c.PrimerApellido}</td>
+                        <td>${segundoApellido}</td>
+                        <td>${c.Telefono}</td>
+                        <td>${c.Correo}</td>
+                        <td>${fechaRegistro}</td>
+                        <td class="table-actions">
+                            <a href="/cliente_actualizar/${c.IdCliente}" class="btn-edit" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>`;
+            });
+
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+
+            document.getElementById('resultados').innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('resultados').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 12px;"></i>
+                    <div class="alert-content">
+                        <div class="alert-message">Error al buscar clientes. Intente nuevamente.</div>
+                    </div>
+                </div>`;
+        });
+}
+</script>
+
+{% endblock %}

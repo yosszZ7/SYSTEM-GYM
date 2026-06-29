@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Movimientos de Inventario</h1>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>IdMovimientoInventario</th>
+            <th>IdInventario</th>
+            <th>IdProducto</th>
+            <th>NombreProducto</th>
+            <th>TipoMovimiento</th>
+            <th>Cantidad</th>
+            <th>Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for mov in movimientos %}
+        <tr>
+            <td>{{ mov.IdMovimientoInventario }}</td>
+            <td>{{ mov.IdInventario }}</td>
+            <td>{{ mov.IdProducto }}</td>
+            <td>{{ mov.NombreProducto }}</td>
+            <td>{{ mov.TipoMovimiento }}</td>
+            <td>{{ mov.Cantidad }}</td>
+            <td>{{ mov.Fecha }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

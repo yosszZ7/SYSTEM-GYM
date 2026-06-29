@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Usuarios{% endblock %}
+{% block breadcrumb %}Usuarios / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-users-cog"></i> Lista de Usuarios</h1>
+            <p>Gestión completa de todos los usuarios del sistema</p>
+        </div>
+        <a href="/usuario_crear" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Crear Usuario
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2><i class="fas fa-list"></i> Usuarios Registrados</h2>
+                <span class="badge badge-info" id="usuariosRegCount">{{ usuarios|length }} registros</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="showInactiveUsers" style="width: 16px; height: 16px; cursor: pointer;">
+                <label for="showInactiveUsers" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Mostrar Inactivos</label>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Usuario</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario.IdUsuario }}</td>
+                            <td>{{ usuario.NombreUsuario }}</td>
+                            <td>{{ usuario.NombreRol }}</td>
+                            <td>
+                                <span class="badge {% if usuario.Estado %}badge-success{% else %}badge-danger{% endif %}">
+                                    {% if usuario.Estado %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ usuario.FechaRegistro }}</td>
+                            <td class="table-actions">
+                                <!-- ✅ CORRECTO -->
+                                <a href="/usuario_editar/{{ usuario.IdUsuario }}" class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/usuario_cambiar_contrasena/{{ usuario.IdUsuario }}" class="btn-view" title="Cambiar Contraseña">
+                                    <i class="fas fa-key"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay usuarios registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Venta Múltiple{% endblock %}
+{% block breadcrumb %}Ventas / Registrar Múltiple{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-layer-group"></i> Registrar Venta Múltiple</h1>
+            <p>Registre múltiples productos en una sola venta (máximo 5 productos)</p>
+        </div>
+        <a href="/venta_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-shopping-cart"></i> Datos de la Venta Múltiple</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nueva</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/venta_registrar_multiple">
+                <!-- SpRegistrarVentaMultiple: IdCliente, ProductosJSON -->
+                <!-- El JSON se genera en el backend combinando los campos -->
+                
+                <div class="form-group">
+                    <label for="IdCliente">
+                        <i class="fas fa-user"></i> Cliente <span class="required">*</span>
+                    </label>
+                    <select id="IdCliente" name="IdCliente" required>
+                        <option value="">Seleccionar cliente...</option>
+                        <!-- Estos valores vienen de la base de datos -->
+                        <option value="1">Juan Pérez</option>
+                        <option value="2">Ana Gómez</option>
+                        <option value="3">Carlos Rodríguez</option>
+                        <option value="4">María López</option>
+                        <option value="5">Pedro Sánchez</option>
+                    </select>
+                    <small class="help-text">Cliente que realiza la compra</small>
+                </div>
+
+                <!-- Productos - Hasta 5 productos -->
+                <div class="card" style="margin-top: 20px; border: 2px dashed var(--border-color); background: var(--bg-tertiary);">
+                    <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h2 style="font-size: 14px;"><i class="fas fa-boxes"></i> Productos de la Venta</h2>
+                        <span class="badge badge-primary">Máximo 5 productos</span>
+                    </div>
+                    <div class="card-body">
+                        <!-- Producto 1 -->
+                        <div class="form-grid" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label for="IdProducto_1">
+                                    <i class="fas fa-box"></i> Producto 1 <span class="required">*</span>
+                                </label>
+                                <select id="IdProducto_1" name="IdProducto_1" required>
+                                    <option value="">Seleccionar producto...</option>
+                                    <option value="1">Proteína Whey - $120,000</option>
+                                    <option value="2">Creatina - $85,000</option>
+                                    <option value="3">BCAA - $60,000</option>
+                                    <option value="4">Pre-entreno - $45,000</option>
+                                    <option value="5">Vitaminas - $35,000</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="Cantidad_1">
+                                    <i class="fas fa-hashtag"></i> Cantidad 1 <span class="required">*</span>
+                                </label>
+                                <input type="number" id="Cantidad_1" name="Cantidad_1" 
+                                       placeholder="Ej: 2" min="1" required>
+                            </div>
+                        </div>
+
+                        <!-- Producto 2 -->
+                        <div class="form-grid" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label for="IdProducto_2">
+                                    <i class="fas fa-box"></i> Producto 2
+                                </label>
+                                <select id="IdProducto_2" name="IdProducto_2">
+                                    <option value="">Seleccionar producto...</option>
+                                    <option value="1">Proteína Whey - $120,000</option>
+                                    <option value="2">Creatina - $85,000</option>
+                                    <option value="3">BCAA - $60,000</option>
+                                    <option value="4">Pre-entreno - $45,000</option>
+                                    <option value="5">Vitaminas - $35,000</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="Cantidad_2">
+                                    <i class="fas fa-hashtag"></i> Cantidad 2
+                                </label>
+                                <input type="number" id="Cantidad_2" name="Cantidad_2" 
+                                       placeholder="Ej: 2" min="1">
+                            </div>
+                        </div>
+
+                        <!-- Producto 3 -->
+                        <div class="form-grid" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label for="IdProducto_3">
+                                    <i class="fas fa-box"></i> Producto 3
+                                </label>
+                                <select id="IdProducto_3" name="IdProducto_3">
+                                    <option value="">Seleccionar producto...</option>
+                                    <option value="1">Proteína Whey - $120,000</option>
+                                    <option value="2">Creatina - $85,000</option>
+                                    <option value="3">BCAA - $60,000</option>
+                                    <option value="4">Pre-entreno - $45,000</option>
+                                    <option value="5">Vitaminas - $35,000</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="Cantidad_3">
+                                    <i class="fas fa-hashtag"></i> Cantidad 3
+                                </label>
+                                <input type="number" id="Cantidad_3" name="Cantidad_3" 
+                                       placeholder="Ej: 2" min="1">
+                            </div>
+                        </div>
+
+                        <!-- Producto 4 -->
+                        <div class="form-grid" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label for="IdProducto_4">
+                                    <i class="fas fa-box"></i> Producto 4
+                                </label>
+                                <select id="IdProducto_4" name="IdProducto_4">
+                                    <option value="">Seleccionar producto...</option>
+                                    <option value="1">Proteína Whey - $120,000</option>
+                                    <option value="2">Creatina - $85,000</option>
+                                    <option value="3">BCAA - $60,000</option>
+                                    <option value="4">Pre-entreno - $45,000</option>
+                                    <option value="5">Vitaminas - $35,000</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="Cantidad_4">
+                                    <i class="fas fa-hashtag"></i> Cantidad 4
+                                </label>
+                                <input type="number" id="Cantidad_4" name="Cantidad_4" 
+                                       placeholder="Ej: 2" min="1">
+                            </div>
+                        </div>
+
+                        <!-- Producto 5 -->
+                        <div class="form-grid" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 0;">
+                            <div class="form-group">
+                                <label for="IdProducto_5">
+                                    <i class="fas fa-box"></i> Producto 5
+                                </label>
+                                <select id="IdProducto_5" name="IdProducto_5">
+                                    <option value="">Seleccionar producto...</option>
+                                    <option value="1">Proteína Whey - $120,000</option>
+                                    <option value="2">Creatina - $85,000</option>
+                                    <option value="3">BCAA - $60,000</option>
+                                    <option value="4">Pre-entreno - $45,000</option>
+                                    <option value="5">Vitaminas - $35,000</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="Cantidad_5">
+                                    <i class="fas fa-hashtag"></i> Cantidad 5
+                                </label>
+                                <input type="number" id="Cantidad_5" name="Cantidad_5" 
+                                       placeholder="Ej: 2" min="1">
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px; padding: 10px; background: var(--warning-light); border-radius: var(--radius-lg);">
+                            <small style="color: var(--warning);">
+                                <i class="fas fa-info-circle"></i> 
+                                Los productos 2-5 son opcionales. Complete solo los que necesite.
+                            </small>
+                        </div>
+
+                        <!-- Total estimado (solo lectura) -->
+                        <div style="margin-top: 20px; padding: 15px; background: var(--primary-bg); border-radius: var(--radius-lg); text-align: right;">
+                            <strong style="font-size: 18px;">Total Estimado: </strong>
+                            <span style="font-size: 24px; font-weight: 700; color: var(--primary);">Se calcula en el servidor</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="Observaciones">
+                        <i class="fas fa-comment"></i> Observaciones
+                    </label>
+                    <textarea id="Observaciones" name="Observaciones" 
+                              rows="2" placeholder="Notas adicionales sobre la venta..."></textarea>
+                    <small class="help-text">Opcional</small>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Registrar Venta Múltiple
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Información del procedimiento -->
+    <div class="card" style="margin-top: 20px; background: var(--bg-tertiary);">
+        <div class="card-header">
+            <h2><i class="fas fa-info-circle"></i> Información del Procedimiento</h2>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-database"></i>
+                <div class="alert-content">
+                    <div class="alert-title">SpRegistrarVentaMultiple</div>
+                    <div class="alert-message">
+                        <strong>Parámetros:</strong> IdCliente, ProductosJSON<br>
+                        <strong>Formato JSON:</strong> 
+                        <code>[{"IdProducto":1,"Cantidad":2},{"IdProducto":3,"Cantidad":1}]</code>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 13px; color: var(--text-secondary);">
+                <p><strong>Validaciones:</strong></p>
+                <ul style="margin-left: 20px; list-style-type: disc;">
+                    <li>Cliente debe existir</li>
+                    <li>Cada producto debe existir</li>
+                    <li>Cantidad debe ser mayor a 0</li>
+                    <li>Stock debe ser suficiente para cada producto</li>
+                    <li>El total se calcula automáticamente</li>
+                    <li>Se actualiza el stock automáticamente</li>
+                    <li>Se registra cada movimiento de inventario</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

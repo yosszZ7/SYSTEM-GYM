@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="World Gym - Sistema de Gestión Profesional">
+    
+    <title>World Gym | {% block title %}Dashboard{% endblock %}</title>
+
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="app-container">
+        
+        <!-- SIDEBAR PREMIUM -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <img src="/static/image/logo.jpeg" alt="World Gym Logo">
+                    </div>
+                    <div class="logo-text">
+                        <h1>WORLD<span>GYM</span></h1>
+                        <small>Fitness Center</small>
+                    </div>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-user">
+                <div class="user-avatar-sidebar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-info-sidebar">
+                    <span class="user-name-sidebar" id="userNameSidebar">{{ usuario if usuario else 'Usuario' }}</span>
+                    <span class="user-role-sidebar" id="userRoleSidebar">Administrador</span>
+                </div>
+            </div>
+
+            <!-- Menú Dividido por Secciones -->
+            <nav class="sidebar-nav">
+                <!-- SECCIÓN INICIO -->
+                <div class="menu-title">Inicio</div>
+                <a href="/dashboard" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- SECCIÓN GESTIÓN -->
+                <div class="menu-title">Gestión</div>
+                
+                <!-- Clientes -->
+                <div class="nav-dropdown {% if 'cliente' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-users"></i>
+                        <span>Clientes</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/cliente_listar" class="{% if request.endpoint == 'cliente_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Clientes
+                        </a>
+                        <a href="/cliente_registrar" class="{% if request.endpoint == 'cliente_registrar' %}active{% endif %}">
+                            <i class="fas fa-user-plus"></i> Registrar Cliente
+                        </a>
+                        <a href="/cliente_buscar" class="{% if request.endpoint == 'cliente_buscar' %}active{% endif %}">
+                            <i class="fas fa-search"></i> Buscar Cliente
+                        </a>
+                        <a href="/cliente_asignar_entrenador" class="{% if request.endpoint == 'cliente_asignar_entrenador' %}active{% endif %}">
+                            <i class="fas fa-user-check"></i> Asignar Entrenador
+                        </a>
+                        <a href="/cliente_membresia" class="{% if request.endpoint == 'cliente_membresia' %}active{% endif %}">
+                            <i class="fas fa-id-card"></i> Asignar Membresía
+                        </a>
+                        <a href="/cliente_asistencia" class="{% if request.endpoint == 'cliente_asistencia' %}active{% endif %}">
+                            <i class="fas fa-calendar-check"></i> Registrar Asistencia
+                        </a>
+                        <!-- "Actualizar Cliente" se quitó de aquí: esa ruta necesita un ID de cliente
+                             específico (/cliente_actualizar/<id>), y siempre se llega a ella desde
+                             el botón de editar en "Listar Clientes". -->
+                        <a href="/cliente_rutina" class="{% if request.endpoint == 'cliente_rutina' %}active{% endif %}">
+                            <i class="fas fa-clipboard-list"></i> Rutinas del Cliente
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Empleados -->
+                <div class="nav-dropdown {% if 'empleado' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Empleados</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/empleado_listar" class="{% if request.endpoint == 'empleado_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Empleados
+                        </a>
+                        <a href="/empleado_registrar" class="{% if request.endpoint == 'empleado_registrar' %}active{% endif %}">
+                            <i class="fas fa-user-plus"></i> Registrar Empleado
+                        </a>
+                        <a href="/empleado_buscar" class="{% if request.endpoint == 'empleado_buscar' %}active{% endif %}">
+                            <i class="fas fa-search"></i> Buscar Empleado
+                        </a>
+                        <a href="/empleado_asistencias" class="{% if request.endpoint == 'empleado_asistencias' %}active{% endif %}">
+                            <i class="fas fa-clock"></i> Asistencia Empleados
+                        </a>
+                        <a href="/empleado_pago" class="{% if request.endpoint == 'empleado_pago' %}active{% endif %}">
+                            <i class="fas fa-money-bill"></i> Pagos Empleados
+                        </a>
+                        <a href="/empleado_entrenadores" class="{% if request.endpoint == 'empleado_entrenadores' %}active{% endif %}">
+                            <i class="fas fa-chalkboard-user"></i> Listar Entrenadores
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Rutinas -->
+                <div class="nav-dropdown {% if 'rutina' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Rutinas</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/rutina_asignar" class="{% if request.endpoint == 'rutina_asignar' %}active{% endif %}">
+                            <i class="fas fa-plus-circle"></i> Asignar Rutina
+                        </a>
+                        <a href="/rutina_hoy" class="{% if request.endpoint == 'rutina_hoy' %}active{% endif %}">
+                            <i class="fas fa-calendar-day"></i> Rutina de Hoy
+                        </a>
+                        <a href="/rutina_definir_dia" class="{% if request.endpoint == 'rutina_definir_dia' %}active{% endif %}">
+                            <i class="fas fa-calendar-week"></i> Definir Día
+                        </a>
+                        <a href="/rutina_agregar_ejercicio" class="{% if request.endpoint == 'rutina_agregar_ejercicio' %}active{% endif %}">
+                            <i class="fas fa-plus"></i> Agregar Ejercicio
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Ejercicios -->
+                <div class="nav-dropdown {% if 'ejercicio' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-dumbbell"></i>
+                        <span>Ejercicios</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/ejercicio_listar" class="{% if request.endpoint == 'ejercicio_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Ejercicios
+                        </a>
+                        <a href="/ejercicio_registrar" class="{% if request.endpoint == 'ejercicio_registrar' %}active{% endif %}">
+                            <i class="fas fa-plus-circle"></i> Registrar Ejercicio
+                        </a>
+                        <a href="/ejercicio_buscar" class="{% if request.endpoint == 'ejercicio_buscar' %}active{% endif %}">
+                            <i class="fas fa-search"></i> Buscar Ejercicio
+                        </a>
+                        <!-- "Actualizar Ejercicio" se quitó: necesita /ejercicio_actualizar/<id>,
+                             se llega desde el botón de editar en "Listar Ejercicios". -->
+                    </div>
+                </div>
+
+                <!-- Grupos Musculares -->
+                <div class="nav-dropdown {% if 'grupo_muscular' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-muscle"></i>
+                        <span>Grupos Musculares</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/grupo_muscular_listar" class="{% if request.endpoint == 'grupo_muscular_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Grupos
+                        </a>
+                        <!-- "Actualizar Grupo" se quitó: necesita /grupo_muscular_actualizar/<id>,
+                             se llega desde el botón de editar en "Listar Grupos". -->
+                    </div>
+                </div>
+
+                <!-- Maquinaria -->
+                <div class="nav-dropdown {% if 'maquinaria' in request.endpoint or 'maquina' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-cogs"></i>
+                        <span>Maquinaria</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/maquinaria_listar" class="{% if request.endpoint == 'maquinaria_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Maquinaria
+                        </a>
+                        <a href="/maquinaria_registrar" class="{% if request.endpoint == 'maquinaria_registrar' %}active{% endif %}">
+                            <i class="fas fa-plus-circle"></i> Registrar Maquinaria
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Membresías -->
+                <a href="/membresia_listar" class="nav-link {% if 'membresia' in request.endpoint %}active{% endif %}">
+                    <i class="fas fa-id-card"></i>
+                    <span>Membresías</span>
+                </a>
+
+                <!-- SECCIÓN OPERACIONES -->
+                <div class="menu-title">Operaciones</div>
+
+                <!-- Productos -->
+                <div class="nav-dropdown {% if 'producto' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-box"></i>
+                        <span>Productos</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/producto_listar" class="{% if request.endpoint == 'producto_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Productos
+                        </a>
+                        <a href="/producto_registrar" class="{% if request.endpoint == 'producto_registrar' %}active{% endif %}">
+                            <i class="fas fa-plus-circle"></i> Registrar Producto
+                        </a>
+                        <!-- "Actualizar Producto" se quitó: necesita /producto_actualizar/<id>,
+                             se llega desde el botón de editar en "Listar Productos". -->
+                    </div>
+                </div>
+
+                <!-- Inventario -->
+                <div class="nav-dropdown {% if 'inventario' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Inventario</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/inventario_lista" class="{% if request.endpoint == 'inventario_lista' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Inventario
+                        </a>
+                        <a href="/inventario_entrada" class="{% if request.endpoint == 'inventario_entrada' %}active{% endif %}">
+                            <i class="fas fa-arrow-down"></i> Entrada de Stock
+                        </a>
+                        <a href="/inventario_salida" class="{% if request.endpoint == 'inventario_salida' %}active{% endif %}">
+                            <i class="fas fa-arrow-up"></i> Salida de Stock
+                        </a>
+                        <a href="/inventario_movimiento" class="{% if request.endpoint == 'inventario_movimiento' %}active{% endif %}">
+                            <i class="fas fa-history"></i> Movimientos
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Ventas -->
+                <div class="nav-dropdown {% if 'venta' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Ventas</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/venta_listar" class="{% if request.endpoint == 'venta_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Ventas
+                        </a>
+                        <a href="/venta_registrar" class="{% if request.endpoint == 'venta_registrar' %}active{% endif %}">
+                            <i class="fas fa-cart-plus"></i> Registrar Venta
+                        </a>
+                        <a href="/venta_registrar_multiple" class="{% if request.endpoint == 'venta_registrar_multiple' %}active{% endif %}">
+                            <i class="fas fa-layer-group"></i> Venta Múltiple
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Compras -->
+                <div class="nav-dropdown {% if 'compra' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-truck"></i>
+                        <span>Compras</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/compra_listar" class="{% if request.endpoint == 'compra_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Compras
+                        </a>
+                        <a href="/compra_registrar" class="{% if request.endpoint == 'compra_registrar' %}active{% endif %}">
+                            <i class="fas fa-plus-circle"></i> Registrar Compra
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mantenimiento -->
+                <div class="nav-dropdown {% if 'mantenimiento' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-tools"></i>
+                        <span>Mantenimiento</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/mantenimiento_registrar" class="{% if request.endpoint == 'mantenimiento_registrar' %}active{% endif %}">
+                            <i class="fas fa-plus"></i> Registrar Mantenimiento
+                        </a>
+                        <a href="/mantenimiento_ver" class="{% if request.endpoint == 'mantenimiento_ver' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Ver Mantenimientos
+                        </a>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN REPORTES -->
+                <div class="menu-title">Reportes</div>
+
+                <div class="nav-dropdown {% if 'reporte' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Reportes</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/reporte_ingresos" class="{% if request.endpoint == 'reporte_ingresos' %}active{% endif %}">
+                            <i class="fas fa-chart-line"></i> Ingresos Mensuales
+                        </a>
+                        <a href="/reporte_ventas_producto" class="{% if request.endpoint == 'reporte_ventas_producto' %}active{% endif %}">
+                            <i class="fas fa-chart-pie"></i> Ventas por Producto
+                        </a>
+                        <a href="/reporte_membresias_activas" class="{% if request.endpoint == 'reporte_membresias_activas' %}active{% endif %}">
+                            <i class="fas fa-chart-bar"></i> Membresías Activas
+                        </a>
+                        <a href="/reporte_rutinas_activas" class="{% if request.endpoint == 'reporte_rutinas_activas' %}active{% endif %}">
+                            <i class="fas fa-chart-simple"></i> Rutinas Activas
+                        </a>
+                        <a href="/reporte_asistencias" class="{% if request.endpoint == 'reporte_asistencias' %}active{% endif %}">
+                            <i class="fas fa-calendar-check"></i> Asistencias
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Usuarios -->
+                <div class="nav-dropdown {% if 'usuario' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-users-cog"></i>
+                        <span>Usuarios</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/usuario_listar" class="{% if request.endpoint == 'usuario_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Listar Usuarios
+                        </a>
+                        <a href="/usuario_crear" class="{% if request.endpoint == 'usuario_crear' %}active{% endif %}">
+                            <i class="fas fa-user-plus"></i> Crear Usuario
+                        </a>
+                        <a href="/usuario_buscar" class="{% if request.endpoint == 'usuario_buscar' %}active{% endif %}">
+                            <i class="fas fa-search"></i> Buscar Usuario
+                        </a>
+                        <!-- "Cambiar Contraseña" se quitó: necesita /usuario_cambiar_contrasena/<id>,
+                             se llega desde el botón correspondiente en "Listar Usuarios". -->
+                        <a href="/usuario_eliminar" class="{% if request.endpoint == 'usuario_eliminar' %}active{% endif %}">
+                            <i class="fas fa-user-slash"></i> Eliminar Usuario
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Soporte y Errores -->
+                <div class="menu-title">Soporte</div>
+                <div class="nav-dropdown {% if 'error' in request.endpoint %}open{% endif %}">
+                    <a href="#" class="nav-link dropdown-trigger">
+                        <i class="fas fa-headset"></i>
+                        <span>Soporte</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="/error_reportar" class="{% if request.endpoint == 'error_reportar' %}active{% endif %}">
+                            <i class="fas fa-bug"></i> Reportar Error
+                        </a>
+                        <a href="/error_listar" class="{% if request.endpoint == 'error_listar' %}active{% endif %}">
+                            <i class="fas fa-list"></i> Ver Errores
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/logout" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOPBAR GLASSMORPHISM -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <i class="fas fa-home"></i>
+                        <span>/</span>
+                        <span class="breadcrumb-current">{% block breadcrumb %}Dashboard{% endblock %}</span>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <button class="dark-btn" id="themeToggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <div class="notification-dropdown">
+                        <button class="notification-btn" id="notificationBtn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge" id="notificationBadge">3</span>
+                        </button>
+                        <div class="notification-panel" id="notificationPanel">
+                            <div class="notification-header">
+                                <h4>Notificaciones</h4>
+                                <span class="mark-all">Marcar todas</span>
+                            </div>
+                            <div class="notification-list">
+                                <div class="notification-item unread">
+                                    <i class="fas fa-user-plus"></i>
+                                    <div>
+                                        <p>Nuevo cliente registrado</p>
+                                        <small>Hace 5 minutos</small>
+                                    </div>
+                                </div>
+                                <div class="notification-item unread">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <div>
+                                        <p>Inventario crítico: Proteínas</p>
+                                        <small>Hace 2 horas</small>
+                                    </div>
+                                </div>
+                                <div class="notification-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <div>
+                                        <p>Membresía por vencer: 3 clientes</p>
+                                        <small>Hace 1 día</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="notification-footer">
+                                <a href="#">Ver todas</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-dropdown">
+                        <div class="profile-btn">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <strong id="userNameHeader">{{ usuario if usuario else 'Usuario' }}</strong>
+                                <small id="userRoleHeader">Administrador</small>
+                            </div>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="profile-menu" id="profileMenu">
+                            <a href="#"><i class="fas fa-user-cog"></i> Mi Perfil</a>
+                            <a href="#"><i class="fas fa-cog"></i> Configuración</a>
+                            <hr>
+                            <a href="/logout"><i class="fas fa-right-from-bracket"></i> Cerrar Sesión</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <section class="content">
+                <!-- FAB - Botón Flotante -->
+                <button class="fab" id="fabBtn" aria-label="Acciones rápidas">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <div class="fab-menu" id="fabMenu">
+                    <button class="fab-option" onclick="window.location.href='/cliente_registrar'">
+                        <i class="fas fa-user-plus"></i> Nuevo Cliente
+                    </button>
+                    <button class="fab-option" onclick="window.location.href='/empleado_registrar'">
+                        <i class="fas fa-user-tie"></i> Nuevo Empleado
+                    </button>
+                    <button class="fab-option" onclick="window.location.href='/venta_registrar'">
+                        <i class="fas fa-cart-plus"></i> Nueva Venta
+                    </button>
+                    <button class="fab-option" onclick="window.location.href='/producto_registrar'">
+                        <i class="fas fa-box"></i> Nuevo Producto
+                    </button>
+                    <button class="fab-option" onclick="window.location.href='/compra_registrar'">
+                        <i class="fas fa-truck"></i> Nueva Compra
+                    </button>
+                </div>
+
+                {% block content %}{% endblock %}
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=1.1.0"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        var type = "{{ category }}";
+                        if (type === "message") type = "info";
+                        mostrarToast("{{ message | escape }}", type);
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        });
+    </script>
+    
+    <!-- Scripts adicionales de cada página -->
+    {% block extra_js %}{% endblock %}
+    
+</body>
+</html>

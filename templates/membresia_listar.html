@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Membresías{% endblock %}
+{% block breadcrumb %}Membresías / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-id-card" style="color: #6366f1;"></i> Lista de Membresías</h1>
+            <p>Monitoreo de los planes de membresía disponibles en el sistema</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Membresías Registradas</h2>
+            <span class="badge badge-info">{{ membresias|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre de Membresía</th>
+                            <th>Precio</th>
+                            <th>Duración</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membresia in membresias %}
+                        <tr>
+                            <td><strong>#{{ membresia.IdMembresia }}</strong></td>
+                            <td>{{ membresia.NombreMembresia }}</td>
+                            <td>
+                                <span style="font-weight: 700; color: #10b981;">
+                                    ${{ membresia.Precio }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">
+                                    {% if membresia.DuracionMeses > 0 %}
+                                        {{ membresia.DuracionMeses }} {% if membresia.DuracionMeses == 1 %}Mes{% else %}Meses{% endif %}
+                                    {% else %}
+                                        {{ membresia.DuracionDias }} {% if membresia.DuracionDias == 1 %}Día{% else %}Días{% endif %}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="table-actions">
+                                <a href="/membresia_actualizar?id={{ membresia.IdMembresia }}" class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/membresia_eliminar?id={{ membresia.IdMembresia }}" class="btn-delete" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay membresías registradas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

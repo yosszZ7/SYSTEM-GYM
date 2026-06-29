@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-clock"></i> Registrar Asistencia Empleado</h1>
+        <p class="text-muted">Registre la entrada y salida de los empleados</p>
+    </div>
+
+    <div class="form-section">
+        <div class="form-wrapper">
+            <form method="POST" action="/api/empleados/asistencia" class="form">
+                <div class="form-group">
+                    <label for="IdEmpleado">
+                        <i class="fas fa-user"></i> Empleado
+                    </label>
+                    <select id="IdEmpleado" name="IdEmpleado" required class="form-control">
+                        <option value="">Seleccione un empleado...</option>
+                        {% for e in empleados %}
+                        <option value="{{ e.IdEmpleado }}">{{ e.PrimerNombre }} {{ e.PrimerApellido }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="HoraEntrada">
+                            <i class="fas fa-sign-in-alt"></i> Hora Entrada
+                        </label>
+                        <input type="time" id="HoraEntrada" name="HoraEntrada" required class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="HoraSalida">
+                            <i class="fas fa-sign-out-alt"></i> Hora Salida
+                        </label>
+                        <input type="time" id="HoraSalida" name="HoraSalida" required class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Registrar Asistencia
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Base dark mode */
+    body {
+        background-color: #0d1117;
+        color: #c9d1d9;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #21262d;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #f0f6fc;
+        margin-bottom: 0.3rem;
+    }
+
+    .page-header h1 i {
+        color: #58a6ff;
+        margin-right: 10px;
+    }
+
+    .page-header .text-muted {
+        font-size: 0.95rem;
+        color: #8b949e;
+    }
+
+    .form-section {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .form-wrapper {
+        background: #161b22;
+        padding: 2rem;
+        border-radius: 12px;
+        border: 1px solid #21262d;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #f0f6fc;
+        font-size: 0.95rem;
+    }
+
+    .form-group label i {
+        color: #58a6ff;
+        margin-right: 8px;
+        width: 18px;
+    }
+
+    .form-group .form-control {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        font-size: 1rem;
+        border: 2px solid #30363d;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background: #0d1117;
+        color: #c9d1d9;
+        height: 48px;
+        appearance: none;
+    }
+
+    .form-group .form-control:focus {
+        border-color: #58a6ff;
+        background: #0d1117;
+        box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        outline: none;
+    }
+
+    .form-group .form-control::placeholder {
+        color: #8b949e;
+    }
+
+    .form-group select.form-control {
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        padding-right: 40px;
+    }
+
+    .form-group select.form-control option {
+        background: #0d1117;
+        color: #c9d1d9;
+        padding: 10px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .btn {
+        padding: 0.7rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        height: 48px;
+    }
+
+    .btn-primary {
+        background: #238636;
+        color: #ffffff;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .btn-primary:hover {
+        background: #2ea043;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
+    }
+
+    .btn-secondary {
+        background: #21262d;
+        color: #c9d1d9;
+        padding: 0.7rem 1.5rem;
+    }
+
+    .btn-secondary:hover {
+        background: #30363d;
+        transform: translateY(-1px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn i {
+        font-size: 0.95rem;
+    }
+
+    /* Alert messages for form */
+    .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid transparent;
+    }
+
+    .alert-success {
+        background: #0d2a1a;
+        color: #3fb950;
+        border-color: #238636;
+    }
+
+    .alert-danger {
+        background: #2a1a1a;
+        color: #f85149;
+        border-color: #da3633;
+    }
+
+    .alert i {
+        font-size: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-wrapper {
+            padding: 1.5rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .page-header h1 {
+            font-size: 1.4rem;
+        }
+
+        .form-group .form-control {
+            height: 44px;
+            font-size: 0.95rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .form-wrapper {
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            height: 42px;
+            font-size: 0.9rem;
+            padding: 0.5rem 1.5rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default time to current time
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const currentTime = hours + ':' + minutes;
+    
+    if (!document.getElementById('HoraEntrada').value) {
+        document.getElementById('HoraEntrada').value = currentTime;
+    }
+    if (!document.getElementById('HoraSalida').value) {
+        const future = new Date(now.getTime() + 8 * 3600000);
+        const fHours = String(future.getHours()).padStart(2, '0');
+        const fMinutes = String(future.getMinutes()).padStart(2, '0');
+        document.getElementById('HoraSalida').value = fHours + ':' + fMinutes;
+    }
+
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const entrada = document.getElementById('HoraEntrada').value;
+        const salida = document.getElementById('HoraSalida').value;
+        
+        if (entrada && salida && entrada >= salida) {
+            e.preventDefault();
+            alert('La hora de salida debe ser mayor que la hora de entrada.');
+        }
+    });
+});
+
+// Check for URL parameters for success/error messages
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const error = params.get('error');
+    
+    if (success) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${success}`;
+        document.querySelector('.form-wrapper').prepend(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            alertDiv.style.transition = 'opacity 0.5s';
+            setTimeout(() => alertDiv.remove(), 500);
+        }, 5000);
+    }
+    
+    if (error) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${error}`;
+        document.querySelector('.form-wrapper').prepend(alertDiv);
+    }
+});
+</script>
+
+
+{% endblock %}

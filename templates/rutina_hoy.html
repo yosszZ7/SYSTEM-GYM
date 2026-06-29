@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-calendar-day"></i> Rutina de Hoy</h1>
+            <p>Seleccione un cliente para ver su rutina programada para el día de hoy</p>
+        </div>
+        <div class="page-header-right">
+            <a href="/rutina_asignar" class="btn btn-secondary">
+                <i class="fas fa-plus-circle"></i> Asignar Rutina
+            </a>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-body">
+            <div class="search-box">
+                <div class="search-input-group">
+                    <select id="IdCliente" style="flex: 1; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text); font-size: 14px; cursor: pointer;">
+                        <option value="">Seleccione un cliente...</option>
+                        {% for c in clientes %}
+                        <option value="{{ c.IdCliente }}">{{ c.PrimerNombre }} {{ c.PrimerApellido }}</option>
+                        {% endfor %}
+                    </select>
+                    <button onclick="verRutinaHoy()" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> Ver Rutina
+                    </button>
+                </div>
+                <small class="form-text" style="display: block; margin-top: 0.5rem; color: var(--text-tertiary);">
+                    Seleccione un cliente y haga clic en "Ver Rutina" o cambie la selección
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div id="rutina" class="results-container">
+        <div class="no-results-message">
+            <i class="fas fa-dumbbell"></i>
+            <p>Seleccione un cliente para ver su rutina de hoy</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .search-box {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .search-input-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .no-results-message {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: var(--bg-secondary);
+        border-radius: 10px;
+        border: 1px dashed var(--border-color);
+        color: var(--text-secondary);
+    }
+    .no-results-message i {
+        font-size: 3rem;
+        color: var(--text-tertiary);
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-trigger on select change
+    document.getElementById('IdCliente').addEventListener('change', function() {
+        if (this.value) {
+            verRutinaHoy();
+        }
+    });
+
+    // Detectar si hay un IdCliente en la URL (ej. ?IdCliente=X o ?id=X) y cargarlo
+    const urlParams = new URLSearchParams(window.location.search);
+    const idCliente = urlParams.get('IdCliente') || urlParams.get('id');
+    if (idCliente) {
+        const select = document.getElementById('IdCliente');
+        select.value = idCliente;
+        // Si el valor es válido en las opciones, ejecutar la búsqueda
+        if (select.value === idCliente) {
+            verRutinaHoy();
+        }
+    }
+});
+
+function verRutinaHoy() {
+    let id = document.getElementById('IdCliente').value;
+    
+    if (!id) {
+        document.getElementById('rutina').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 12px;"></i>
+                <div class="alert-content">
+                    <div class="alert-message">Por favor seleccione un cliente</div>
+                </div>
+            </div>`;
+        return;
+    }
+
+    document.getElementById('rutina').innerHTML = `
+        <div class="loading-spinner" style="text-align: center; padding: 2.5rem 0;">
+            <div class="spinner-border" role="status" style="width: 2.5rem; height: 2.5rem; border: 3px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary);">
+                <span class="sr-only">Cargando...</span>
+            </div>
+            <p class="text-muted mt-2" style="font-size:0.9rem; color: var(--text-secondary);">Cargando rutina de hoy...</p>
+        </div>`;
+
+    fetch('/api/rutinas/hoy/' + id)
+        .then(r => r.json())
+        .then(data => {
+            if (data.length === 0) {
+                document.getElementById('rutina').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle" style="margin-right: 12px;"></i>
+                        <div class="alert-content">
+                            <div class="alert-message">No hay rutina programada para hoy</div>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            let cabecera = data[0];
+            let ejercicios = data.filter(e => e.NombreEjercicio);
+
+            let html = `
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div class="card-header">
+                        <h2><i class="fas fa-dumbbell"></i> ${cabecera.NombreRutina || 'Rutina de Hoy'}</h2>
+                    </div>
+                    <div class="card-body">
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">
+                            <strong><i class="fas fa-bullseye" style="color: var(--primary); margin-right: 8px;"></i>Enfoque Muscular:</strong> 
+                            ${cabecera.EnfoqueMuscular1 || 'Sin enfoque definido'} 
+                            ${cabecera.EnfoqueMuscular2 ? ' / ' + cabecera.EnfoqueMuscular2 : ''}
+                        </p>
+                        ${cabecera.NotaGeneral ? `<p style="margin: 0.5rem 0 0 0; color: var(--text-tertiary); font-size: 13px; font-style: italic;"><strong>Nota:</strong> ${cabecera.NotaGeneral}</p>` : ''}
+                    </div>
+                </div>`;
+
+            if (ejercicios.length === 0) {
+                html += `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle" style="margin-right: 12px;"></i>
+                        <div class="alert-content">
+                            <div class="alert-message">No hay ejercicios agregados a esta rutina para el día de hoy.</div>
+                        </div>
+                    </div>`;
+            } else {
+                html += `
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-list"></i> Ejercicios Programados</h2>
+                            <span class="badge badge-info">${ejercicios.length} ejercicio${ejercicios.length > 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Orden</th>
+                                            <th>Ejercicio</th>
+                                            <th>Series</th>
+                                            <th>Repeticiones</th>
+                                            <th>Peso Recomendado</th>
+                                            <th>Descanso</th>
+                                            <th>Nota</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+
+                ejercicios.forEach(e => {
+                    html += `
+                        <tr>
+                            <td><span style="background: var(--bg-primary); padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; border: 1px solid var(--border-color); color: var(--text);">#${e.Orden}</span></td>
+                            <td><strong>${e.NombreEjercicio}</strong></td>
+                            <td><span class="badge-status active" style="font-size: 12px; padding: 4px 10px; border-radius: 12px; background: var(--success-light); color: var(--success); font-weight: bold;">${e.Series} series</span></td>
+                            <td>${e.Repeticiones}</td>
+                            <td>${e.PesoRecomendado || '—'}</td>
+                            <td><i class="fas fa-clock" style="color: var(--text-tertiary); margin-right: 6px;"></i> ${e.DescansoSegundos ? e.DescansoSegundos + 's' : '—'}</td>
+                            <td><span style="font-size: 12px; color: var(--text-secondary); font-style: italic;">${e.Nota || '—'}</span></td>
+                        </tr>`;
+                });
+
+                html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            document.getElementById('rutina').innerHTML = html;
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('rutina').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 12px;"></i>
+                    <div class="alert-content">
+                        <div class="alert-message">Error al cargar la rutina. Intente nuevamente.</div>
+                    </div>
+                </div>`;
+        });
+}
+</script>
+{% endblock %}

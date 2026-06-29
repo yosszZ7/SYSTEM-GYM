@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Reporte de Membresías Activas</h1>
+<div id="reporteMembresias" style="margin-bottom: 25px;"></div>
+
+<table class="data-table">
+    <thead><tr><th>IdMembresia</th><th>NombreMembresia</th><th>TotalClientesActivos</th></tr></thead>
+    <tbody>
+        {% for membresia in membresias_activas %}
+        <tr><td>{{ membresia.IdMembresia }}</td><td>{{ membresia.NombreMembresia }}</td><td>{{ membresia.TotalClientesActivos }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

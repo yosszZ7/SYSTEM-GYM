@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Pago Empleado{% endblock %}
+{% block breadcrumb %}Empleados / Registrar Pago{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-money-bill"></i> Registrar Pago Empleado</h1>
+            <p>Registre el pago de un empleado</p>
+        </div>
+        <a href="/empleado_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-money-bill"></i> Datos del Pago</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/empleado_pago">
+                <!-- SpRegistrarPagoEmpleado: IdEmpleado, Monto, IdMetodoPago -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="IdEmpleado">
+                            <i class="fas fa-user-tie"></i> Empleado <span class="required">*</span>
+                        </label>
+                        <select id="IdEmpleado" name="IdEmpleado" required>
+                            <option value="">Seleccionar empleado...</option>
+                            <!-- Estos valores vienen de la base de datos -->
+                            <option value="1">Carlos Gómez</option>
+                            <option value="2">Ana Martínez</option>
+                            <option value="3">Luis Rodríguez</option>
+                        </select>
+                        <small class="help-text">Empleado que recibe el pago</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdMetodoPago">
+                            <i class="fas fa-credit-card"></i> Método de Pago <span class="required">*</span>
+                        </label>
+                        <select id="IdMetodoPago" name="IdMetodoPago" required>
+                            <option value="">Seleccionar método...</option>
+                            <option value="1">Efectivo</option>
+                            <option value="2">Transferencia</option>
+                            <option value="3">Cheque</option>
+                        </select>
+                        <small class="help-text">Método de pago</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Monto">
+                            <i class="fas fa-dollar-sign"></i> Monto <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Monto" name="Monto" 
+                               placeholder="Ej: 1500000" step="100" min="0" required>
+                        <small class="help-text">Monto a pagar (debe ser mayor a 0)</small>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Registrar Pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

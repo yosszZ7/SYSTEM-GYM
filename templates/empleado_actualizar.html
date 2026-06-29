@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Actualizar Empleado{% endblock %}
+{% block breadcrumb %}Empleados / Actualizar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-user-tie-edit"></i> Actualizar Empleado</h1>
+            <p>Modifique los datos del empleado seleccionado</p>
+        </div>
+        <a href="/empleado_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-user-tie"></i> Datos del Empleado</h2>
+            <span class="badge badge-warning"><i class="fas fa-edit"></i> ID: {{ empleado.IdEmpleado }}</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/empleado_actualizar/{{ empleado.IdEmpleado }}">
+                <!-- SpActualizarEmpleado (si existe) o UPDATE directo -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="PrimerNombre">
+                            <i class="fas fa-user"></i> Primer Nombre <span class="required">*</span>
+                        </label>
+                        <input type="text" id="PrimerNombre" name="PrimerNombre" 
+                               value="{{ empleado.PrimerNombre }}" maxlength="30" required>
+                        <small class="help-text">Máximo 30 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="SegundoNombre">
+                            <i class="fas fa-user"></i> Segundo Nombre
+                        </label>
+                        <input type="text" id="SegundoNombre" name="SegundoNombre" 
+                               value="{{ empleado.SegundoNombre or '' }}" maxlength="30">
+                        <small class="help-text">Opcional - Máximo 30 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="PrimerApellido">
+                            <i class="fas fa-user"></i> Primer Apellido <span class="required">*</span>
+                        </label>
+                        <input type="text" id="PrimerApellido" name="PrimerApellido" 
+                               value="{{ empleado.PrimerApellido }}" maxlength="35" required>
+                        <small class="help-text">Máximo 35 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="SegundoApellido">
+                            <i class="fas fa-user"></i> Segundo Apellido
+                        </label>
+                        <input type="text" id="SegundoApellido" name="SegundoApellido" 
+                               value="{{ empleado.SegundoApellido or '' }}" maxlength="35">
+                        <small class="help-text">Opcional - Máximo 35 caracteres</small>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="Telefono">
+                            <i class="fas fa-phone"></i> Teléfono <span class="required">*</span>
+                        </label>
+                        <input type="tel" id="Telefono" name="Telefono" 
+                               value="{{ empleado.Telefono }}" maxlength="15" required>
+                        <small class="help-text">Máximo 15 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Correo">
+                            <i class="fas fa-envelope"></i> Correo Electrónico <span class="required">*</span>
+                        </label>
+                        <input type="email" id="Correo" name="Correo" 
+                               value="{{ empleado.Correo }}" maxlength="120" required>
+                        <small class="help-text">Máximo 120 caracteres</small>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="IdCargo">
+                            <i class="fas fa-briefcase"></i> Cargo <span class="required">*</span>
+                        </label>
+                        <select id="IdCargo" name="IdCargo" required>
+                            <option value="">Seleccionar cargo...</option>
+                            {% for cargo in cargos %}
+                            <option value="{{ cargo.IdCargo }}" {% if empleado.IdCargo == cargo.IdCargo %}selected{% endif %}>
+                                {{ cargo.NombreCargo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="help-text">Cargo del empleado</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Salario">
+                            <i class="fas fa-money-bill"></i> Salario <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Salario" name="Salario" 
+                               value="{{ empleado.Salario }}" step="1000" min="0" required>
+                        <small class="help-text">Salario mensual en pesos</small>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="FechaContratacion">
+                        <i class="fas fa-calendar-alt"></i> Fecha de Contratación <span class="required">*</span>
+                    </label>
+                    <input type="date" id="FechaContratacion" name="FechaContratacion" 
+                           value="{{ empleado.FechaContratacion }}" required>
+                    <small class="help-text">Fecha de inicio del empleado</small>
+                </div>
+
+                <div class="card-footer">
+                    <a href="/empleado_listar" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Actualizar Empleado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

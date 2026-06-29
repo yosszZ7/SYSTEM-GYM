@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Definir Día de Rutina{% endblock %}
+{% block breadcrumb %}Rutinas / Definir Día{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-calendar-week"></i> Definir Día de Rutina</h1>
+            <p>Defina los enfoques musculares para un día de la semana</p>
+        </div>
+        <a href="/rutina_hoy" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-calendar-week"></i> Datos del Día</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/rutina_definir_dia">
+                <!-- SpDefinirDiaRutina: IdRutinaCliente, IdDiaSemana, IdEnfoqueMuscular1, IdEnfoqueMuscular2, NotaGeneral -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="IdRutinaCliente">
+                            <i class="fas fa-clipboard-list"></i> Rutina <span class="required">*</span>
+                        </label>
+                        <select id="IdRutinaCliente" name="IdRutinaCliente" required>
+                            <option value="">Seleccionar rutina...</option>
+                            <!-- Estos valores vienen de la base de datos -->
+                            <option value="1">Rutina de Juan Pérez</option>
+                            <option value="2">Rutina de Ana Gómez</option>
+                        </select>
+                        <small class="help-text">Rutina a modificar</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdDiaSemana">
+                            <i class="fas fa-calendar-day"></i> Día de la Semana <span class="required">*</span>
+                        </label>
+                        <select id="IdDiaSemana" name="IdDiaSemana" required>
+                            <option value="">Seleccionar día...</option>
+                            <!-- Estos valores vienen de SpListarDiasSemana -->
+                            <option value="1">Lunes</option>
+                            <option value="2">Martes</option>
+                            <option value="3">Miércoles</option>
+                            <option value="4">Jueves</option>
+                            <option value="5">Viernes</option>
+                            <option value="6">Sábado</option>
+                            <option value="7">Domingo</option>
+                        </select>
+                        <small class="help-text">Día de la semana a definir</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdEnfoqueMuscular1">
+                            <i class="fas fa-muscle"></i> Enfoque Muscular 1 <span class="required">*</span>
+                        </label>
+                        <select id="IdEnfoqueMuscular1" name="IdEnfoqueMuscular1" required>
+                            <option value="">Seleccionar grupo...</option>
+                            <!-- Estos valores vienen de SpListarGruposMusculares -->
+                            <option value="1">Pecho</option>
+                            <option value="2">Espalda</option>
+                            <option value="3">Piernas</option>
+                            <option value="4">Hombros</option>
+                            <option value="5">Bíceps</option>
+                            <option value="6">Tríceps</option>
+                            <option value="7">Abdomen</option>
+                            <option value="8">Glúteos</option>
+                        </select>
+                        <small class="help-text">Grupo muscular principal</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdEnfoqueMuscular2">
+                            <i class="fas fa-muscle"></i> Enfoque Muscular 2
+                        </label>
+                        <select id="IdEnfoqueMuscular2" name="IdEnfoqueMuscular2">
+                            <option value="">Ninguno</option>
+                            <option value="1">Pecho</option>
+                            <option value="2">Espalda</option>
+                            <option value="3">Piernas</option>
+                            <option value="4">Hombros</option>
+                            <option value="5">Bíceps</option>
+                            <option value="6">Tríceps</option>
+                            <option value="7">Abdomen</option>
+                            <option value="8">Glúteos</option>
+                        </select>
+                        <small class="help-text">Grupo muscular secundario (opcional)</small>
+                    </div>
+                </div>
+
+                <!-- Nota General -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="NotaGeneral">
+                        <i class="fas fa-comment"></i> Nota General
+                    </label>
+                    <textarea id="NotaGeneral" name="NotaGeneral" 
+                              rows="2" placeholder="Notas generales para este día..." maxlength="250"></textarea>
+                    <small class="help-text">Opcional - Máximo 250 caracteres</small>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Definir Día
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

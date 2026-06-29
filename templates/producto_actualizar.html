@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Actualizar Producto{% endblock %}
+{% block breadcrumb %}Productos / Actualizar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-box-edit"></i> Actualizar Producto</h1>
+            <p>Modifique los datos del producto seleccionado</p>
+        </div>
+        <a href="/producto_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-box"></i> Datos del Producto</h2>
+            <span class="badge badge-warning"><i class="fas fa-edit"></i> ID: {{ producto.IdProducto }}</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/producto_actualizar/{{ producto.IdProducto }}">
+                <!-- SpActualizarProducto: IdProducto, NombreProducto, Marca, Categoria, Precio -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="NombreProducto">
+                            <i class="fas fa-tag"></i> Nombre del Producto <span class="required">*</span>
+                        </label>
+                        <input type="text" id="NombreProducto" name="NombreProducto" 
+                               value="{{ producto.NombreProducto }}" maxlength="100" required>
+                        <small class="help-text">Máximo 100 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Marca">
+                            <i class="fas fa-trademark"></i> Marca <span class="required">*</span>
+                        </label>
+                        <input type="text" id="Marca" name="Marca" 
+                               value="{{ producto.Marca }}" maxlength="100" required>
+                        <small class="help-text">Máximo 100 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Categoria">
+                            <i class="fas fa-tags"></i> Categoría <span class="required">*</span>
+                        </label>
+                        <select id="Categoria" name="Categoria" required>
+                            <option value="">Seleccionar categoría...</option>
+                            <option value="Suplementos" {% if producto.Categoria == 'Suplementos' %}selected{% endif %}>Suplementos</option>
+                            <option value="Ropa" {% if producto.Categoria == 'Ropa' %}selected{% endif %}>Ropa</option>
+                            <option value="Accesorios" {% if producto.Categoria == 'Accesorios' %}selected{% endif %}>Accesorios</option>
+                            <option value="Bebidas" {% if producto.Categoria == 'Bebidas' %}selected{% endif %}>Bebidas</option>
+                            <option value="Equipos" {% if producto.Categoria == 'Equipos' %}selected{% endif %}>Equipos</option>
+                        </select>
+                        <small class="help-text">Categoría del producto</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Precio">
+                            <i class="fas fa-dollar-sign"></i> Precio <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Precio" name="Precio" 
+                               value="{{ producto.Precio }}" step="100" min="0" required>
+                        <small class="help-text">Precio en pesos (no puede ser negativo)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Stock">
+                            <i class="fas fa-boxes"></i> Stock Actual <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Stock" name="Stock" 
+                               value="{{ producto.Stock }}" min="0" required style="width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text); font-size: 14px;">
+                        <small class="help-text">Cantidad actual disponible en inventario</small>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <a href="/producto_listar" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Actualizar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

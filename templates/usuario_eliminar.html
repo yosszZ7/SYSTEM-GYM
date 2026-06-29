@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Usuario{% endblock %}
+{% block breadcrumb %}Usuarios / Eliminar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-user-minus"></i> Eliminar Usuario</h1>
+            <p class="text-muted">Seleccione el usuario que desea eliminar del sistema</p>
+        </div>
+        <a href="/usuario_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h2>
+            <span class="badge badge-danger"><i class="fas fa-trash"></i> Acción Irreversible</span>
+        </div>
+        
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>¡Advertencia!</strong>
+                    <p>Esta acción eliminará permanentemente al usuario del sistema. No se puede deshacer.</p>
+                </div>
+            </div>
+
+            <form method="POST" action="/api/usuarios/eliminar">
+                <div class="form-group">
+                    <label for="IdUsuario">
+                        <i class="fas fa-user"></i> Seleccionar Usuario <span class="required">*</span>
+                    </label>
+                    <select id="IdUsuario" name="IdUsuario" required>
+                        <option value="">Seleccione un usuario...</option>
+                        {% for u in usuarios %}
+                        <option value="{{ u.IdUsuario }}">{{ u.NombreUsuario }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="help-text">Seleccione el usuario que desea eliminar</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Eliminar Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Dark blue theme */
+    .container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #1a2a4a;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header-left h1 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #e8edf5;
+        margin: 0 0 0.3rem 0;
+    }
+
+    .page-header-left h1 i {
+        color: #ef4444;
+        margin-right: 10px;
+    }
+
+    .page-header-left .text-muted {
+        font-size: 0.95rem;
+        color: #7a8aa0;
+        margin: 0;
+    }
+
+    .btn {
+        padding: 0.7rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        height: 44px;
+    }
+
+    .btn-secondary {
+        background: #1a2a4a;
+        color: #7a8aa0;
+    }
+
+    .btn-secondary:hover {
+        background: #2a3a5a;
+        color: #e0e7f0;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: #ffffff;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .card {
+        background: #0f1f3a;
+        border-radius: 12px;
+        border: 1px solid #1a2a4a;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.2rem 1.5rem;
+        background: #0a1628;
+        border-bottom: 1px solid #1a2a4a;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #e8edf5;
+    }
+
+    .card-header h2 i {
+        color: #ef4444;
+        margin-right: 10px;
+    }
+
+    .card-header .badge {
+        background: #ef4444;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .card-header .badge i {
+        margin-right: 5px;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #e8edf5;
+        font-size: 0.95rem;
+    }
+
+    .form-group label i {
+        color: #4a8cf7;
+        margin-right: 8px;
+        width: 18px;
+    }
+
+    .form-group label .required {
+        color: #ef4444;
+        margin-left: 2px;
+    }
+
+    .form-group select {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        font-size: 1rem;
+        border: 2px solid #1a2a4a;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background: #0a1628;
+        color: #e0e7f0;
+        font-family: inherit;
+        height: 48px;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8aa0' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        padding-right: 40px;
+    }
+
+    .form-group select option {
+        background: #0a1628;
+        color: #e0e7f0;
+        padding: 10px;
+    }
+
+    .form-group select:focus {
+        border-color: #4a8cf7;
+        background: #0a1628;
+        box-shadow: 0 0 0 3px rgba(74, 140, 247, 0.15);
+        outline: none;
+    }
+
+    .help-text {
+        display: block;
+        margin-top: 0.4rem;
+        font-size: 0.8rem;
+        color: #5a6a80;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #1a2a4a;
+        flex-wrap: wrap;
+    }
+
+    /* Alert styles */
+    .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        border: 1px solid transparent;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-warning {
+        background: #1a2a3a;
+        color: #ffd700;
+        border-color: #f59e0b40;
+    }
+
+    .alert-warning i {
+        color: #f59e0b;
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    .alert-warning strong {
+        color: #ffd700;
+    }
+
+    .alert-warning p {
+        margin: 4px 0 0 0;
+        color: #b0bcc8;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 1rem;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .page-header-left h1 {
+            font-size: 1.4rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .form-group select {
+            font-size: 0.95rem;
+        }
+
+        .alert {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 1rem;
+        }
+
+        .card-header h2 {
+            font-size: 1rem;
+        }
+
+        .btn {
+            height: 40px;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

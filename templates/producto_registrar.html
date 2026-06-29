@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Producto{% endblock %}
+{% block breadcrumb %}Productos / Registrar{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-box"></i> Registrar Producto</h1>
+            <p>Complete los datos para agregar un nuevo producto al inventario</p>
+        </div>
+        <a href="/producto_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-box"></i> Datos del Producto</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/producto_registrar">
+                <!-- SpRegistrarProducto: NombreProducto, Marca, Categoria, Precio -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="NombreProducto">
+                            <i class="fas fa-tag"></i> Nombre del Producto <span class="required">*</span>
+                        </label>
+                        <input type="text" id="NombreProducto" name="NombreProducto" 
+                               placeholder="Ej: Proteína Whey" maxlength="100" required>
+                        <small class="help-text">Máximo 100 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Marca">
+                            <i class="fas fa-trademark"></i> Marca <span class="required">*</span>
+                        </label>
+                        <input type="text" id="Marca" name="Marca" 
+                               placeholder="Ej: Optimum Nutrition" maxlength="100" required>
+                        <small class="help-text">Máximo 100 caracteres</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Categoria">
+                            <i class="fas fa-tags"></i> Categoría <span class="required">*</span>
+                        </label>
+                        <select id="Categoria" name="Categoria" required>
+                            <option value="">Seleccionar categoría...</option>
+                            <option value="Suplementos">Suplementos</option>
+                            <option value="Ropa">Ropa</option>
+                            <option value="Accesorios">Accesorios</option>
+                            <option value="Bebidas">Bebidas</option>
+                            <option value="Equipos">Equipos</option>
+                        </select>
+                        <small class="help-text">Categoría del producto</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Precio">
+                            <i class="fas fa-dollar-sign"></i> Precio <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Precio" name="Precio" 
+                               placeholder="Ej: 120000" step="100" min="0" required>
+                        <small class="help-text">Precio en pesos (debe ser mayor a 0)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Stock">
+                            <i class="fas fa-boxes"></i> Stock Inicial <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Stock" name="Stock" 
+                               value="0" min="0" required style="width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text); font-size: 14px;">
+                        <small class="help-text">Cantidad inicial disponible en inventario</small>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

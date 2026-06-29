@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Reporte de Ventas por Producto</h1>
+
+<table class="data-table">
+    <thead><tr><th>IdProducto</th><th>NombreProducto</th><th>TotalVendido</th><th>TotalIngresos</th></tr></thead>
+    <tbody>
+        {% for venta in ventas_producto %}
+        <tr><td>{{ venta.IdProducto }}</td><td>{{ venta.NombreProducto }}</td><td>{{ venta.TotalVendido }}</td><td>${{ venta.TotalIngresos }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

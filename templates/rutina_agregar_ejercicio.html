@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Agregar Ejercicio a Rutina{% endblock %}
+{% block breadcrumb %}Rutinas / Agregar Ejercicio{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-plus"></i> Agregar Ejercicio a Rutina</h1>
+            <p>Agregue un ejercicio a un día específico de la rutina</p>
+        </div>
+        <a href="/rutina_hoy" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-plus"></i> Datos del Ejercicio</h2>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" action="/rutina_agregar_ejercicio">
+                <!-- SpAgregarEjercicioRutinaDia: IdRutinaCliente, IdDiaSemana, Orden, IdEjercicio, Series, Repeticiones, PesoRecomendado, DescansoSegundos, Nota -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="IdRutinaCliente">
+                            <i class="fas fa-clipboard-list"></i> Rutina <span class="required">*</span>
+                        </label>
+                        <select id="IdRutinaCliente" name="IdRutinaCliente" required>
+                            <option value="">Seleccionar rutina...</option>
+                            <option value="1">Rutina de Juan Pérez</option>
+                            <option value="2">Rutina de Ana Gómez</option>
+                        </select>
+                        <small class="help-text">Rutina a modificar</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdDiaSemana">
+                            <i class="fas fa-calendar-day"></i> Día de la Semana <span class="required">*</span>
+                        </label>
+                        <select id="IdDiaSemana" name="IdDiaSemana" required>
+                            <option value="">Seleccionar día...</option>
+                            <option value="1">Lunes</option>
+                            <option value="2">Martes</option>
+                            <option value="3">Miércoles</option>
+                            <option value="4">Jueves</option>
+                            <option value="5">Viernes</option>
+                            <option value="6">Sábado</option>
+                            <option value="7">Domingo</option>
+                        </select>
+                        <small class="help-text">Día de la semana</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="IdEjercicio">
+                            <i class="fas fa-dumbbell"></i> Ejercicio <span class="required">*</span>
+                        </label>
+                        <select id="IdEjercicio" name="IdEjercicio" required>
+                            <option value="">Seleccionar ejercicio...</option>
+                            <!-- Estos valores vienen de SpListarEjercicios -->
+                            <option value="1">Press de Banca</option>
+                            <option value="2">Sentadillas</option>
+                            <option value="3">Peso Muerto</option>
+                            <option value="4">Dominadas</option>
+                            <option value="5">Flexiones</option>
+                        </select>
+                        <small class="help-text">Ejercicio a agregar</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Orden">
+                            <i class="fas fa-sort-numeric"></i> Orden <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Orden" name="Orden" 
+                               placeholder="Ej: 1" min="1" required>
+                        <small class="help-text">Orden de ejecución</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Series">
+                            <i class="fas fa-repeat"></i> Series <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Series" name="Series" 
+                               placeholder="Ej: 4" min="1" required>
+                        <small class="help-text">Número de series</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="Repeticiones">
+                            <i class="fas fa-hashtag"></i> Repeticiones <span class="required">*</span>
+                        </label>
+                        <input type="text" id="Repeticiones" name="Repeticiones" 
+                               placeholder="Ej: 10-12" maxlength="20" required>
+                        <small class="help-text">Rango de repeticiones</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="PesoRecomendado">
+                            <i class="fas fa-weight"></i> Peso Recomendado
+                        </label>
+                        <input type="text" id="PesoRecomendado" name="PesoRecomendado" 
+                               placeholder="Ej: 40 kg" maxlength="50">
+                        <small class="help-text">Opcional</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="DescansoSegundos">
+                            <i class="fas fa-clock"></i> Descanso (segundos)
+                        </label>
+                        <input type="number" id="DescansoSegundos" name="DescansoSegundos" 
+                               placeholder="Ej: 60" min="0">
+                        <small class="help-text">Opcional - Segundos de descanso</small>
+                    </div>
+                </div>
+
+                <!-- Nota -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="Nota">
+                        <i class="fas fa-comment"></i> Nota del Ejercicio
+                    </label>
+                    <textarea id="Nota" name="Nota" 
+                              rows="2" placeholder="Notas específicas para este ejercicio..." maxlength="250"></textarea>
+                    <small class="help-text">Opcional - Máximo 250 caracteres</small>
+                </div>
+
+                <!-- Aviso -->
+                <div class="alert alert-warning" style="margin-top: 20px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">Importante</div>
+                        <div class="alert-message">Primero debe definir los enfoques del día usando "Definir Día de Rutina".</div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="card-footer">
+                    <button type="reset" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Agregar Ejercicio
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Productos{% endblock %}
+{% block breadcrumb %}Productos / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-box"></i> Lista de Productos</h1>
+            <p>Gestión completa de todos los productos registrados</p>
+        </div>
+        <a href="/producto_registrar" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Nuevo Producto
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Productos Registrados</h2>
+            <span class="badge badge-info">{{ productos|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Producto</th>
+                            <th>Marca</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td>{{ producto.IdProducto }}</td>
+                            <td>{{ producto.NombreProducto }}</td>
+                            <td>{{ producto.Marca }}</td>
+                            <td>{{ producto.Categoria }}</td>
+                            <td>${{ producto.Precio }}</td>
+                            <td>{{ producto.Stock }}</td>
+                            <td>{{ producto.FechaRegistro }}</td>
+                            <td class="table-actions">
+                                <!--  CORRECTO -->
+                                <a href="/producto_actualizar/{{ producto.IdProducto }}" class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">No hay productos registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

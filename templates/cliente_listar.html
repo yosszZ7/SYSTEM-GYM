@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Clientes{% endblock %}
+{% block breadcrumb %}Clientes / Lista{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-users"></i> Lista de Clientes</h1>
+            <p>Gestión completa de todos los clientes registrados</p>
+        </div>
+        <a href="/cliente_registrar" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Nuevo Cliente
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Clientes Registrados</h2>
+            <span class="badge badge-info">{{ clientes|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Primer Nombre</th>
+                            <th>Segundo Nombre</th>
+                            <th>Primer Apellido</th>
+                            <th>Segundo Apellido</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                        <tr>
+                            <td>{{ cliente.IdCliente }}</td>
+                            <td>{{ cliente.PrimerNombre }}</td>
+                            <td>{{ cliente.SegundoNombre or '-' }}</td>
+                            <td>{{ cliente.PrimerApellido }}</td>
+                            <td>{{ cliente.SegundoApellido or '-' }}</td>
+                            <td>{{ cliente.Telefono }}</td>
+                            <td>{{ cliente.Correo }}</td>
+                            <td>{{ cliente.FechaRegistro }}</td>
+                            <td class="table-actions">
+                                <!--  CORRECTO: usa /id en lugar de ?id= -->
+                                <a href="/cliente_actualizar/{{ cliente.IdCliente }}" class="btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <!-- ELIMINAR: si no tienes ruta, quítalo o agrega la ruta -->
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center">No hay clientes registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                color: #333333;
+                background-color: #f4f6f9;
+                margin: 0;
+                padding: 20px;
+            }
+            .card {
+                max-width: 600px;
+                background: #ffffff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+                border: 1px solid #e1e8ed;
+                margin: 0 auto;
+            }
+            .header {
+                background-color: #0f172a;
+                color: #ffffff;
+                padding: 20px;
+                text-align: center;
+            }
+            .header h2 {
+                margin: 0;
+                font-size: 20px;
+                letter-spacing: 0.5px;
+            }
+            .content {
+                padding: 25px;
+            }
+            .badge {
+                display: inline-block;
+                padding: 5px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #ffffff;
+            }
+            .badge-critico { background-color: #ef4444; }
+            .badge-medio { background-color: #f59e0b; }
+            .badge-bajo { background-color: #3b82f6; }
+            .meta-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+            .meta-table td {
+                padding: 10px 8px;
+                border-bottom: 1px solid #f0f3f6;
+            }
+            .meta-table td.label {
+                font-weight: bold;
+                color: #64748b;
+                width: 30%;
+            }
+            .desc-box {
+                background: #f8fafc;
+                border-left: 4px solid #0f172a;
+                padding: 15px;
+                margin-top: 15px;
+                font-family: Consolas, Monaco, monospace;
+                white-space: pre-wrap;
+                font-size: 13px;
+                color: #334155;
+            }
+            .footer {
+                background-color: #f8fafc;
+                text-align: center;
+                padding: 15px;
+                font-size: 12px;
+                color: #64748b;
+                border-top: 1px solid #e2e8f0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="header">
+                <h2>⚠️ REPORTE DE ERROR DETECTADO</h2>
+            </div>
+            <div class="content">
+                <p>Se ha registrado un nuevo reporte de fallo en <strong>GYM SISTEM</strong> con los siguientes detalles:</p>
+                
+                <table class="meta-table">
+                    <tr>
+                        <td class="label">ID Reporte</td>
+                        <td>#5</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Módulo Afectado</td>
+                        <td><strong>Dashboard</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Prioridad / Nivel</td>
+                        <td>
+                            <span class="badge badge-medio">Medio</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Reportado por</td>
+                        <td>roberto</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Fecha y Hora</td>
+                        <td>2026-06-23 16:00:00</td>
+                    </tr>
+                </table>
+                
+                <h3 style="margin-top: 20px; color: #0f172a; font-size: 15px;">Descripción del Error:</h3>
+                <div class="desc-box">Test error: Dashboard charts not loading on mobile screens.</div>
+            </div>
+            <div class="footer">
+                Este correo fue autogenerado por el sistema de soporte técnico de GYM SISTEM.
+            </div>
+        </div>
+    </body>
+    </html>
+    

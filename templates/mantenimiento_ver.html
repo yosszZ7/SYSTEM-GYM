@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Mantenimientos{% endblock %}
+{% block breadcrumb %}Maquinaria / Mantenimientos{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-tools"></i> Historial de Mantenimientos</h1>
+            <p>Registro y seguimiento del mantenimiento preventivo y correctivo de la maquinaria del gimnasio</p>
+        </div>
+        <a href="/mantenimiento_registrar" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Registrar Mantenimiento
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-list"></i> Mantenimientos Programados</h2>
+            <span class="badge badge-info">{{ mantenimientos|length }} registros</span>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ID Máquina</th>
+                            <th>Máquina</th>
+                            <th>Descripción del Trabajo</th>
+                            <th>Fecha Mantenimiento</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in mantenimientos %}
+                        <tr>
+                            <td><strong>{{ m.IdMantenimiento }}</strong></td>
+                            <td>{{ m.IdMaquina }}</td>
+                            <td><strong>{{ m.NombreMaquina or m.NombreMaquinaria or '-' }}</strong></td>
+                            <td>{{ m.Descripcion }}</td>
+                            <td>{{ m.FechaMantenimiento }}</td>
+                            <td class="table-actions">
+                                <a href="/mantenimiento_editar/{{ m.IdMantenimiento }}" class="btn-edit-item" title="Editar Mantenimiento" style="color: var(--primary); font-size: 14px; margin-right: 12px; text-decoration: none; display: inline-block; transition: transform 0.2s ease;">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="eliminarMantenimiento({{ m.IdMantenimiento }})" class="btn-delete-item" title="Eliminar Mantenimiento" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 8px; font-size: 14px; transition: transform 0.2s ease; display: inline-block;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay mantenimientos registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function eliminarMantenimiento(id) {
+    if (confirm('¿Está seguro de que desea eliminar este registro de mantenimiento? Esta acción no se puede deshacer.')) {
+        fetch('/api/mantenimiento/eliminar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ IdMantenimiento: id })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al eliminar mantenimiento: ' + data.error);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Ocurrió un error al procesar la solicitud.');
+        });
+    }
+}
+</script>
+{% endblock %}

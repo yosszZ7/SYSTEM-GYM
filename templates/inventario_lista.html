@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Lista de Inventario</h1>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>IdInventario</th>
+            <th>IdProducto</th>
+            <th>NombreProducto</th>
+            <th>Marca</th>
+            <th>Categoria</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in inventario %}
+        <tr>
+            <td>{{ item.IdInventario }}</td>
+            <td>{{ item.IdProducto }}</td>
+            <td>{{ item.NombreProducto }}</td>
+            <td>{{ item.Marca }}</td>
+            <td>{{ item.Categoria }}</td>
+            <td>{{ item.Precio }}</td>
+            <td>{{ item.Stock }}</td>
+            <td><a href="/inventario_movimiento?id={{ item.IdProducto }}">Ver Movimientos</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

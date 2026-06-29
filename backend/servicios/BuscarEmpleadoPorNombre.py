@@ -1,0 +1,51 @@
+from ConexionBD import ConectarBD
+
+def BuscarEmpleadoPorNombre(Nombre):
+    if not Nombre or not Nombre.strip():
+        return False, "Debe ingresar un nombre."
+    Conexion = None
+    try:
+        Conexion = ConectarBD()
+        if Conexion is None:
+            return False, "No se pudo conectar."
+        Cursor = Conexion.cursor()
+        
+        palabras = Nombre.strip().split()
+        if palabras:
+            condiciones = []
+            parametros = []
+            for p in palabras:
+                condiciones.append("(E.PrimerNombre COLLATE Latin1_General_CI_AI LIKE ? OR E.SegundoNombre COLLATE Latin1_General_CI_AI LIKE ? OR E.PrimerApellido COLLATE Latin1_General_CI_AI LIKE ? OR E.SegundoApellido COLLATE Latin1_General_CI_AI LIKE ?)")
+                parametros.extend([f"%{p}%", f"%{p}%", f"%{p}%", f"%{p}%"])
+            
+            where_clause = " AND ".join(condiciones)
+            sql = f"""
+            SELECT
+                E.IdEmpleado,
+                E.PrimerNombre,
+                E.SegundoNombre,
+                E.PrimerApellido,
+                E.SegundoApellido,
+                E.Telefono,
+                E.Correo,
+                E.FechaContratacion,
+                E.Salario,
+                C.NombreCargo
+            FROM Empleado E
+            INNER JOIN Cargo C ON E.IdCargo = C.IdCargo
+            WHERE {where_clause}
+            ORDER BY E.PrimerNombre, E.PrimerApellido
+            """
+            Cursor.execute(sql, parametros)
+        else:
+            return True, []
+            
+        columnas = [desc[0] for desc in Cursor.description] if Cursor.description else []
+        filas = Cursor.fetchall()
+        empleados = [dict(zip(columnas, fila)) for fila in filas] if columnas else []
+        return True, empleados
+    except Exception as e:
+        return False, f"Error: {str(e)}"
+    finally:
+        if Conexion:
+            Conexion.close()
