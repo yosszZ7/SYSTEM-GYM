@@ -1728,15 +1728,20 @@ def rutina_asignar():
         else:
             flash(f'Error: {res}', 'error')
             
-    _, clientes = ListarClientes()
     clientes_filtrados = []
-    if clientes:
+    conexion = ConectarBD()
+    if conexion:
+        cursor = conexion.cursor()
+        cursor.execute("SELECT IdCliente, PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido, RequiereEntrenador FROM Cliente")
+        col_names = [desc[0] for desc in cursor.description]
+        clientes = [dict(zip(col_names, row)) for row in cursor.fetchall()]
         clientes_filtrados = [
             c for c in clientes 
             if c.get('RequiereEntrenador') == 1 
             or c.get('RequiereEntrenador') is True 
             or str(c.get('RequiereEntrenador')) == '1'
         ]
+        conexion.close()
     return render_template('rutina_asignar.html', usuario=session.get('usuario_nombre'), clientes=clientes_filtrados)
 
 @app.route('/api/rutina/guardar_completa', methods=['POST'])
