@@ -840,9 +840,16 @@ def cliente_perfil(id):
             pass
             
         # 6. Listas para los dropdowns
-        cursor.execute("SELECT IdEmpleado, PrimerNombre + ' ' + PrimerApellido AS Nombre FROM Empleado WHERE Cargo = 'Entrenador' OR Cargo = 'entrenador'")
-        col_emp = [desc[0] for desc in cursor.description]
-        entrenadores = [dict(zip(col_emp, r)) for r in cursor.fetchall()]
+        cursor.execute("EXEC SpListarEntrenadores")
+        entrenadores = []
+        if cursor.description:
+            col_emp = [desc[0] for desc in cursor.description]
+            for r in cursor.fetchall():
+                row_dict = dict(zip(col_emp, r))
+                entrenadores.append({
+                    'IdEmpleado': row_dict.get('IdEmpleado'),
+                    'Nombre': row_dict.get('NombreCompleto')
+                })
         
         cursor.execute("SELECT IdMembresia, NombreMembresia, Precio FROM Membresia")
         col_memb = [desc[0] for desc in cursor.description]
@@ -856,7 +863,7 @@ def cliente_perfil(id):
         col_ej = [desc[0] for desc in cursor.description]
         ejercicios = [dict(zip(col_ej, r)) for r in cursor.fetchall()]
         
-        cursor.execute("SELECT IdEnfoqueMuscular, NombreEnfoque FROM EnfoqueMuscular ORDER BY NombreEnfoque")
+        cursor.execute("SELECT IdGrupoMuscular AS IdEnfoqueMuscular, NombreGrupo AS NombreEnfoque FROM GrupoMuscular ORDER BY NombreGrupo")
         col_enf = [desc[0] for desc in cursor.description]
         enfoques = [dict(zip(col_enf, r)) for r in cursor.fetchall()]
         
