@@ -2018,7 +2018,7 @@ function initDarkMode() {
     var savedTheme = localStorage.getItem('theme') || 'light';
     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
-    var initialTheme = savedTheme === 'dark' || (savedTheme === 'system' && prefersDark) ? 'dark' : 'light';
+    var initialTheme = savedTheme === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', initialTheme);
     
     themeToggle.innerHTML = initialTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
