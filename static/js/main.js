@@ -152,7 +152,7 @@ const CONFIG = {
     MAX_NOTIFICATIONS: 50,
     MAX_RECENT_ACTIVITY: 10,
     PAGINATION_LIMIT: 15,
-    CHART_COLORS: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#e0e7ff', '#c7d2fe'],
+    CHART_COLORS: ['#F28C28', '#FA9E4E', '#FCB87A', '#FCD0A6', '#FCE3CC', '#FFF0DF', '#FFF7ED', '#FFE8D6'],
     MONTHS: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
     DAYS: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
     STATUS_COLORS: {
@@ -160,7 +160,7 @@ const CONFIG = {
         error: '#ef4444',
         warning: '#f59e0b',
         info: '#4a8cf7',
-        primary: '#2563eb',
+        primary: '#F28C28',
         secondary: '#6b7280',
         dark: '#1f2937',
         light: '#f3f4f6'
@@ -2489,8 +2489,8 @@ async function cargarGraficos() {
         try {
             var ctx = ingresosCanvas.getContext('2d');
             var gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.3)');
-            gradient.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+            gradient.addColorStop(0, 'rgba(242, 140, 40, 0.3)');
+            gradient.addColorStop(1, 'rgba(242, 140, 40, 0.02)');
             
             charts.ingresos = new Chart(ingresosCanvas, {
                 type: 'line',
@@ -2499,12 +2499,12 @@ async function cargarGraficos() {
                     datasets: [{
                         label: 'Ingresos',
                         data: [12000, 15000, 18000, 22000, 25000, 28000, 30000, 32000, 29000, 35000, 38000, 42000],
-                        borderColor: '#2563eb',
+                        borderColor: '#F28C28',
                         backgroundColor: gradient,
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointBackgroundColor: '#2563eb',
+                        pointBackgroundColor: '#F28C28',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
                         pointRadius: 4

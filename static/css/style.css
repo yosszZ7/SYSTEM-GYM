@@ -18,25 +18,25 @@
     --primary-gradient: linear-gradient(135deg, #F28C28 0%, #D77218 100%);
     
     /* Fondos con profundidad */
-    --bg-primary: #FFF7ED;
-    --bg-secondary: #F5E6D3;
-    --bg-tertiary: #F3E1CB;
-    --bg-hover: #FCE3CC;
-    --bg-sidebar: linear-gradient(180deg, #4A3728 0%, #8B6F5A 100%);
-    --bg-glass: rgba(255, 247, 237, 0.85);
-    --bg-hero: linear-gradient(135deg, #4A3728 0%, #8B6F5A 50%, #4A3728 100%);
+    --bg-primary: #FFFDF9;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #FDF6EE;
+    --bg-hover: #FBECE0;
+    --bg-sidebar: #FAF1E6;
+    --bg-glass: rgba(255, 253, 249, 0.85);
+    --bg-hero: linear-gradient(135deg, #FAF1E6 0%, #FFFDF9 100%);
     
     /* Textos - Café Oscuro y Claro/Taupe */
     --text: #4A3728;
     --text-secondary: #8B6F5A;
     --text-tertiary: #8B6F5A;
-    --text-muted: #8B6F5A;
-    --text-inverse: #FFF7ED;
+    --text-muted: #A69282;
+    --text-inverse: #FFFFFF;
     --text-light: #8B6F5A;
     
     /* Bordes */
-    --border-color: #E5D5C3;
-    --border-light: #F0E0CE;
+    --border-color: #EFE6DC;
+    --border-light: #F7EFE5;
     --border-medium: #8B6F5A;
     --border-active: #F28C28;
     
@@ -2621,16 +2621,16 @@ p, label, span, td, th {
 .welcome-content h1 {
     font-size: 28px;
     font-weight: 700;
-    color: white;
+    color: var(--text);
     margin-bottom: 8px;
 }
 
 .welcome-content h1 span {
-    color: #60a5fa;
+    color: var(--primary);
 }
 
 .welcome-content p {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
     font-size: 15px;
     margin-bottom: 0;
 }
@@ -2641,11 +2641,11 @@ p, label, span, td, th {
     gap: 12px;
     margin-top: 12px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-secondary);
 }
 
 .welcome-content .welcome-date i {
-    color: #60a5fa;
+    color: var(--primary);
 }
 
 .welcome-image {
