@@ -9,36 +9,36 @@
 
 /* ========== VARIABLES GLOBALES PREMIUM ========== */
 :root {
-    /* Colores principales - Azul premium deportivo */
-    --primary: #265bcd;
-    --primary-dark: #c3cce4;
-    --primary-light: #ced2d9;
-    --primary-bg: #eef2ff;
-    --primary-glow: rgba(161, 165, 175, 0.15);
-    --primary-gradient: linear-gradient(135deg, #1e3a5f 0%, #1a56db 100%);
+    /* Colores principales - Naranja y Café Premium */
+    --primary: #F28C28;
+    --primary-dark: #D77218;
+    --primary-light: #FCE3CC;
+    --primary-bg: #FFF7ED;
+    --primary-glow: rgba(242, 140, 40, 0.15);
+    --primary-gradient: linear-gradient(135deg, #F28C28 0%, #D77218 100%);
     
     /* Fondos con profundidad */
-    --bg-primary: #f1f5f9;
-    --bg-secondary: #ffffff;
-    --bg-tertiary: #f8fafc;
-    --bg-hover: #f1f5f9;
-    --bg-sidebar: linear-gradient(180deg, #1e3a5f 0%, #1a56db 100%);
-    --bg-glass: rgba(255, 255, 255, 0.85);
-    --bg-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    --bg-primary: #FFF7ED;
+    --bg-secondary: #F5E6D3;
+    --bg-tertiary: #F3E1CB;
+    --bg-hover: #FCE3CC;
+    --bg-sidebar: linear-gradient(180deg, #4A3728 0%, #8B6F5A 100%);
+    --bg-glass: rgba(255, 247, 237, 0.85);
+    --bg-hero: linear-gradient(135deg, #4A3728 0%, #8B6F5A 50%, #4A3728 100%);
     
-    /* Textos - Mejorados para modo oscuro */
-    --text: #d3d6db;
-    --text-secondary: #b8bec7;
-    --text-tertiary: #3e454e;
-    --text-muted: #434951;
-    --text-inverse: #ffffff;
-    --text-light: #585e64;
+    /* Textos - Café Oscuro y Claro/Taupe */
+    --text: #4A3728;
+    --text-secondary: #8B6F5A;
+    --text-tertiary: #8B6F5A;
+    --text-muted: #8B6F5A;
+    --text-inverse: #FFF7ED;
+    --text-light: #8B6F5A;
     
     /* Bordes */
-    --border-color: #e2e8f0;
-    --border-light: #f1f5f9;
-    --border-medium: #4c5157;
-    --border-active: #2563eb;
+    --border-color: #E5D5C3;
+    --border-light: #F0E0CE;
+    --border-medium: #8B6F5A;
+    --border-active: #F28C28;
     
     /* Colores de estado */
     --success: #10b981;
@@ -113,29 +113,30 @@
 /* ========== DARK THEME COMPLETO - MEJORADO ========== */
 [data-theme="dark"] {
     /* Fondos */
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-tertiary: #2d3748;
-    --bg-hover: #1e293b;
-    --bg-sidebar: linear-gradient(180deg, #0f172a 0%, #1a56db 100%);
-    --bg-glass: rgba(30, 41, 59, 0.85);
-    --bg-hero: linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%);
+    --bg-primary: #1C120B;
+    --bg-secondary: #2B1D12;
+    --bg-tertiary: #3D2C1E;
+    --bg-hover: #3D2C1E;
+    --bg-sidebar: linear-gradient(180deg, #120A05 0%, #2B1D12 100%);
+    --bg-glass: rgba(43, 29, 18, 0.85);
+    --bg-hero: linear-gradient(135deg, #120A05 0%, #1C120B 50%, #120A05 100%);
     
-    /* Textos - Mejor contraste en modo oscuro */
-    --text: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
-    --text-muted: #94a3b8;
-    --text-inverse: #0f172a;
-    --text-light: #f1f5f9;
+    /* Textos */
+    --text: #F5E6D3;
+    --text-secondary: #C4A48A;
+    --text-tertiary: #C4A48A;
+    --text-muted: #8B6F5A;
+    --text-inverse: #1C120B;
+    --text-light: #F5E6D3;
     
     /* Bordes */
-    --border-color: #334155;
-    --border-light: #1e293b;
-    --border-medium: #475569;
+    --border-color: #3D2C1E;
+    --border-light: #2B1D12;
+    --border-medium: #5C4637;
+    --border-active: #F28C28;
     
     /* Sombras */
-    --primary-glow: rgba(59, 130, 246, 0.25);
+    --primary-glow: rgba(242, 140, 40, 0.25);
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.5);
@@ -2478,15 +2479,15 @@ p, label, span, td, th {
 .btn-delete {
     background: transparent;
     border: none;
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: var(--radius-md);
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     transition: all var(--transition-fast);
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 
 .btn-edit {
@@ -2501,13 +2502,13 @@ p, label, span, td, th {
 }
 
 .btn-view {
-    color: var(--text-secondary);
-    background: var(--bg-tertiary);
+    color: var(--primary);
+    background: var(--primary-light);
 }
 
 .btn-view:hover {
-    background: var(--border-color);
-    color: var(--text);
+    background: var(--primary);
+    color: var(--text-inverse);
     transform: translateY(-1px);
 }
 
