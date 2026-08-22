@@ -81,12 +81,6 @@
                         <a href="/cliente_buscar" class="{% if request.endpoint == 'cliente_buscar' %}active{% endif %}">
                             <i class="fas fa-search"></i> Buscar Cliente
                         </a>
-                        <a href="/cliente_asignar_entrenador" class="{% if request.endpoint == 'cliente_asignar_entrenador' %}active{% endif %}">
-                            <i class="fas fa-user-check"></i> Asignar Entrenador
-                        </a>
-                        <a href="/cliente_membresia" class="{% if request.endpoint == 'cliente_membresia' %}active{% endif %}">
-                            <i class="fas fa-id-card"></i> Asignar Membresía
-                        </a>
                         <a href="/cliente_asistencia" class="{% if request.endpoint == 'cliente_asistencia' %}active{% endif %}">
                             <i class="fas fa-calendar-check"></i> Registrar Asistencia
                         </a>
@@ -136,17 +130,8 @@
                         <i class="fas fa-chevron-down dropdown-icon"></i>
                     </a>
                     <div class="submenu">
-                        <a href="/rutina_asignar" class="{% if request.endpoint == 'rutina_asignar' %}active{% endif %}">
-                            <i class="fas fa-plus-circle"></i> Asignar Rutina
-                        </a>
                         <a href="/rutina_hoy" class="{% if request.endpoint == 'rutina_hoy' %}active{% endif %}">
                             <i class="fas fa-calendar-day"></i> Rutina de Hoy
-                        </a>
-                        <a href="/rutina_definir_dia" class="{% if request.endpoint == 'rutina_definir_dia' %}active{% endif %}">
-                            <i class="fas fa-calendar-week"></i> Definir Día
-                        </a>
-                        <a href="/rutina_agregar_ejercicio" class="{% if request.endpoint == 'rutina_agregar_ejercicio' %}active{% endif %}">
-                            <i class="fas fa-plus"></i> Agregar Ejercicio
                         </a>
                     </div>
                 </div>

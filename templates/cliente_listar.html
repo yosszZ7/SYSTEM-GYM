@@ -48,11 +48,12 @@
                             <td>{{ cliente.Correo }}</td>
                             <td>{{ cliente.FechaRegistro }}</td>
                             <td class="table-actions">
-                                <!--  CORRECTO: usa /id en lugar de ?id= -->
+                                <a href="/cliente_perfil/{{ cliente.IdCliente }}" class="btn-view" title="Ver Perfil">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
                                 <a href="/cliente_actualizar/{{ cliente.IdCliente }}" class="btn-edit" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <!-- ELIMINAR: si no tienes ruta, quítalo o agrega la ruta -->
                             </td>
                         </tr>
                         {% else %}

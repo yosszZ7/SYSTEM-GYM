@@ -743,6 +743,143 @@ def cliente_listar():
     _, clientes = ListarClientes()
     return render_template('cliente_listar.html', usuario=session.get('usuario_nombre'), clientes=clientes or [])
 
+@app.route('/cliente_perfil/<int:id>')
+@login_required
+def cliente_perfil(id):
+    from backend.servicios.ConexionBD import ConectarBD
+    conexion = ConectarBD()
+    if not conexion:
+        flash("No se pudo conectar con la base de datos", "error")
+        return redirect(url_for('cliente_listar'))
+    
+    cursor = conexion.cursor()
+    try:
+        # 1. Obtener datos del cliente
+        cursor.execute("""
+            SELECT IdCliente, PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido, Telefono, Correo, FechaRegistro, RequiereEntrenador, IdEntrenador 
+            FROM Cliente 
+            WHERE IdCliente = ?
+        """, (id,))
+        col_names = [desc[0] for desc in cursor.description]
+        row = cursor.fetchone()
+        if not row:
+            flash("Cliente no encontrado", "error")
+            return redirect(url_for('cliente_listar'))
+        
+        cliente = dict(zip(col_names, row))
+        
+        # 2. Obtener nombre del entrenador si tiene asignado
+        entrenador_nombre = None
+        if cliente.get('IdEntrenador'):
+            cursor.execute("SELECT PrimerNombre + ' ' + PrimerApellido FROM Empleado WHERE IdEmpleado = ?", (cliente['IdEntrenador'],))
+            t_row = cursor.fetchone()
+            if t_row:
+                entrenador_nombre = t_row[0]
+                
+        # 3. Obtener membresía activa
+        cursor.execute("EXEC SpObtenerMembresiaActivaCliente ?", (id,))
+        membresia = None
+        if cursor.description:
+            col_m = [desc[0] for desc in cursor.description]
+            m_row = cursor.fetchone()
+            if m_row:
+                membresia = dict(zip(col_m, m_row))
+                
+        # Limpiar el cursor anterior
+        while cursor.nextset():
+            pass
+            
+        # 4. Obtener rutina activa
+        cursor.execute("EXEC SpObtenerRutinaActivaCliente ?", (id,))
+        rutina = None
+        if cursor.description:
+            col_r = [desc[0] for desc in cursor.description]
+            r_row = cursor.fetchone()
+            if r_row:
+                rutina = dict(zip(col_r, r_row))
+            
+        # Limpiar el cursor
+        while cursor.nextset():
+            pass
+            
+        # 5. Si tiene rutina activa, obtener el detalle de días y ejercicios
+        rutina_dias_lista = []
+        if rutina:
+            cursor.execute("EXEC SpListarDetalleRutina ?", (rutina['IdRutinaCliente'],))
+            if cursor.description:
+                col_d = [desc[0] for desc in cursor.description]
+                d_rows = cursor.fetchall()
+                rutina_detalle = [dict(zip(col_d, dr)) for dr in d_rows]
+                
+                # Agrupar por NombreDia
+                rutina_dias = {}
+                for row in rutina_detalle:
+                    day = row.get('NombreDia')
+                    if day not in rutina_dias:
+                        rutina_dias[day] = {
+                            'NombreDia': day,
+                            'EnfoqueMuscular1': row.get('EnfoqueMuscular1'),
+                            'EnfoqueMuscular2': row.get('EnfoqueMuscular2'),
+                            'NotaGeneral': row.get('NotaGeneral'),
+                            'ejercicios': []
+                        }
+                    if row.get('NombreEjercicio'):
+                        rutina_dias[day]['ejercicios'].append({
+                            'Orden': row.get('Orden'),
+                            'NombreEjercicio': row.get('NombreEjercicio'),
+                            'Series': row.get('Series'),
+                            'Repeticiones': row.get('Repeticiones'),
+                            'PesoRecomendado': row.get('PesoRecomendado'),
+                            'DescansoSegundos': row.get('DescansoSegundos'),
+                            'Nota': row.get('Nota')
+                        })
+                rutina_dias_lista = list(rutina_dias.values())
+            
+        # Limpiar el cursor
+        while cursor.nextset():
+            pass
+            
+        # 6. Listas para los dropdowns
+        cursor.execute("SELECT IdEmpleado, PrimerNombre + ' ' + PrimerApellido AS Nombre FROM Empleado WHERE Cargo = 'Entrenador' OR Cargo = 'entrenador'")
+        col_emp = [desc[0] for desc in cursor.description]
+        entrenadores = [dict(zip(col_emp, r)) for r in cursor.fetchall()]
+        
+        cursor.execute("SELECT IdMembresia, NombreMembresia, Precio FROM Membresia")
+        col_memb = [desc[0] for desc in cursor.description]
+        membresias = [dict(zip(col_memb, r)) for r in cursor.fetchall()]
+        
+        cursor.execute("SELECT IdMetodoPago, NombreMetodo AS Nombre FROM MetodoPago")
+        col_mp = [desc[0] for desc in cursor.description]
+        metodos_pago = [dict(zip(col_mp, r)) for r in cursor.fetchall()]
+        
+        cursor.execute("SELECT IdEjercicio, NombreEjercicio FROM Ejercicio ORDER BY NombreEjercicio")
+        col_ej = [desc[0] for desc in cursor.description]
+        ejercicios = [dict(zip(col_ej, r)) for r in cursor.fetchall()]
+        
+        cursor.execute("SELECT IdEnfoqueMuscular, NombreEnfoque FROM EnfoqueMuscular ORDER BY NombreEnfoque")
+        col_enf = [desc[0] for desc in cursor.description]
+        enfoques = [dict(zip(col_enf, r)) for r in cursor.fetchall()]
+        
+        return render_template(
+            'cliente_perfil.html',
+            usuario=session.get('usuario_nombre'),
+            cliente=cliente,
+            entrenador_nombre=entrenador_nombre,
+            membresia=membresia,
+            rutina=rutina,
+            rutina_dias=rutina_dias_lista,
+            entrenadores=entrenadores,
+            membresias=membresias,
+            metodos_pago=metodos_pago,
+            ejercicios=ejercicios,
+            enfoques=enfoques
+        )
+    except Exception as e:
+        flash(f"Error al cargar perfil del cliente: {str(e)}", "error")
+        return redirect(url_for('cliente_listar'))
+    finally:
+        conexion.close()
+
 @app.route('/cliente_registrar', methods=['GET', 'POST'])
 @login_required
 def cliente_registrar():
@@ -827,6 +964,8 @@ def cliente_asignar_entrenador():
         success, res = AsignarEntrenadorCliente(id_cliente, id_entrenador)
         if success:
             flash('Entrenador asignado exitosamente', 'success')
+            if request.form.get('from_profile') == 'true' or (request.referrer and 'cliente_perfil' in request.referrer):
+                return redirect(url_for('cliente_perfil', id=id_cliente))
             return redirect(url_for('cliente_listar'))
         else:
             flash(f'Error: {res}', 'error')
@@ -847,6 +986,8 @@ def cliente_membresia():
         success, res = AsignarMembresia(id_cliente, id_membresia, id_metodo_pago, monto)
         if success:
             flash('Membresía asignada exitosamente', 'success')
+            if request.form.get('from_profile') == 'true' or (request.referrer and 'cliente_perfil' in request.referrer):
+                return redirect(url_for('cliente_perfil', id=id_cliente))
             return redirect(url_for('cliente_listar'))
         else:
             flash(f'Error: {res}', 'error')
@@ -1591,6 +1732,25 @@ def rutina_asignar():
             or str(c.get('RequiereEntrenador')) == '1'
         ]
     return render_template('rutina_asignar.html', usuario=session.get('usuario_nombre'), clientes=clientes_filtrados)
+
+@app.route('/api/rutina/guardar_completa', methods=['POST'])
+@login_required
+def api_rutina_guardar_completa():
+    data = request.json or {}
+    id_cliente = int(data.get('IdCliente'))
+    nombre_rutina = data.get('NombreRutina')
+    fecha_inicio = data.get('FechaInicio')
+    duracion_dias = int(data.get('DuracionDias'))
+    frecuencia_semanal = int(data.get('FrecuenciaSemanal'))
+    dias = data.get('dias', [])
+    
+    success, res = AsignarRutinaCompleta(
+        id_cliente, fecha_inicio, duracion_dias, frecuencia_semanal, nombre_rutina, dias
+    )
+    if success:
+        return jsonify({'success': True, 'message': 'Rutina completa asignada exitosamente.', 'id_rutina': res})
+    else:
+        return jsonify({'success': False, 'error': res}), 500
 
 @app.route('/rutina_hoy')
 @login_required

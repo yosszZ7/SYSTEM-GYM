@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil de Cliente{% endblock %}
+{% block breadcrumb %}Clientes / Perfil{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- Header del Perfil -->
+    <div class="page-header" style="margin-bottom: 20px;">
+        <div class="page-header-left">
+            <h1 style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-id-card" style="color: var(--primary);"></i>
+                {{ cliente.PrimerNombre }} {% if cliente.SegundoNombre and cliente.SegundoNombre != '-' %}{{ cliente.SegundoNombre }}{% endif %} {{ cliente.PrimerApellido }} {% if cliente.SegundoApellido and cliente.SegundoApellido != '-' %}{{ cliente.SegundoApellido }}{% endif %}
+            </h1>
+            <p>ID Cliente: <strong>#{{ cliente.IdCliente }}</strong> | Registrado el: <strong>{{ cliente.FechaRegistro }}</strong></p>
+        </div>
+        <a href="/cliente_listar" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </a>
+    </div>
+
+    <!-- Navegación por Pestañas (Tabs) -->
+    <div style="display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; padding-bottom: 2px;">
+        <button class="tab-btn active" onclick="switchTab(event, 'tab-asignaciones')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+            <i class="fas fa-user-check"></i> Asignaciones
+        </button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-rutina-activa')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+            <i class="fas fa-heartbeat"></i> Rutina Activa
+        </button>
+        <button class="tab-btn" id="btn-tab-wizard" onclick="switchTab(event, 'tab-wizard')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+            <i class="fas fa-calendar-plus"></i> Diseñar Rutina
+        </button>
+    </div>
+
+    <!-- Contenido de las Pestañas -->
+    
+    <!-- PESTAÑA 1: ASIGNACIONES (ENTRENADOR Y MEMBRESÍA) -->
+    <div id="tab-asignaciones" class="tab-content" style="display: block;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Tarjeta de Entrenador -->
+            <div class="card">
+                <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-user-tie" style="margin-right: 8px; color: var(--success);"></i>Entrenador Asignado</h3>
+                </div>
+                <div class="card-body">
+                    {% if cliente.IdEntrenador %}
+                        <div class="alert alert-success" style="margin-bottom: 20px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); padding: 12px; border-radius: 8px; color: #10b981;">
+                            <i class="fas fa-check-circle" style="font-size: 20px; margin-right: 8px; vertical-align: middle;"></i>
+                            <span style="font-size: 1.1rem; font-weight: bold; vertical-align: middle;">{{ entrenador_nombre }}</span>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" style="margin-bottom: 20px; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--warning); padding: 12px; border-radius: 8px; color: #f59e0b;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 20px; margin-right: 8px; vertical-align: middle;"></i>
+                            <span style="font-weight: bold; vertical-align: middle;">Sin entrenador asignado actualmente.</span>
+                        </div>
+                    {% endif %}
+
+                    <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--text-secondary);">Cambiar / Asignar Entrenador:</h4>
+                    <form method="POST" action="/cliente_asignar_entrenador">
+                        <input type="hidden" name="IdCliente" value="{{ cliente.IdCliente }}">
+                        <input type="hidden" name="from_profile" value="true">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <select id="IdEntrenador" name="IdEntrenador" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                                <option value="">Seleccionar entrenador...</option>
+                                {% for e in entrenadores %}
+                                    <option value="{{ e.IdEmpleado }}" {% if cliente.IdEntrenador == e.IdEmpleado %}selected{% endif %}>{{ e.Nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-save"></i> Guardar Asignación
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Membresía -->
+            <div class="card">
+                <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-id-badge" style="margin-right: 8px; color: var(--info);"></i>Membresía Activa</h3>
+                </div>
+                <div class="card-body">
+                    {% if membresia %}
+                        <div style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span style="font-weight: bold; font-size: 1.1rem; color: var(--text-inverse);">{{ membresia.NombreMembresia }}</span>
+                                <span class="badge badge-success" style="font-size: 12px; font-weight: bold; background: var(--success-light); color: var(--success); padding: 4px 10px; border-radius: 12px;">{{ membresia.Estado }}</span>
+                            </div>
+                            <p style="margin: 5px 0; font-size: 0.95rem;">Precio: <strong>${{ membresia.Precio }}</strong></p>
+                            <p style="margin: 5px 0; font-size: 0.95rem;">Vigencia: <strong>{{ membresia.FechaInicio }}</strong> al <strong>{{ membresia.FechaFin }}</strong></p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" style="margin-bottom: 20px; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--warning); padding: 12px; border-radius: 8px; color: #f59e0b;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 20px; margin-right: 8px; vertical-align: middle;"></i>
+                            <span style="font-weight: bold; vertical-align: middle;">Sin membresía activa actualmente.</span>
+                        </div>
+                    {% endif %}
+
+                    <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--text-secondary);">Asignar / Renovar Membresía:</h4>
+                    <form method="POST" action="/cliente_membresia">
+                        <input type="hidden" name="IdCliente" value="{{ cliente.IdCliente }}">
+                        <input type="hidden" name="from_profile" value="true">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div class="form-group">
+                                <label for="IdMembresia" style="font-size: 0.85rem; display:block; margin-bottom: 4px;">Membresía</label>
+                                <select id="IdMembresia" name="IdMembresia" required onchange="updateMontoMembresia(this)" style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                                    <option value="">Seleccionar...</option>
+                                    {% for m in membresias %}
+                                        <option value="{{ m.IdMembresia }}" data-precio="{{ m.Precio }}">{{ m.NombreMembresia }} (${{ m.Precio }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="IdMetodoPago" style="font-size: 0.85rem; display:block; margin-bottom: 4px;">Método de Pago</label>
+                                <select id="IdMetodoPago" name="IdMetodoPago" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                                    <option value="">Seleccionar...</option>
+                                    {% for mp in metodos_pago %}
+                                        <option value="{{ mp.IdMetodoPago }}">{{ mp.Nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="Monto" style="font-size: 0.85rem; display:block; margin-bottom: 4px;">Monto a Pagar ($)</label>
+                            <input type="number" id="Monto" name="Monto" step="0.01" required placeholder="0.00" style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-save"></i> Registrar Pago y Activar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑA 2: RUTINA ACTIVA -->
+    <div id="tab-rutina-activa" class="tab-content" style="display: none;">
+        <div class="card">
+            <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-dumbbell" style="margin-right: 8px; color: var(--primary);"></i>Rutina de Ejercicios Activa</h3>
+                {% if rutina %}
+                    <span class="badge badge-info" style="font-size: 13px; font-weight: bold; background: var(--primary-bg); color: var(--primary); padding: 4px 10px; border-radius: 12px;">{{ rutina.NombreRutina or 'Rutina Activa' }}</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if rutina %}
+                    <div style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 25px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <p style="margin: 0;">Fecha Inicio: <strong>{{ rutina.FechaInicio }}</strong></p>
+                        <p style="margin: 0;">Fecha Vence: <strong>{{ rutina.FechaFin }}</strong></p>
+                        <p style="margin: 0;">Frecuencia Semanal: <strong>{{ rutina.FrecuenciaSemanal }} días</strong></p>
+                    </div>
+
+                    {% for dia in rutina_dias %}
+                        <div style="margin-bottom: 30px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); overflow: hidden;">
+                            <div style="background: var(--bg-primary); padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; font-size: 1.05rem; color: var(--text-inverse); font-weight: bold;">
+                                    <i class="fas fa-calendar-day" style="margin-right: 6px; color: var(--success);"></i>
+                                    {{ dia.NombreDia }}
+                                </h4>
+                                <span style="font-size: 0.9rem; color: var(--text-secondary);">
+                                    Enfoques: <strong>{{ dia.EnfoqueMuscular1 }}</strong> {% if dia.EnfoqueMuscular2 %}y <strong>{{ dia.EnfoqueMuscular2 }}</strong>{% endif %}
+                                </span>
+                            </div>
+                            <div style="padding: 15px;">
+                                {% if dia.NotaGeneral %}
+                                    <p style="margin: 0 0 15px 0; font-size: 0.9rem; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid var(--info); border-radius: 4px; color: var(--text-inverse);">
+                                        <strong>Nota General:</strong> {{ dia.NotaGeneral }}
+                                    </p>
+                                {% endif %}
+                                <div class="table-container">
+                                    <table class="data-table" style="width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 60px;">Orden</th>
+                                                <th>Ejercicio</th>
+                                                <th style="width: 80px;">Series</th>
+                                                <th style="width: 120px;">Repeticiones</th>
+                                                <th style="width: 120px;">Peso</th>
+                                                <th style="width: 100px;">Descanso</th>
+                                                <th>Nota</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for ej in dia.ejercicios %}
+                                                <tr>
+                                                    <td><strong>{{ ej.Orden }}</strong></td>
+                                                    <td><strong>{{ ej.NombreEjercicio }}</strong></td>
+                                                    <td>{{ ej.Series }}</td>
+                                                    <td>{{ ej.Repeticiones }}</td>
+                                                    <td>{{ ej.PesoRecomendado or '—' }}</td>
+                                                    <td>{{ ej.DescansoSegundos or '—' }}s</td>
+                                                    <td><small style="color: var(--text-secondary);">{{ ej.Nota or '—' }}</small></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-center" style="color: var(--text-secondary); padding: 20px;">No se encontraron días configurados para esta rutina activa.</p>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 50px 20px; color: var(--text-secondary);">
+                        <i class="fas fa-clipboard-list" style="font-size: 48px; margin-bottom: 15px; color: var(--border-medium);"></i>
+                        <p style="font-size: 1.1rem; margin-bottom: 20px;">Este cliente no tiene ninguna rutina de ejercicios activa en el sistema.</p>
+                        <button class="btn btn-primary" onclick="triggerWizardTab()">
+                            <i class="fas fa-plus"></i> Diseñar Nueva Rutina
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑA 3: CREADOR DE RUTINA SEMANAL (WIZARD) -->
+    <div id="tab-wizard" class="tab-content" style="display: none;">
+        <div class="card">
+            <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-calendar-plus" style="margin-right: 8px; color: var(--primary);"></i>Creador de Rutina Semanal Unificado</h3>
+            </div>
+            <div class="card-body">
+                <form id="wizard-form" onsubmit="saveCompleteRoutine(event)">
+                    <!-- Datos de Cabecera -->
+                    <div class="form-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                        <div class="form-group">
+                            <label for="wizNombreRutina">Nombre de la Rutina *</label>
+                            <input type="text" id="wizNombreRutina" required placeholder="Ej: Rutina de Hipertrofia o Fuerza" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                        </div>
+                        <div class="form-group">
+                            <label for="wizFechaInicio">Fecha Inicio *</label>
+                            <input type="date" id="wizFechaInicio" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                        </div>
+                        <div class="form-group">
+                            <label for="wizDuracion">Duración (Días) *</label>
+                            <input type="number" id="wizDuracion" required min="1" value="30" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                        </div>
+                        <div class="form-group">
+                            <label for="wizFrecuencia">Frecuencia Semanal *</label>
+                            <select id="wizFrecuencia" required onchange="generateWizardDays(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                                <option value="1">1 día a la semana</option>
+                                <option value="2">2 días a la semana</option>
+                                <option value="3" selected>3 días a la semana</option>
+                                <option value="4">4 días a la semana</option>
+                                <option value="5">5 días a la semana</option>
+                                <option value="6">6 días a la semana</option>
+                                <option value="7">7 días a la semana</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Panel de días dinámicos -->
+                    <div id="wizard-days-container">
+                        <!-- Generado por JS -->
+                    </div>
+
+                    <!-- Botón de Envío -->
+                    <div style="text-align: right; margin-top: 30px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                        <button type="submit" class="btn btn-primary" style="padding: 12px 30px; font-size: 1.05rem;">
+                            <i class="fas fa-save" style="margin-right: 6px;"></i> Guardar Rutina Completa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Plantilla Oculta de Ejercicios para clonación dinámica -->
+<div id="exercise-row-template" style="display: none;">
+    <table>
+        <tbody>
+            <tr class="exercise-row">
+                <td style="width: 60px;">
+                    <input type="number" class="row-orden" required min="1" value="1" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text); font-weight: bold;">
+                </td>
+                <td>
+                    <select class="row-ejercicio" required style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                        <option value="">Seleccionar ejercicio...</option>
+                        {% for ej in ejercicios %}
+                            <option value="{{ ej.IdEjercicio }}">{{ ej.NombreEjercicio }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td style="width: 80px;">
+                    <input type="number" class="row-series" required min="1" value="4" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                </td>
+                <td style="width: 120px;">
+                    <input type="text" class="row-reps" required placeholder="Ej: 12 o 10-12" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                </td>
+                <td style="width: 120px;">
+                    <input type="text" class="row-peso" placeholder="Ej: 100 lbs" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                </td>
+                <td style="width: 100px;">
+                    <input type="number" class="row-descanso" placeholder="Ej: 60" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                </td>
+                <td>
+                    <input type="text" class="row-nota" placeholder="Opcional..." style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                </td>
+                <td style="width: 50px; text-align: center;">
+                    <button type="button" onclick="removeExerciseRow(this)" style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.1rem; padding: 4px;" title="Eliminar Ejercicio">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Configurar fecha de hoy por defecto en el planificador
+    document.addEventListener('DOMContentLoaded', function() {
+        var today = new Date().toISOString().split('T')[0];
+        var dateInput = document.getElementById('wizFechaInicio');
+        if (dateInput) {
+            dateInput.value = today;
+        }
+        
+        // Generar los días por defecto (3 días inicialmente)
+        generateWizardDays(3);
+    });
+
+    // Cambiar entre pestañas
+    function switchTab(evt, tabId) {
+        // Ocultar todos los contenidos de pestaña
+        var contents = document.getElementsByClassName('tab-content');
+        for (var i = 0; i < contents.length; i++) {
+            contents[i].style.display = 'none';
+        }
+        
+        // Remover clase 'active' de todos los botones de pestaña
+        var buttons = document.getElementsByClassName('tab-btn');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active');
+            buttons[i].style.borderBottom = '3px solid transparent';
+            buttons[i].style.color = 'var(--text-secondary)';
+        }
+        
+        // Mostrar la pestaña seleccionada
+        document.getElementById(tabId).style.display = 'block';
+        evt.currentTarget.classList.add('active');
+        evt.currentTarget.style.borderBottom = '3px solid var(--primary)';
+        evt.currentTarget.style.color = 'var(--text-inverse)';
+    }
+
+    function triggerWizardTab() {
+        var btn = document.getElementById('btn-tab-wizard');
+        if (btn) {
+            btn.click();
+        }
+    }
+
+    // Actualizar monto sugerido de membresía
+    function updateMontoMembresia(select) {
+        var option = select.options[select.selectedIndex];
+        var precio = option.getAttribute('data-precio');
+        var montoInput = document.getElementById('Monto');
+        if (montoInput && precio) {
+            montoInput.value = precio;
+        }
+    }
+
+    // Generar dinámicamente las pestañas y formularios para los días
+    function generateWizardDays(freq) {
+        var container = document.getElementById('wizard-days-container');
+        if (!container) return;
+        
+        container.innerHTML = ''; // Limpiar
+        
+        var freqNum = parseInt(freq);
+        
+        // 1. Crear la cabecera de pestañas de los días
+        var tabsHeader = document.createElement('div');
+        tabsHeader.className = 'wizard-days-tabs';
+        tabsHeader.style.display = 'flex';
+        tabsHeader.style.gap = '8px';
+        tabsHeader.style.marginBottom = '15px';
+        tabsHeader.style.borderBottom = '1px solid var(--border-color)';
+        tabsHeader.style.paddingBottom = '5px';
+        
+        // 2. Crear el contenedor para los paneles de cada día
+        var panelsContainer = document.createElement('div');
+        panelsContainer.className = 'wizard-days-panels';
+        
+        // Listas de opciones de enfoque para inyectar vía JS
+        var enfoqueOptionsHtml = '<option value="">Ninguno</option>';
+        {% for enf in enfoques %}
+            enfoqueOptionsHtml += '<option value="{{ enf.IdEnfoqueMuscular }}">{{ enf.NombreEnfoque }}</option>';
+        {% endfor %}
+        
+        for (var d = 1; d <= freqNum; d++) {
+            // Botón de pestaña del día
+            var tabBtn = document.createElement('button');
+            tabBtn.type = 'button';
+            tabBtn.className = 'wiz-day-tab-btn' + (d === 1 ? ' active' : '');
+            tabBtn.textContent = 'Día ' + d;
+            tabBtn.setAttribute('onclick', 'switchWizardDay(event, ' + d + ')');
+            tabBtn.style.padding = '8px 16px';
+            tabBtn.style.border = 'none';
+            tabBtn.style.background = d === 1 ? 'var(--primary)' : 'var(--bg-primary)';
+            tabBtn.style.color = d === 1 ? 'white' : 'var(--text-secondary)';
+            tabBtn.style.borderRadius = '6px';
+            tabBtn.style.cursor = 'pointer';
+            tabBtn.style.fontWeight = 'bold';
+            tabBtn.style.transition = 'all 0.2s';
+            tabsHeader.appendChild(tabBtn);
+            
+            // Panel de contenido de ese día
+            var panel = document.createElement('div');
+            panel.id = 'wiz-day-panel-' + d;
+            panel.className = 'wiz-day-panel';
+            panel.style.display = d === 1 ? 'block' : 'none';
+            panel.setAttribute('data-day-num', d);
+            
+            // Construir formulario de enfoques y tabla de ejercicios
+            panel.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 3.5fr; gap: 15px; margin-bottom: 20px; background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div class="form-group">
+                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Día de la Semana *</label>
+                        <select class="wiz-day-name" required style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                            <option value="1" ${d===1?'selected':''}>Lunes</option>
+                            <option value="2" ${d===2?'selected':''}>Martes</option>
+                            <option value="3" ${d===3?'selected':''}>Miércoles</option>
+                            <option value="4" ${d===4?'selected':''}>Jueves</option>
+                            <option value="5" ${d===5?'selected':''}>Viernes</option>
+                            <option value="6" ${d===6?'selected':''}>Sábado</option>
+                            <option value="7" ${d===7?'selected':''}>Domingo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Enfoque Muscular 1 *</label>
+                        <select class="wiz-day-enfoque1" required style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                            <option value="">Seleccionar...</option>
+                            ${enfoqueOptionsHtml.replace('value=""', 'disabled')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Enfoque Muscular 2</label>
+                        <select class="wiz-day-enfoque2" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                            ${enfoqueOptionsHtml}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Nota General del Día</label>
+                        <input type="text" class="wiz-day-nota-general" placeholder="Ej: Realizar 10 min de cardio antes de iniciar" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="margin:0; font-size:1rem; color:var(--text-inverse);">Ejercicios del Día</h4>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addExerciseRowToDay(${d})" style="padding:6px 12px; font-size:0.85rem;">
+                            <i class="fas fa-plus"></i> Añadir Ejercicio
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="wiz-exercises-table-${d}">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px;">Orden</th>
+                                    <th>Ejercicio</th>
+                                    <th style="width: 90px;">Series</th>
+                                    <th style="width: 130px;">Repeticiones</th>
+                                    <th style="width: 130px;">Peso Sugerido</th>
+                                    <th style="width: 110px;">Descanso (seg)</th>
+                                    <th>Nota del Ejercicio</th>
+                                    <th style="width: 50px; text-align:center;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="exercises-tbody">
+                                <!-- Filas agregadas dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            panelsContainer.appendChild(panel);
+        }
+        
+        container.appendChild(tabsHeader);
+        container.appendChild(panelsContainer);
+        
+        // Agregar automáticamente un primer ejercicio en el Día 1
+        addExerciseRowToDay(1);
+    }
+
+    // Cambiar de panel de día en el Wizard
+    function switchWizardDay(evt, dayNum) {
+        // Ocultar todos los paneles
+        var panels = document.getElementsByClassName('wiz-day-panel');
+        for (var i = 0; i < panels.length; i++) {
+            panels[i].style.display = 'none';
+        }
+        
+        // Cambiar estilos de botones de pestañas
+        var tabBtns = document.getElementsByClassName('wiz-day-tab-btn');
+        for (var i = 0; i < tabBtns.length; i++) {
+            tabBtns[i].style.background = 'var(--bg-primary)';
+            tabBtns[i].style.color = 'var(--text-secondary)';
+        }
+        
+        // Mostrar el seleccionado
+        document.getElementById('wiz-day-panel-' + dayNum).style.display = 'block';
+        evt.currentTarget.style.background = 'var(--primary)';
+        evt.currentTarget.style.color = 'white';
+    }
+
+    // Agregar una fila de ejercicio a la tabla del día correspondiente
+    function addExerciseRowToDay(dayNum) {
+        var tableBody = document.querySelector(`#wiz-exercises-table-${dayNum} .exercises-tbody`);
+        if (!tableBody) return;
+        
+        var templateRow = document.querySelector('#exercise-row-template tr').cloneNode(true);
+        
+        // Auto-calcular número de orden
+        var currentRowsCount = tableBody.querySelectorAll('.exercise-row').length;
+        templateRow.querySelector('.row-orden').value = currentRowsCount + 1;
+        
+        tableBody.appendChild(templateRow);
+    }
+
+    // Remover fila de ejercicio
+    function removeExerciseRow(button) {
+        var row = button.closest('tr');
+        var tbody = row.parentNode;
+        row.remove();
+        
+        // Re-ordenar secuencialmente el campo de Orden
+        var rows = tbody.querySelectorAll('.exercise-row');
+        rows.forEach(function(r, idx) {
+            r.querySelector('.row-orden').value = idx + 1;
+        });
+    }
+
+    // Guardar la rutina completa por AJAX
+    async function saveCompleteRoutine(event) {
+        event.preventDefault();
+        
+        var idCliente = {{ cliente.IdCliente }};
+        var nombreRutina = document.getElementById('wizNombreRutina').value;
+        var fechaInicio = document.getElementById('wizFechaInicio').value;
+        var duracion = parseInt(document.getElementById('wizDuracion').value);
+        var frecuencia = parseInt(document.getElementById('wizFrecuencia').value);
+        
+        // 1. Recopilar datos de cada día
+        var dias = [];
+        var panels = document.querySelectorAll('.wiz-day-panel');
+        
+        for (var i = 0; i < panels.length; i++) {
+            var panel = panels[i];
+            var idDia = parseInt(panel.querySelector('.wiz-day-name').value);
+            var enfoque1 = parseInt(panel.querySelector('.wiz-day-enfoque1').value);
+            
+            if (!enfoque1) {
+                alert('Debe seleccionar el Enfoque Muscular 1 para el Día ' + panel.getAttribute('data-day-num'));
+                panel.querySelector('.wiz-day-enfoque1').focus();
+                return;
+            }
+            
+            var enfoque2Val = panel.querySelector('.wiz-day-enfoque2').value;
+            var enfoque2 = enfoque2Val ? parseInt(enfoque2Val) : null;
+            var notaGeneral = panel.querySelector('.wiz-day-nota-general').value || null;
+            
+            // Recopilar ejercicios del día
+            var ejercicios = [];
+            var rows = panel.querySelectorAll('.exercise-row');
+            
+            if (rows.length === 0) {
+                alert('Debe agregar al menos un ejercicio en el Día ' + panel.getAttribute('data-day-num'));
+                return;
+            }
+            
+            for (var j = 0; j < rows.length; j++) {
+                var row = rows[j];
+                var orden = parseInt(row.querySelector('.row-orden').value);
+                var idEjercicio = parseInt(row.querySelector('.row-ejercicio').value);
+                
+                if (!idEjercicio) {
+                    alert('Debe seleccionar un ejercicio en la fila ' + (j + 1) + ' del Día ' + panel.getAttribute('data-day-num'));
+                    row.querySelector('.row-ejercicio').focus();
+                    return;
+                }
+                
+                var series = parseInt(row.querySelector('.row-series').value);
+                var reps = row.querySelector('.row-reps').value;
+                var peso = row.querySelector('.row-peso').value || null;
+                var descansoVal = row.querySelector('.row-descanso').value;
+                var descanso = descansoVal ? parseInt(descansoVal) : null;
+                var nota = row.querySelector('.row-nota').value || null;
+                
+                ejercicios.push({
+                    Orden: orden,
+                    IdEjercicio: idEjercicio,
+                    Series: series,
+                    Repeticiones: reps,
+                    PesoRecomendado: peso,
+                    DescansoSegundos: descanso,
+                    Nota: nota
+                });
+            }
+            
+            dias.push({
+                IdDiaSemana: idDia,
+                IdEnfoqueMuscular1: enfoque1,
+                IdEnfoqueMuscular2: enfoque2,
+                NotaGeneral: notaGeneral,
+                ejercicios: ejercicios
+            });
+        }
+        
+        // 2. Construir payload completo
+        var payload = {
+            IdCliente: idCliente,
+            NombreRutina: nombreRutina,
+            FechaInicio: fechaInicio,
+            DuracionDias: duracion,
+            FrecuenciaSemanal: frecuencia,
+            dias: dias
+        };
+        
+        mostrarLoading(true);
+        
+        try {
+            var response = await fetch('/api/rutina/guardar_completa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            var result = await response.json();
+            
+            if (response.ok && result.success) {
+                mostrarToast('Rutina creada y guardada exitosamente.', 'success');
+                // Recargar el perfil del cliente para reflejar la rutina en la pestaña de Rutina Activa
+                setTimeout(function() {
+                    location.reload();
+                }, 1000);
+            } else {
+                mostrarToast(result.error || 'Error al guardar la rutina completa.', 'error');
+            }
+        } catch (err) {
+            console.error('Error al guardar rutina:', err);
+            mostrarToast('Ocurrió un error al enviar los datos del plan.', 'error');
+        } finally {
+            maxLoading = false; // safe check
+            mostrarLoading(false);
+        }
+    }
+</script>
+
+<style>
+    /* Estilos dinámicos para los días en el wizard */
+    .wiz-day-tab-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    
+    .day-header {
+        font-size: 1.15rem;
+        margin: 25px 0 10px 0;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 6px;
+        color: var(--text-inverse);
+    }
+    
+    .day-note {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin: 0 0 15px 0;
+    }
+</style>
+{% endblock %}

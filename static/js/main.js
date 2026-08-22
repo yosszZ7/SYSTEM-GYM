@@ -2693,9 +2693,9 @@ async function cargarClientes() {
                     '<td>' + (c.Correo || c.correo || '') + '</td>' +
                     '<td>' + (c.FechaRegistro || c.fechaRegistro || '') + '</td>' +
                     '<td class="table-actions">' +
-                        '<a href="/cliente_actualizar?id=' + (c.IdCliente || c.id) + '" class="btn-edit" title="Editar"><i class="fas fa-edit"></i></a>' +
+                        '<a href="/cliente_perfil/' + (c.IdCliente || c.id) + '" class="btn-view" title="Ver Perfil"><i class="fas fa-user-circle"></i></a>' +
+                        '<a href="/cliente_actualizar/' + (c.IdCliente || c.id) + '" class="btn-edit" title="Editar"><i class="fas fa-edit"></i></a>' +
                         '<button onclick="eliminarCliente(' + (c.IdCliente || c.id) + ')" class="btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button>' +
-                        '<a href="/cliente_rutina?id=' + (c.IdCliente || c.id) + '" class="btn-view" title="Ver Rutina"><i class="fas fa-clipboard-list"></i></a>' +
                     '</td>' +
                     '</tr>';
             }).join('');
