@@ -746,7 +746,6 @@ def cliente_listar():
 @app.route('/cliente_perfil/<int:id>')
 @login_required
 def cliente_perfil(id):
-    from backend.servicios.ConexionBD import ConectarBD
     conexion = ConectarBD()
     if not conexion:
         flash("No se pudo conectar con la base de datos", "error")
