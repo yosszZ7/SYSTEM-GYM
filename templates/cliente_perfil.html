@@ -21,13 +21,13 @@
 
     <!-- Navegación por Pestañas (Tabs) -->
     <div style="display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; padding-bottom: 2px;">
-        <button class="tab-btn active" onclick="switchTab(event, 'tab-asignaciones')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+        <button class="tab-btn active" onclick="switchTab(this, 'tab-asignaciones')" style="padding: 10px 20px; border: none; background: none; color: var(--text); font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--primary); font-size: 1rem; transition: all 0.3s ease;">
             <i class="fas fa-user-check"></i> Asignaciones
         </button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-rutina-activa')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+        <button class="tab-btn" onclick="switchTab(this, 'tab-rutina-activa')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
             <i class="fas fa-heartbeat"></i> Rutina Activa
         </button>
-        <button class="tab-btn" id="btn-tab-wizard" onclick="switchTab(event, 'tab-wizard')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+        <button class="tab-btn" id="btn-tab-wizard" onclick="switchTab(this, 'tab-wizard')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
             <i class="fas fa-calendar-plus"></i> Diseñar Rutina
         </button>
     </div>
@@ -324,7 +324,7 @@
     });
 
     // Cambiar entre pestañas
-    function switchTab(evt, tabId) {
+    function switchTab(btn, tabId) {
         // Ocultar todos los contenidos de pestaña
         var contents = document.getElementsByClassName('tab-content');
         for (var i = 0; i < contents.length; i++) {
@@ -341,9 +341,9 @@
         
         // Mostrar la pestaña seleccionada
         document.getElementById(tabId).style.display = 'block';
-        evt.currentTarget.classList.add('active');
-        evt.currentTarget.style.borderBottom = '3px solid var(--primary)';
-        evt.currentTarget.style.color = 'var(--text-inverse)';
+        btn.classList.add('active');
+        btn.style.borderBottom = '3px solid var(--primary)';
+        btn.style.color = 'var(--text)';
     }
 
     function triggerWizardTab() {
@@ -397,7 +397,7 @@
             tabBtn.type = 'button';
             tabBtn.className = 'wiz-day-tab-btn' + (d === 1 ? ' active' : '');
             tabBtn.textContent = 'Día ' + d;
-            tabBtn.setAttribute('onclick', 'switchWizardDay(event, ' + d + ')');
+            tabBtn.setAttribute('onclick', 'switchWizardDay(this, ' + d + ')');
             tabBtn.style.padding = '8px 16px';
             tabBtn.style.border = 'none';
             tabBtn.style.background = d === 1 ? 'var(--primary)' : 'var(--bg-primary)';
@@ -489,7 +489,7 @@
     }
 
     // Cambiar de panel de día en el Wizard
-    function switchWizardDay(evt, dayNum) {
+    function switchWizardDay(btn, dayNum) {
         // Ocultar todos los paneles
         var panels = document.getElementsByClassName('wiz-day-panel');
         for (var i = 0; i < panels.length; i++) {
@@ -505,8 +505,8 @@
         
         // Mostrar el seleccionado
         document.getElementById('wiz-day-panel-' + dayNum).style.display = 'block';
-        evt.currentTarget.style.background = 'var(--primary)';
-        evt.currentTarget.style.color = 'white';
+        btn.style.background = 'var(--primary)';
+        btn.style.color = 'white';
     }
 
     // Agregar una fila de ejercicio a la tabla del día correspondiente
