@@ -442,9 +442,6 @@
                         <select class="wiz-day-enfoque2" onchange="filterExercisesForDay(${d})" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
                             ${enfoqueOptionsHtml}
                         </select>
-                        <button type="button" class="btn-add-enfoque3" onclick="showEnfoque3(${d})" style="background:none; border:none; color:var(--primary); font-size:0.75rem; font-weight:bold; cursor:pointer; padding:2px 0; display:block; text-align:left; margin-top:2px;">
-                            <i class="fas fa-plus-circle"></i> ¿Añadir tercer enfoque?
-                        </button>
                     </div>
                     <div class="form-group wiz-day-enfoque3-container" id="wiz-day-enfoque3-container-${d}" style="display: none;">
                         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Enfoque Muscular 3</label>
@@ -463,7 +460,12 @@
 
                 <div style="margin-top: 15px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0; font-size:1rem; color:var(--text-inverse);">Ejercicios del Día</h4>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <h4 style="margin:0; font-size:1rem; color:var(--text); font-weight:bold;">Ejercicios del Día</h4>
+                            <button type="button" class="btn-add-enfoque3" id="btn-add-enfoque3-${d}" onclick="showEnfoque3(${d})" style="background:none; border:none; color:var(--primary); font-size:0.85rem; font-weight:bold; cursor:pointer; padding:0; display:flex; align-items:center; gap:4px; transition: all 0.2s;">
+                                <i class="fas fa-plus-circle"></i> ¿Añadir tercer enfoque?
+                            </button>
+                        </div>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="addExerciseRowToDay(${d})" style="padding:6px 12px; font-size:0.85rem;">
                             <i class="fas fa-plus"></i> Añadir Ejercicio
                         </button>
@@ -574,12 +576,12 @@
     function showEnfoque3(dayNum) {
         var grid = document.getElementById('wiz-day-header-grid-' + dayNum);
         var e3Container = document.getElementById('wiz-day-enfoque3-container-' + dayNum);
-        var e2Container = document.getElementById('wiz-day-enfoque2-container-' + dayNum);
+        var btnAdd = document.getElementById('btn-add-enfoque3-' + dayNum);
         
-        if (grid && e3Container && e2Container) {
+        if (grid && e3Container) {
             e3Container.style.display = 'block';
             grid.style.gridTemplateColumns = '1.2fr 1.2fr 1.2fr 1.2fr 3.2fr';
-            e2Container.querySelector('.btn-add-enfoque3').style.display = 'none';
+            if (btnAdd) btnAdd.style.display = 'none';
         }
     }
     
@@ -587,13 +589,13 @@
     function hideEnfoque3(dayNum) {
         var grid = document.getElementById('wiz-day-header-grid-' + dayNum);
         var e3Container = document.getElementById('wiz-day-enfoque3-container-' + dayNum);
-        var e2Container = document.getElementById('wiz-day-enfoque2-container-' + dayNum);
+        var btnAdd = document.getElementById('btn-add-enfoque3-' + dayNum);
         
-        if (grid && e3Container && e2Container) {
+        if (grid && e3Container) {
             e3Container.style.display = 'none';
             e3Container.querySelector('.wiz-day-enfoque3').value = '';
             grid.style.gridTemplateColumns = '1.5fr 1.5fr 1.5fr 3.5fr';
-            e2Container.querySelector('.btn-add-enfoque3').style.display = 'block';
+            if (btnAdd) btnAdd.style.display = 'inline-flex';
             filterExercisesForDay(dayNum);
         }
     }
