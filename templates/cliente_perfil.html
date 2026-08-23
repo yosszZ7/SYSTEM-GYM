@@ -21,13 +21,13 @@
 
     <!-- Navegación por Pestañas (Tabs) -->
     <div style="display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; padding-bottom: 2px;">
-        <button class="tab-btn active" onclick="switchTab(this, 'tab-asignaciones')" style="padding: 10px 20px; border: none; background: none; color: var(--text); font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--primary); font-size: 1rem; transition: all 0.3s ease;">
+        <button class="tab-btn active" onclick="switchProfileTab(this, 'tab-asignaciones')" style="padding: 10px 20px; border: none; background: none; color: var(--text); font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--primary); font-size: 1rem; transition: all 0.3s ease;">
             <i class="fas fa-user-check"></i> Asignaciones
         </button>
-        <button class="tab-btn" onclick="switchTab(this, 'tab-rutina-activa')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+        <button class="tab-btn" onclick="switchProfileTab(this, 'tab-rutina-activa')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
             <i class="fas fa-heartbeat"></i> Rutina Activa
         </button>
-        <button class="tab-btn" id="btn-tab-wizard" onclick="switchTab(this, 'tab-wizard')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
+        <button class="tab-btn" id="btn-tab-wizard" onclick="switchProfileTab(this, 'tab-wizard')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
             <i class="fas fa-calendar-plus"></i> Diseñar Rutina
         </button>
     </div>
@@ -324,7 +324,7 @@
     });
 
     // Cambiar entre pestañas
-    function switchTab(btn, tabId) {
+    function switchProfileTab(btn, tabId) {
         // Ocultar todos los contenidos de pestaña
         var contents = document.getElementsByClassName('tab-content');
         for (var i = 0; i < contents.length; i++) {
