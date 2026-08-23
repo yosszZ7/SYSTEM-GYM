@@ -43,8 +43,8 @@
                             <td>{{ venta.PrimerNombre }} {{ venta.PrimerApellido }}</td>
                             <td>{{ venta.NombreProducto }}</td>
                             <td>{{ venta.Cantidad }}</td>
-                            <td>${{ venta.PrecioUnitario }}</td>
-                            <td><strong>${{ venta.Total }}</strong></td>
+                            <td>C${{ venta.PrecioUnitario }}</td>
+                            <td><strong>C${{ venta.Total }}</strong></td>
                             <td>{{ venta.FechaVenta }}</td>
                             <td>
                                 <span class="badge {% if venta.Estado == 'Completada' %}badge-success{% else %}badge-warning{% endif %}">

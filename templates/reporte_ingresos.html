@@ -7,7 +7,7 @@
     <thead><tr><th>Anio</th><th>Mes</th><th>TotalIngresos</th></tr></thead>
     <tbody>
         {% for ingreso in ingresos %}
-        <tr><td>{{ ingreso.Anio }}</td><td>{{ ingreso.Mes }}</td><td>${{ ingreso.TotalIngresos }}</td></tr>
+        <tr><td>{{ ingreso.Anio }}</td><td>{{ ingreso.Mes }}</td><td>C${{ ingreso.TotalIngresos }}</td></tr>
         {% endfor %}
     </tbody>
 </table>

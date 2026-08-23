@@ -57,11 +57,9 @@
                                 </label>
                                 <select id="IdProducto_1" name="IdProducto_1" required>
                                     <option value="">Seleccionar producto...</option>
-                                    <option value="1">Proteína Whey - $120,000</option>
-                                    <option value="2">Creatina - $85,000</option>
-                                    <option value="3">BCAA - $60,000</option>
-                                    <option value="4">Pre-entreno - $45,000</option>
-                                    <option value="5">Vitaminas - $35,000</option>
+                                    {% for p in productos %}
+                                    <option value="{{ p.IdProducto }}">{{ p.NombreProducto }} - C${{ p.Precio }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group">
@@ -81,11 +79,9 @@
                                 </label>
                                 <select id="IdProducto_2" name="IdProducto_2">
                                     <option value="">Seleccionar producto...</option>
-                                    <option value="1">Proteína Whey - $120,000</option>
-                                    <option value="2">Creatina - $85,000</option>
-                                    <option value="3">BCAA - $60,000</option>
-                                    <option value="4">Pre-entreno - $45,000</option>
-                                    <option value="5">Vitaminas - $35,000</option>
+                                    {% for p in productos %}
+                                    <option value="{{ p.IdProducto }}">{{ p.NombreProducto }} - C${{ p.Precio }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group">
@@ -105,11 +101,9 @@
                                 </label>
                                 <select id="IdProducto_3" name="IdProducto_3">
                                     <option value="">Seleccionar producto...</option>
-                                    <option value="1">Proteína Whey - $120,000</option>
-                                    <option value="2">Creatina - $85,000</option>
-                                    <option value="3">BCAA - $60,000</option>
-                                    <option value="4">Pre-entreno - $45,000</option>
-                                    <option value="5">Vitaminas - $35,000</option>
+                                    {% for p in productos %}
+                                    <option value="{{ p.IdProducto }}">{{ p.NombreProducto }} - C${{ p.Precio }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group">
@@ -129,11 +123,9 @@
                                 </label>
                                 <select id="IdProducto_4" name="IdProducto_4">
                                     <option value="">Seleccionar producto...</option>
-                                    <option value="1">Proteína Whey - $120,000</option>
-                                    <option value="2">Creatina - $85,000</option>
-                                    <option value="3">BCAA - $60,000</option>
-                                    <option value="4">Pre-entreno - $45,000</option>
-                                    <option value="5">Vitaminas - $35,000</option>
+                                    {% for p in productos %}
+                                    <option value="{{ p.IdProducto }}">{{ p.NombreProducto }} - C${{ p.Precio }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group">
@@ -153,11 +145,9 @@
                                 </label>
                                 <select id="IdProducto_5" name="IdProducto_5">
                                     <option value="">Seleccionar producto...</option>
-                                    <option value="1">Proteína Whey - $120,000</option>
-                                    <option value="2">Creatina - $85,000</option>
-                                    <option value="3">BCAA - $60,000</option>
-                                    <option value="4">Pre-entreno - $45,000</option>
-                                    <option value="5">Vitaminas - $35,000</option>
+                                    {% for p in productos %}
+                                    <option value="{{ p.IdProducto }}">{{ p.NombreProducto }} - C${{ p.Precio }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group">

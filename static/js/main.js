@@ -2440,7 +2440,7 @@ async function cargarDashboard() {
             var el = document.getElementById(id);
             if (el) {
                 if (id === 'ventasMes' || id === 'ventasHoy' || id === 'ingresosTotales') {
-                    el.innerHTML = '$' + Number(value).toLocaleString();
+                    el.innerHTML = 'C$' + Number(value).toLocaleString();
                 } else {
                     el.innerText = Number(value).toLocaleString();
                 }
@@ -2518,7 +2518,7 @@ async function cargarGraficos() {
                         tooltip: {
                             callbacks: {
                                 label: function(ctx) {
-                                    return '$' + ctx.raw.toLocaleString();
+                                    return 'C$' + ctx.raw.toLocaleString();
                                 }
                             }
                         }
@@ -2528,7 +2528,7 @@ async function cargarGraficos() {
                             beginAtZero: true,
                             grid: { color: 'rgba(0,0,0,0.05)' },
                             ticks: { callback: function(value) {
-                                return '$' + value.toLocaleString();
+                                return 'C$' + value.toLocaleString();
                             } }
                         },
                         x: { grid: { display: false } }
@@ -2636,7 +2636,7 @@ async function cargarEstadisticasRapidas() {
                 var el = document.getElementById(id);
                 if (el) {
                     if (id === 'ingresosHoy') {
-                        el.innerHTML = '$' + Number(value).toLocaleString();
+                        el.innerHTML = 'C$' + Number(value).toLocaleString();
                     } else {
                         el.innerText = Number(value).toLocaleString();
                     }
@@ -3563,7 +3563,7 @@ function formatearFecha(fecha) {
 }
 
 function formatearMoneda(valor) {
-    return '$' + Number(valor).toLocaleString('es-CO', {
+    return 'C$' + Number(valor).toLocaleString('es-CO', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
     });

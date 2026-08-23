@@ -7,7 +7,7 @@
     <thead><tr><th>IdProducto</th><th>NombreProducto</th><th>TotalVendido</th><th>TotalIngresos</th></tr></thead>
     <tbody>
         {% for venta in ventas_producto %}
-        <tr><td>{{ venta.IdProducto }}</td><td>{{ venta.NombreProducto }}</td><td>{{ venta.TotalVendido }}</td><td>${{ venta.TotalIngresos }}</td></tr>
+        <tr><td>{{ venta.IdProducto }}</td><td>{{ venta.NombreProducto }}</td><td>{{ venta.TotalVendido }}</td><td>C${{ venta.TotalIngresos }}</td></tr>
         {% endfor %}
     </tbody>
 </table>

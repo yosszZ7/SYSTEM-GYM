@@ -44,8 +44,8 @@
                             <td>{{ compra.Nombre }}</td>
                             <td>{{ compra.NombreProducto }}</td>
                             <td>{{ compra.Cantidad }}</td>
-                            <td>${{ compra.PrecioCompra }}</td>
-                            <td><strong>${{ compra.Total }}</strong></td>
+                            <td>C${{ compra.PrecioCompra }}</td>
+                            <td><strong>C${{ compra.Total }}</strong></td>
                             <td>{{ compra.FechaCompra }}</td>
                             <td>
                                 <span class="badge {% if compra.Estado == 'Recibida' %}badge-success{% else %}badge-warning{% endif %}">
