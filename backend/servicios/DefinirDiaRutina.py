@@ -1,6 +1,6 @@
 from ConexionBD import ConectarBD
 
-def DefinirDiaRutina(IdRutinaCliente, IdDiaSemana, IdEnfoqueMuscular1, IdEnfoqueMuscular2=None, NotaGeneral=None):
+def DefinirDiaRutina(IdRutinaCliente, IdDiaSemana, IdEnfoqueMuscular1, IdEnfoqueMuscular2=None, NotaGeneral=None, IdEnfoqueMuscular3=None):
     """
     Define los enfoques musculares para un día específico de la rutina.
     Retorna: (success, mensaje)
@@ -20,8 +20,8 @@ def DefinirDiaRutina(IdRutinaCliente, IdDiaSemana, IdEnfoqueMuscular1, IdEnfoque
 
         Cursor = Conexion.cursor()
         Cursor.execute(
-            "EXEC SpDefinirDiaRutina ?, ?, ?, ?, ?",
-            (IdRutinaCliente, IdDiaSemana, IdEnfoqueMuscular1, IdEnfoqueMuscular2, NotaGeneral)
+            "EXEC SpDefinirDiaRutina ?, ?, ?, ?, ?, ?",
+            (IdRutinaCliente, IdDiaSemana, IdEnfoqueMuscular1, IdEnfoqueMuscular2, NotaGeneral, IdEnfoqueMuscular3)
         )
         Conexion.commit()
         return True, "Día de rutina definido correctamente."

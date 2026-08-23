@@ -819,6 +819,7 @@ def cliente_perfil(id):
                             'NombreDia': day,
                             'EnfoqueMuscular1': row.get('EnfoqueMuscular1'),
                             'EnfoqueMuscular2': row.get('EnfoqueMuscular2'),
+                            'EnfoqueMuscular3': row.get('EnfoqueMuscular3'),
                             'NotaGeneral': row.get('NotaGeneral'),
                             'ejercicios': []
                         }
@@ -858,7 +859,7 @@ def cliente_perfil(id):
         col_mp = [desc[0] for desc in cursor.description]
         metodos_pago = [dict(zip(col_mp, r)) for r in cursor.fetchall()]
         
-        cursor.execute("SELECT IdEjercicio, NombreEjercicio FROM Ejercicio ORDER BY NombreEjercicio")
+        cursor.execute("SELECT IdEjercicio, NombreEjercicio, IdGrupoMuscular FROM Ejercicio ORDER BY NombreEjercicio")
         col_ej = [desc[0] for desc in cursor.description]
         ejercicios = [dict(zip(col_ej, r)) for r in cursor.fetchall()]
         

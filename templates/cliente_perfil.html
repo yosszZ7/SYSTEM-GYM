@@ -161,7 +161,7 @@
                                     {{ dia.NombreDia }}
                                 </h4>
                                 <span style="font-size: 0.9rem; color: var(--text-secondary);">
-                                    Enfoques: <strong>{{ dia.EnfoqueMuscular1 }}</strong> {% if dia.EnfoqueMuscular2 %}y <strong>{{ dia.EnfoqueMuscular2 }}</strong>{% endif %}
+                                     Enfoques: <strong>{{ dia.EnfoqueMuscular1 }}</strong>{% if dia.EnfoqueMuscular2 %}, <strong>{{ dia.EnfoqueMuscular2 }}</strong>{% endif %}{% if dia.EnfoqueMuscular3 %}, <strong>{{ dia.EnfoqueMuscular3 }}</strong>{% endif %}
                                 </span>
                             </div>
                             <div style="padding: 15px;">
@@ -281,7 +281,7 @@
                     <select class="row-ejercicio" required style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                         <option value="">Seleccionar ejercicio...</option>
                         {% for ej in ejercicios %}
-                            <option value="{{ ej.IdEjercicio }}">{{ ej.NombreEjercicio }}</option>
+                            <option value="{{ ej.IdEjercicio }}" data-grupo="{{ ej.IdGrupoMuscular }}">{{ ej.NombreEjercicio }}</option>
                         {% endfor %}
                     </select>
                 </td>
@@ -417,7 +417,7 @@
             
             // Construir formulario de enfoques y tabla de ejercicios
             panel.innerHTML = `
-                <div style="display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 3.5fr; gap: 15px; margin-bottom: 20px; background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div id="wiz-day-header-grid-${d}" style="display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 3.5fr; gap: 15px; margin-bottom: 20px; background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); transition: all 0.3s ease;">
                     <div class="form-group">
                         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Día de la Semana *</label>
                         <select class="wiz-day-name" required style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
@@ -432,19 +432,31 @@
                     </div>
                     <div class="form-group">
                         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Enfoque Muscular 1 *</label>
-                        <select class="wiz-day-enfoque1" required style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                        <select class="wiz-day-enfoque1" required onchange="filterExercisesForDay(${d})" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
                             <option value="">Seleccionar...</option>
                             ${enfoqueOptionsHtml.replace('value=""', 'disabled')}
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="wiz-day-enfoque2-container-${d}">
                         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Enfoque Muscular 2</label>
-                        <select class="wiz-day-enfoque2" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                        <select class="wiz-day-enfoque2" onchange="filterExercisesForDay(${d})" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
                             ${enfoqueOptionsHtml}
                         </select>
+                        <button type="button" class="btn-add-enfoque3" onclick="showEnfoque3(${d})" style="background:none; border:none; color:var(--primary); font-size:0.75rem; font-weight:bold; cursor:pointer; padding:2px 0; display:block; text-align:left; margin-top:2px;">
+                            <i class="fas fa-plus-circle"></i> ¿Añadir tercer enfoque?
+                        </button>
+                    </div>
+                    <div class="form-group wiz-day-enfoque3-container" id="wiz-day-enfoque3-container-${d}" style="display: none;">
+                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Enfoque Muscular 3</label>
+                        <select class="wiz-day-enfoque3" onchange="filterExercisesForDay(${d})" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                            ${enfoqueOptionsHtml}
+                        </select>
+                        <button type="button" onclick="hideEnfoque3(${d})" style="background:none; border:none; color:var(--danger); font-size:0.75rem; font-weight:bold; cursor:pointer; padding:2px 0; display:block; text-align:left; margin-top:2px;">
+                            <i class="fas fa-minus-circle"></i> Quitar tercer enfoque
+                        </button>
                     </div>
                     <div class="form-group">
-                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Nota General del Día</label>
+                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Nota General del Día <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: normal;">(Opcional)</span></label>
                         <input type="text" class="wiz-day-nota-general" placeholder="Ej: Realizar 10 min de cardio antes de iniciar" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
                     </div>
                 </div>
@@ -509,6 +521,83 @@
         btn.style.color = 'white';
     }
 
+    // Filtrar los ejercicios del día basados en los enfoques musculares seleccionados
+    function filterExercisesForDay(dayNum) {
+        var panel = document.getElementById('wiz-day-panel-' + dayNum);
+        if (!panel) return;
+        
+        var enf1 = panel.querySelector('.wiz-day-enfoque1').value;
+        var enf2 = panel.querySelector('.wiz-day-enfoque2').value;
+        var enf3Select = panel.querySelector('.wiz-day-enfoque3');
+        var enf3 = enf3Select ? enf3Select.value : '';
+        
+        var allowedGroups = [];
+        if (enf1) allowedGroups.push(enf1);
+        if (enf2) allowedGroups.push(enf2);
+        if (enf3) allowedGroups.push(enf3);
+        
+        var selects = panel.querySelectorAll('.row-ejercicio');
+        selects.forEach(function(select) {
+            var currentValue = select.value;
+            var hasValidSelection = false;
+            
+            var options = select.options;
+            for (var i = 0; i < options.length; i++) {
+                var opt = options[i];
+                if (!opt.value) {
+                    opt.style.display = '';
+                    opt.disabled = false;
+                    continue;
+                }
+                
+                var group = opt.getAttribute('data-grupo');
+                if (allowedGroups.length === 0 || allowedGroups.indexOf(group) !== -1) {
+                    opt.style.display = '';
+                    opt.disabled = false;
+                    if (opt.value === currentValue) {
+                        hasValidSelection = true;
+                    }
+                } else {
+                    opt.style.display = 'none';
+                    opt.disabled = true;
+                }
+            }
+            
+            // Si el ejercicio previamente seleccionado ya no pertenece al enfoque, reiniciar el select
+            if (currentValue && !hasValidSelection) {
+                select.value = '';
+            }
+        });
+    }
+
+    // Mostrar el tercer enfoque muscular y ensanchar la cuadrícula del encabezado
+    function showEnfoque3(dayNum) {
+        var grid = document.getElementById('wiz-day-header-grid-' + dayNum);
+        var e3Container = document.getElementById('wiz-day-enfoque3-container-' + dayNum);
+        var e2Container = document.getElementById('wiz-day-enfoque2-container-' + dayNum);
+        
+        if (grid && e3Container && e2Container) {
+            e3Container.style.display = 'block';
+            grid.style.gridTemplateColumns = '1.2fr 1.2fr 1.2fr 1.2fr 3.2fr';
+            e2Container.querySelector('.btn-add-enfoque3').style.display = 'none';
+        }
+    }
+    
+    // Ocultar el tercer enfoque muscular y restablecer la cuadrícula del encabezado
+    function hideEnfoque3(dayNum) {
+        var grid = document.getElementById('wiz-day-header-grid-' + dayNum);
+        var e3Container = document.getElementById('wiz-day-enfoque3-container-' + dayNum);
+        var e2Container = document.getElementById('wiz-day-enfoque2-container-' + dayNum);
+        
+        if (grid && e3Container && e2Container) {
+            e3Container.style.display = 'none';
+            e3Container.querySelector('.wiz-day-enfoque3').value = '';
+            grid.style.gridTemplateColumns = '1.5fr 1.5fr 1.5fr 3.5fr';
+            e2Container.querySelector('.btn-add-enfoque3').style.display = 'block';
+            filterExercisesForDay(dayNum);
+        }
+    }
+
     // Agregar una fila de ejercicio a la tabla del día correspondiente
     function addExerciseRowToDay(dayNum) {
         var tableBody = document.querySelector(`#wiz-exercises-table-${dayNum} .exercises-tbody`);
@@ -521,6 +610,9 @@
         templateRow.querySelector('.row-orden').value = currentRowsCount + 1;
         
         tableBody.appendChild(templateRow);
+        
+        // Aplicar el filtro de enfoques musculares a la nueva fila
+        filterExercisesForDay(dayNum);
     }
 
     // Remover fila de ejercicio
@@ -563,6 +655,11 @@
             
             var enfoque2Val = panel.querySelector('.wiz-day-enfoque2').value;
             var enfoque2 = enfoque2Val ? parseInt(enfoque2Val) : null;
+            
+            var enfoque3Select = panel.querySelector('.wiz-day-enfoque3');
+            var enfoque3Val = enfoque3Select ? enfoque3Select.value : '';
+            var enfoque3 = enfoque3Val ? parseInt(enfoque3Val) : null;
+            
             var notaGeneral = panel.querySelector('.wiz-day-nota-general').value || null;
             
             // Recopilar ejercicios del día
@@ -607,6 +704,7 @@
                 IdDiaSemana: idDia,
                 IdEnfoqueMuscular1: enfoque1,
                 IdEnfoqueMuscular2: enfoque2,
+                IdEnfoqueMuscular3: enfoque3,
                 NotaGeneral: notaGeneral,
                 ejercicios: ejercicios
             });

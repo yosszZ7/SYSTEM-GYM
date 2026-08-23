@@ -27,9 +27,10 @@ def AsignarRutinaCompleta(IdCliente, FechaInicio, DuracionDias, FrecuenciaSemana
         id_dia = dia.get('IdDiaSemana')
         enfoque1 = dia.get('IdEnfoqueMuscular1')
         enfoque2 = dia.get('IdEnfoqueMuscular2')
+        enfoque3 = dia.get('IdEnfoqueMuscular3')
         nota_general = dia.get('NotaGeneral')
         # Definir día
-        success, msg = DefinirDiaRutina(id_rutina, id_dia, enfoque1, enfoque2, nota_general)
+        success, msg = DefinirDiaRutina(id_rutina, id_dia, enfoque1, enfoque2, nota_general, enfoque3)
         if not success:
             return False, f"Error en día {id_dia}: {msg}"
         # Agregar ejercicios de ese día
