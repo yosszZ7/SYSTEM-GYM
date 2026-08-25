@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        /* Asegurar que el login se vea bien */
+        /* Asegurar que el login se vea bien con los colores corporativos */
         body.login-page {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #c2c7ea 100%);
+            background: linear-gradient(135deg, #2D1F16 0%, #4A3728 50%, #8B6F5A 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -25,11 +25,12 @@
             margin: 20px;
         }
         .login-card {
-            background: white;
+            background: #FFFDF9; /* Fondo color crema de la web */
+            border: 1px solid #EFE6DC;
             border-radius: 24px;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.45);
         }
         .login-logo img {
             width: 80px;
@@ -37,32 +38,42 @@
             border-radius: 50%;
             object-fit: cover;
             margin-bottom: 15px;
+            border: 2px solid #F28C28;
         }
         .login-logo h1 {
             font-size: 28px;
             margin: 0;
-            color: #1a1a2e;
+            color: #4A3728; /* Café oscuro */
         }
         .login-logo h1 span {
-            color: #2563EB;
+            color: #F28C28; /* Naranja corporativo */
         }
         .login-logo p {
-            color: #666;
+            color: #8B6F5A; /* Café secundario */
             margin-top: 5px;
+            font-size: 0.95rem;
         }
         .login-form input {
             width: 100%;
             padding: 14px;
             margin: 10px 0;
-            border: 1px solid #ddd;
+            border: 1px solid #EFE6DC;
             border-radius: 12px;
             font-size: 16px;
             box-sizing: border-box;
+            background: #FFFFFF;
+            color: #4A3728;
+            transition: all 0.2s ease;
+        }
+        .login-form input:focus {
+            outline: none;
+            border-color: #F28C28;
+            box-shadow: 0 0 0 3px rgba(242, 140, 40, 0.15);
         }
         .login-form button {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #2563EB, #1D4ED8);
+            background: linear-gradient(135deg, #F28C28, #D77218); /* Degradado Naranja */
             color: white;
             border: none;
             border-radius: 12px;
@@ -70,25 +81,33 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(242, 140, 40, 0.1);
         }
         .login-form button:hover {
             transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(242, 140, 40, 0.4);
+            filter: brightness(1.05);
         }
         .message {
             margin-top: 15px;
             padding: 10px;
             border-radius: 8px;
             display: none;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
         .message.error {
             background: #FEE2E2;
             color: #DC2626;
             display: block;
+            border: 1px solid #FCA5A5;
         }
         .message.success {
             background: #D1FAE5;
             color: #065F46;
             display: block;
+            border: 1px solid #6EE7B7;
         }
         .loader-overlay {
             position: fixed;
@@ -96,7 +115,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(45, 31, 22, 0.8);
             display: none;
             justify-content: center;
             align-items: center;
@@ -106,8 +125,8 @@
         .loader {
             width: 50px;
             height: 50px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2563EB;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #F28C28;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -118,6 +137,7 @@
         .loader-text {
             color: white;
             margin-top: 15px;
+            font-weight: 500;
         }
     </style>
 </head>
