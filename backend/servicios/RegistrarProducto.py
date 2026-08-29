@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD
+from ConexionBD import ConectarBD, TraducirErrorBD
 
 def RegistrarProducto(NombreProducto, Marca, Categoria, Precio, Stock=0):
     """
@@ -35,7 +35,7 @@ def RegistrarProducto(NombreProducto, Marca, Categoria, Precio, Stock=0):
         return True, "Producto registrado correctamente."
 
     except Exception as Error:
-        return False, f"Error al registrar producto: {str(Error)}"
+        return False, TraducirErrorBD(Error, "Error al registrar producto")
     finally:
         if Conexion:
             Conexion.close()

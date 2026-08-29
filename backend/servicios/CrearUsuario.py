@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD
+from ConexionBD import ConectarBD, TraducirErrorBD
 
 def CrearUsuario(NombreUsuario, Contrasena, IdRol, IdCliente=None, IdEmpleado=None):
     """
@@ -46,8 +46,7 @@ def CrearUsuario(NombreUsuario, Contrasena, IdRol, IdCliente=None, IdEmpleado=No
             return True, id_usuario
 
     except Exception as Error:
-        mensaje_error = str(Error)
-        return False, f"Error al crear usuario: {mensaje_error}"
+        return False, TraducirErrorBD(Error, "Error al crear usuario")
     finally:
         if Conexion:
             Conexion.close()

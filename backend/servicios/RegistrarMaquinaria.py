@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD
+from ConexionBD import ConectarBD, TraducirErrorBD
 
 def RegistrarMaquinaria(Nombre, Tipo, Estado, FechaCompra):
     """
@@ -42,7 +42,7 @@ def RegistrarMaquinaria(Nombre, Tipo, Estado, FechaCompra):
             return True, "Máquina registrada correctamente (directo)."
 
     except Exception as Error:
-        return False, f"Error al registrar máquina: {str(Error)}"
+        return False, TraducirErrorBD(Error, "Error al registrar máquina")
     finally:
         if Conexion:
             Conexion.close()

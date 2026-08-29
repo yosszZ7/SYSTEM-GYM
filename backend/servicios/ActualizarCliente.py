@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD
+from ConexionBD import ConectarBD, TraducirErrorBD
 
 def ActualizarCliente(IdCliente, PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido, Telefono, Correo):
     if not IdCliente or IdCliente <= 0:
@@ -14,7 +14,7 @@ def ActualizarCliente(IdCliente, PrimerNombre, SegundoNombre, PrimerApellido, Se
         Conexion.commit()
         return True, "Cliente actualizado correctamente."
     except Exception as e:
-        return False, f"Error: {str(e)}"
+        return False, TraducirErrorBD(e, "Error al actualizar cliente")
     finally:
         if Conexion:
             Conexion.close()

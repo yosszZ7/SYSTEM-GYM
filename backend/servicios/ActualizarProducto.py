@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD
+from ConexionBD import ConectarBD, TraducirErrorBD
 
 def ActualizarProducto(IdProducto, NombreProducto, Marca, Categoria, Precio, Stock=None):
     if not IdProducto or IdProducto <= 0:
@@ -16,7 +16,7 @@ def ActualizarProducto(IdProducto, NombreProducto, Marca, Categoria, Precio, Sto
         Conexion.commit()
         return True, "Producto actualizado correctamente."
     except Exception as e:
-        return False, f"Error: {str(e)}"
+        return False, TraducirErrorBD(e, "Error al actualizar producto")
     finally:
         if Conexion:
             Conexion.close()

@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD
+from ConexionBD import ConectarBD, TraducirErrorBD
 
 def RegistrarCliente(PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido,
                      Telefono, Correo, RequiereEntrenador=0, IdEntrenador=None):
@@ -32,7 +32,7 @@ def RegistrarCliente(PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellid
         Conexion.commit()
         return True, id_cliente
     except Exception as Error:
-        return False, f"Error al registrar cliente: {str(Error)}"
+        return False, TraducirErrorBD(Error, "Error al registrar cliente")
     finally:
         if Conexion:
             Conexion.close()
