@@ -57,49 +57,51 @@
 
         <div class="card-body" style="padding: 0;">
             <div class="table-container" style="overflow-x: auto; width: 100%; border: none; border-radius: 0; box-shadow: none;">
-                <table class="data-table" id="tablaEmpleados" style="width: 100%; min-width: 1080px; margin: 0; white-space: nowrap;">
+                <table class="data-table data-table-compact" id="tablaEmpleados" style="width: 100%; margin: 0;">
                     <thead>
                         <tr>
-                            <th style="width: 60px;">ID</th>
-                            <th>PRIMER NOMBRE</th>
-                            <th>SEGUNDO NOMBRE</th>
-                            <th>PRIMER APELLIDO</th>
-                            <th>SEGUNDO APELLIDO</th>
-                            <th>TELÉFONO</th>
-                            <th>CORREO</th>
-                            <th>CARGO</th>
-                            <th>SALARIO</th>
-                            <th style="min-width: 140px;">FECHA CONTRATACIÓN</th>
-                            <th style="text-align: center; width: 100px;">ACCIONES</th>
+                            <th style="width: 45px; text-align: center; padding: 10px 8px; font-size: 11px;">ID</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRIMER NOMBRE</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">SEGUNDO NOMBRE</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRIMER APELLIDO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">SEGUNDO APELLIDO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">TELÉFONO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">CORREO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">CARGO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">SALARIO</th>
+                            <th style="width: 115px; text-align: center; padding: 10px 10px; font-size: 11px; white-space: nowrap;">FECHA CONTRATACIÓN</th>
+                            <th style="text-align: center; width: 65px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaEmpleados">
                         {% for empleado in empleados %}
                         <tr class="fila-empleado-inicial">
-                            <td>{{ empleado.IdEmpleado }}</td>
-                            <td><strong>{{ empleado.PrimerNombre }}</strong></td>
-                            <td>{{ empleado.SegundoNombre or '-' }}</td>
-                            <td>{{ empleado.PrimerApellido }}</td>
-                            <td>{{ empleado.SegundoApellido or '-' }}</td>
-                            <td>{{ empleado.Telefono }}</td>
-                            <td>{{ empleado.Correo }}</td>
-                            <td>
-                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 4px 10px; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ empleado.IdEmpleado }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ empleado.PrimerNombre }}</strong></td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ empleado.SegundoNombre or '-' }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ empleado.PrimerApellido }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ empleado.SegundoApellido or '-' }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ empleado.Telefono }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ empleado.Correo }}</td>
+                            <td style="padding: 8px 10px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
                                     {{ empleado.NombreCargo }}
                                 </span>
                             </td>
-                            <td>C${{ empleado.Salario }}</td>
-                            <td>{{ empleado.FechaContratacion }}</td>
-                            <td class="table-actions" style="text-align: center;">
-                                <a href="/empleado_actualizar/{{ empleado.IdEmpleado }}" class="btn-edit" title="Editar Empleado">
+                            <td style="padding: 8px 10px; font-size: 13px; white-space: nowrap;">C${{ empleado.Salario }}</td>
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">
+                                {{ empleado.FechaContratacion.strftime('%d/%m/%Y') if empleado.FechaContratacion and empleado.FechaContratacion.strftime else empleado.FechaContratacion }}
+                            </td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/empleado_actualizar/{{ empleado.IdEmpleado }}" class="btn-edit" title="Editar Empleado" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="11" class="text-center" style="padding: 3rem 1rem; color: var(--text-secondary, #8B6F5A);">
-                                <i class="fas fa-user-slash" style="font-size: 2.5rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.75rem;"></i>
+                            <td colspan="11" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-user-slash" style="font-size: 2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
                                 No hay empleados registrados en el sistema
                             </td>
                         </tr>
@@ -128,14 +130,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatearFecha(fechaStr) {
         if (!fechaStr || fechaStr === '-') return '-';
-        if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return fechaStr;
+        // Si ya viene en formato DD/MM/YYYY
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr;
+        // Si viene en formato ISO YYYY-MM-DD
+        const matchISO = fechaStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (matchISO) {
+            return `${matchISO[3]}/${matchISO[2]}/${matchISO[1]}`;
+        }
         try {
             const d = new Date(fechaStr);
             if (isNaN(d.getTime())) return fechaStr;
-            const year = d.getUTCFullYear();
-            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
             const day = String(d.getUTCDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const year = d.getUTCFullYear();
+            return `${day}/${month}/${year}`;
         } catch (e) {
             return fechaStr;
         }
@@ -158,11 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cuerpoTabla) {
             cuerpoTabla.innerHTML = `
                 <tr>
-                    <td colspan="11" class="text-center" style="padding: 2.5rem 1rem;">
-                        <div class="spinner-border" role="status" style="width: 2rem; height: 2rem; border: 3px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F28C28);">
+                    <td colspan="11" class="text-center" style="padding: 2rem 1rem;">
+                        <div class="spinner-border" role="status" style="width: 1.8rem; height: 1.8rem; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F28C28);">
                             <span class="sr-only">Buscando...</span>
                         </div>
-                        <p style="margin: 8px 0 0 0; font-size: 13px; color: var(--text-secondary, #8B6F5A);">Buscando empleados...</p>
+                        <p style="margin: 6px 0 0 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Buscando empleados...</p>
                     </td>
                 </tr>`;
         }
@@ -181,12 +189,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (cuerpoTabla) {
                         cuerpoTabla.innerHTML = `
                             <tr>
-                                <td colspan="11" class="text-center" style="padding: 3rem 1rem; color: var(--text-secondary, #8B6F5A);">
-                                    <i class="fas fa-search" style="font-size: 2.5rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.75rem;"></i>
-                                    <span style="font-size: 1.05rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron empleados con el nombre "<strong>${nombre}</strong>"</span>
-                                    <p style="margin: 6px 0 16px 0; font-size: 13px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
-                                    <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12.5px; padding: 6px 14px; border-radius: 6px; cursor: pointer;">
-                                        <i class="fas fa-list" style="margin-right: 5px;"></i> Ver todos los empleados
+                                <td colspan="11" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                    <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron empleados con el nombre "<strong>${nombre}</strong>"</span>
+                                    <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                                    <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                                        <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los empleados
                                     </button>
                                 </td>
                             </tr>`;
@@ -209,22 +217,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     htmlFilas += `
                         <tr>
-                            <td>${e.IdEmpleado}</td>
-                            <td><strong>${e.PrimerNombre}</strong></td>
-                            <td>${segundoNombre}</td>
-                            <td>${e.PrimerApellido}</td>
-                            <td>${segundoApellido}</td>
-                            <td>${e.Telefono || '-'}</td>
-                            <td>${e.Correo || '-'}</td>
-                            <td>
-                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 4px 10px; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">${e.IdEmpleado}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>${e.PrimerNombre}</strong></td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${segundoNombre}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${e.PrimerApellido}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${segundoApellido}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${e.Telefono || '-'}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${e.Correo || '-'}</td>
+                            <td style="padding: 8px 10px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
                                     ${cargo}
                                 </span>
                             </td>
-                            <td>C$${salario}</td>
-                            <td>${fechaContratacion}</td>
-                            <td class="table-actions" style="text-align: center;">
-                                <a href="/empleado_actualizar/${e.IdEmpleado}" class="btn-edit" title="Editar Empleado">
+                            <td style="padding: 8px 10px; font-size: 13px; white-space: nowrap;">C$${salario}</td>
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">${fechaContratacion}</td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/empleado_actualizar/${e.IdEmpleado}" class="btn-edit" title="Editar Empleado" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>

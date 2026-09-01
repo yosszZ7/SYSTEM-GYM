@@ -52,7 +52,10 @@ def BuscarEmpleadoPorNombre(Nombre):
         for fila in filas:
             emp = dict(zip(columnas, fila))
             if emp.get('FechaContratacion'):
-                emp['FechaContratacion'] = str(emp['FechaContratacion'])
+                if hasattr(emp['FechaContratacion'], 'strftime'):
+                    emp['FechaContratacion'] = emp['FechaContratacion'].strftime('%d/%m/%Y')
+                else:
+                    emp['FechaContratacion'] = str(emp['FechaContratacion'])
             if emp.get('Salario') is not None:
                 emp['Salario'] = f"{float(emp['Salario']):.2f}"
             empleados.append(emp)
