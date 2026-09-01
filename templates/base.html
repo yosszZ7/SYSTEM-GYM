@@ -8,7 +8,7 @@
     <title>World Gym | {% block title %}Dashboard{% endblock %}</title>
 
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.2.0">
     
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -487,7 +487,7 @@
 
     <!-- Toast Notification -->
     <div class="toast-container" id="toastContainer"></div>
-    <script src="{{ url_for('static', filename='js/main.js') }}?v=1.1.0"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=1.2.0"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {

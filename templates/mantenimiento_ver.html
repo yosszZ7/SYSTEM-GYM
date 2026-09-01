@@ -64,27 +64,40 @@
 
 <script>
 function eliminarMantenimiento(id) {
-    if (confirm('¿Está seguro de que desea eliminar este registro de mantenimiento? Esta acción no se puede deshacer.')) {
-        fetch('/api/mantenimiento/eliminar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ IdMantenimiento: id })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error al eliminar mantenimiento: ' + data.error);
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            alert('Ocurrió un error al procesar la solicitud.');
-        });
-    }
+    mostrarConfirmacion({
+        titulo: '¿Eliminar Mantenimiento?',
+        mensaje: '¿Está seguro de que desea eliminar este registro de mantenimiento? Esta acción no se puede deshacer.',
+        tipo: 'danger',
+        textoConfirmar: 'Sí, eliminar',
+        textoCancelar: 'Cancelar',
+        onConfirm: function() {
+            mostrarLoading(true);
+            fetch('/api/mantenimiento/eliminar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ IdMantenimiento: id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                mostrarLoading(false);
+                if (data.success) {
+                    mostrarToast('Mantenimiento eliminado correctamente', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 800);
+                } else {
+                    mostrarToast('Error al eliminar mantenimiento: ' + (data.error || 'No se pudo eliminar'), 'error');
+                }
+            })
+            .catch(err => {
+                mostrarLoading(false);
+                console.error('Error:', err);
+                mostrarToast('Ocurrió un error al procesar la solicitud.', 'error');
+            });
+        }
+    });
 }
 </script>
 {% endblock %}

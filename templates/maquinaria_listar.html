@@ -74,28 +74,40 @@
 
 <script>
 function eliminarMaquina(id) {
-    if (confirm('¿Está seguro de que desea eliminar esta máquina del inventario? Esta acción no se puede deshacer.')) {
-        fetch('/api/maquinaria/eliminar', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ IdMaquina: id })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Recargar la página
-                location.reload();
-            } else {
-                alert('Error al eliminar máquina: ' + data.error);
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            alert('Ocurrió un error al procesar la solicitud.');
-        });
-    }
+    mostrarConfirmacion({
+        titulo: '¿Eliminar Equipo?',
+        mensaje: '¿Está seguro de que desea eliminar este equipo del inventario? Esta acción no se puede deshacer.',
+        tipo: 'danger',
+        textoConfirmar: 'Sí, eliminar',
+        textoCancelar: 'Cancelar',
+        onConfirm: function() {
+            mostrarLoading(true);
+            fetch('/api/maquinaria/eliminar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ IdMaquina: id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                mostrarLoading(false);
+                if (data.success) {
+                    mostrarToast('Equipo eliminado correctamente', 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 800);
+                } else {
+                    mostrarToast('Error al eliminar máquina: ' + (data.error || 'No se pudo eliminar'), 'error');
+                }
+            })
+            .catch(err => {
+                mostrarLoading(false);
+                console.error('Error:', err);
+                mostrarToast('Ocurrió un error al procesar la solicitud.', 'error');
+            });
+        }
+    });
 }
 </script>
 

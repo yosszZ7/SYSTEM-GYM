@@ -3308,11 +3308,105 @@ function initRegistroCliente() {
     });
 }
 
+// ========== MODAL DE CONFIRMACIÓN PERSONALIZADO WORLD GYM ==========
+function initCustomModal() {
+    if (document.getElementById('customModalOverlay')) return;
+    var modalHtml = '<div id="customModalOverlay" class="custom-modal-overlay" style="display: none;">' +
+        '<div class="custom-modal-box">' +
+            '<div class="custom-modal-icon-wrapper danger" id="customModalIcon">' +
+                '<i class="fas fa-trash-alt"></i>' +
+            '</div>' +
+            '<h3 class="custom-modal-title" id="customModalTitle">¿Confirmar Acción?</h3>' +
+            '<p class="custom-modal-text" id="customModalText">¿Está seguro de que desea realizar esta acción?</p>' +
+            '<div class="custom-modal-actions">' +
+                '<button type="button" class="custom-modal-btn custom-modal-btn-cancel" id="customModalCancelBtn">Cancelar</button>' +
+                '<button type="button" class="custom-modal-btn custom-modal-btn-confirm danger" id="customModalConfirmBtn">Eliminar</button>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function mostrarConfirmacion(opciones) {
+    opciones = opciones || {};
+    return new Promise(function(resolve) {
+        var overlay = document.getElementById('customModalOverlay');
+        if (!overlay) {
+            initCustomModal();
+            overlay = document.getElementById('customModalOverlay');
+        }
+
+        var titleEl = document.getElementById('customModalTitle');
+        var textEl = document.getElementById('customModalText');
+        var iconEl = document.getElementById('customModalIcon');
+        var confirmBtn = document.getElementById('customModalConfirmBtn');
+        var cancelBtn = document.getElementById('customModalCancelBtn');
+
+        var tipo = opciones.tipo || 'danger';
+        titleEl.textContent = opciones.titulo || (tipo === 'danger' ? '¿Confirmar eliminación?' : '¿Confirmar acción?');
+        textEl.textContent = opciones.mensaje || '¿Está seguro de continuar?';
+
+        // Configurar icono
+        iconEl.className = 'custom-modal-icon-wrapper ' + tipo;
+        var iconMap = {
+            danger: '<i class="fas fa-trash-alt"></i>',
+            warning: '<i class="fas fa-exclamation-triangle"></i>',
+            info: '<i class="fas fa-info-circle"></i>'
+        };
+        iconEl.innerHTML = iconMap[tipo] || iconMap.danger;
+
+        // Botones
+        confirmBtn.textContent = opciones.textoConfirmar || (tipo === 'danger' ? 'Sí, eliminar' : 'Aceptar');
+        confirmBtn.className = 'custom-modal-btn custom-modal-btn-confirm ' + (tipo === 'danger' ? 'danger' : '');
+        cancelBtn.textContent = opciones.textoCancelar || 'Cancelar';
+
+        // Eventos
+        function cerrarModal(resultado) {
+            overlay.classList.remove('active');
+            setTimeout(function() {
+                overlay.style.display = 'none';
+            }, 250);
+            
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+            overlay.onclick = null;
+            
+            if (resultado) {
+                if (typeof opciones.onConfirm === 'function') opciones.onConfirm();
+                resolve(true);
+            } else {
+                if (typeof opciones.onCancel === 'function') opciones.onCancel();
+                resolve(false);
+            }
+        }
+
+        confirmBtn.onclick = function() { cerrarModal(true); };
+        cancelBtn.onclick = function() { cerrarModal(false); };
+        overlay.onclick = function(e) {
+            if (e.target === overlay) {
+                cerrarModal(false);
+            }
+        };
+
+        overlay.style.display = 'flex';
+        setTimeout(function() {
+            overlay.classList.add('active');
+            confirmBtn.focus();
+        }, 10);
+    });
+}
+window.mostrarConfirmacion = mostrarConfirmacion;
+
 // ========== FUNCIONES DE ELIMINACION ==========
 function confirmarEliminacion(mensaje, callback) {
-    if (confirm(mensaje)) {
-        callback();
-    }
+    mostrarConfirmacion({
+        titulo: '¿Eliminar Registro?',
+        mensaje: mensaje,
+        tipo: 'danger',
+        textoConfirmar: 'Sí, eliminar',
+        textoCancelar: 'Cancelar',
+        onConfirm: callback
+    });
 }
 
 window.eliminarCliente = function(id) {

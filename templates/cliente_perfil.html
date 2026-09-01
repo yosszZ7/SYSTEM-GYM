@@ -654,7 +654,7 @@
             var enfoque1 = parseInt(panel.querySelector('.wiz-day-enfoque1').value);
             
             if (!enfoque1) {
-                alert('Debe seleccionar el Enfoque Muscular 1 para el Día ' + panel.getAttribute('data-day-num'));
+                mostrarToast('Debe seleccionar el Enfoque Muscular 1 para el Día ' + panel.getAttribute('data-day-num'), 'warning');
                 panel.querySelector('.wiz-day-enfoque1').focus();
                 return;
             }
@@ -673,7 +673,7 @@
             var rows = panel.querySelectorAll('.exercise-row');
             
             if (rows.length === 0) {
-                alert('Debe agregar al menos un ejercicio en el Día ' + panel.getAttribute('data-day-num'));
+                mostrarToast('Debe agregar al menos un ejercicio en el Día ' + panel.getAttribute('data-day-num'), 'warning');
                 return;
             }
             
@@ -683,7 +683,7 @@
                 var idEjercicio = parseInt(row.querySelector('.row-ejercicio').value);
                 
                 if (!idEjercicio) {
-                    alert('Debe seleccionar un ejercicio en la fila ' + (j + 1) + ' del Día ' + panel.getAttribute('data-day-num'));
+                    mostrarToast('Debe seleccionar un ejercicio en la fila ' + (j + 1) + ' del Día ' + panel.getAttribute('data-day-num'), 'warning');
                     row.querySelector('.row-ejercicio').focus();
                     return;
                 }

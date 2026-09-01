@@ -3597,3 +3597,142 @@ p, label, span, td, th {
     color: #64748b;
     border-top: 1px solid #e2e8f0;
 }
+
+/* ========== MODAL DE CONFIRMACIÓN PERSONALIZADO WORLD GYM ========== */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(45, 31, 22, 0.45);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.custom-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-modal-box {
+    background: var(--bg-primary, #FFFDF9);
+    border: 1px solid var(--border-color, #EFE6DC);
+    border-radius: 20px;
+    padding: 32px 28px;
+    width: 90%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(45, 31, 22, 0.35);
+    transform: scale(0.92) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.custom-modal-overlay.active .custom-modal-box {
+    transform: scale(1) translateY(0);
+}
+
+.custom-modal-icon-wrapper {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    margin: 0 auto 18px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    transition: transform 0.2s ease;
+}
+
+.custom-modal-icon-wrapper.danger {
+    background: #FEE2E2;
+    color: #EF4444;
+    border: 2px solid #FCA5A5;
+}
+
+.custom-modal-icon-wrapper.warning {
+    background: #FEF3C7;
+    color: #F59E0B;
+    border: 2px solid #FCD34D;
+}
+
+.custom-modal-icon-wrapper.info {
+    background: #FFF7ED;
+    color: var(--primary, #F28C28);
+    border: 2px solid var(--primary-light, #FCE3CC);
+}
+
+.custom-modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text, #4A3728);
+    margin: 0 0 10px 0;
+}
+
+.custom-modal-text {
+    font-size: 0.95rem;
+    color: var(--text-secondary, #8B6F5A);
+    line-height: 1.5;
+    margin: 0 0 25px 0;
+}
+
+.custom-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.custom-modal-btn {
+    flex: 1;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.custom-modal-btn-cancel {
+    background: var(--bg-sidebar, #FAF1E6);
+    color: var(--text-secondary, #8B6F5A);
+    border: 1px solid var(--border-color, #EFE6DC);
+}
+
+.custom-modal-btn-cancel:hover {
+    background: var(--border-color, #EFE6DC);
+    color: var(--text, #4A3728);
+}
+
+.custom-modal-btn-confirm {
+    background: var(--primary-gradient, linear-gradient(135deg, #F28C28 0%, #D77218 100%));
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(242, 140, 40, 0.3);
+}
+
+.custom-modal-btn-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(242, 140, 40, 0.4);
+    filter: brightness(1.05);
+}
+
+.custom-modal-btn-confirm.danger {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.custom-modal-btn-confirm.danger:hover {
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
