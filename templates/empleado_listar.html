@@ -27,16 +27,19 @@
 
         <!-- BARRA DE BÚSQUEDA Y FILTRADO INTEGRADA -->
         <div class="table-filter-bar" style="padding: 16px 20px; background: var(--bg-sidebar, #FAF1E6); border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-            <div style="display: flex; gap: 12px; flex: 1; min-width: 280px; max-width: 600px; position: relative;">
-                <div style="position: relative; width: 100%;">
+            <div style="display: flex; gap: 10px; flex: 1; min-width: 280px; max-width: 620px;">
+                <div style="position: relative; flex: 1;">
                     <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-secondary, #8B6F5A); pointer-events: none;"></i>
-                    <input type="text" id="buscadorEmpleados" placeholder="Buscar por nombre, apellido, teléfono, correo o cargo..." 
+                    <input type="text" id="buscadorEmpleados" placeholder="Nombre del empleado a buscar..." 
                            style="width: 100%; padding: 10px 38px 10px 38px; border-radius: 10px; border: 1.5px solid var(--border-color, #EFE6DC); background: #FFFFFF; font-size: 14px; color: var(--text, #4A3728); outline: none; transition: all 0.2s ease;">
                     <button type="button" id="btnLimpiarBusqueda" onclick="limpiarBusqueda()" title="Limpiar búsqueda" 
                             style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 14px;">
                         <i class="fas fa-times-circle"></i>
                     </button>
                 </div>
+                <button type="button" onclick="filtrarEmpleados()" class="btn btn-primary" style="padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
             </div>
 
             <div style="display: flex; gap: 10px; align-items: center;">
@@ -138,9 +141,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const filaSinCoincidencias = document.getElementById('filaSinCoincidencias');
     const totalEmpleados = filas.length;
 
-    function filtrarEmpleados() {
-        const query = (inputBuscar.value || '').toLowerCase().trim();
-        const cargoSeleccionado = (selectCargo.value || '').toLowerCase().trim();
+    // Normaliza eliminando acentos y convirtiendo a minúsculas (igual que Latin1_General_CI_AI en SQL Server)
+    function normalizarTexto(txt) {
+        if (!txt) return '';
+        return txt
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+    }
+
+    window.filtrarEmpleados = function() {
+        const queryRaw = inputBuscar ? inputBuscar.value : '';
+        const query = normalizarTexto(queryRaw);
+        const cargoSeleccionado = normalizarTexto(selectCargo ? selectCargo.value : '');
 
         // Mostrar u ocultar botón de limpiar búsqueda rápida
         if (btnLimpiar) {
@@ -151,11 +165,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const queryTokens = query.split(/\s+/).filter(Boolean);
 
         filas.forEach(function(fila) {
-            const nombre = (fila.getAttribute('data-nombre') || '').toLowerCase();
-            const telefono = (fila.getAttribute('data-telefono') || '').toLowerCase().replace(/\s+/g, '');
-            const correo = (fila.getAttribute('data-correo') || '').toLowerCase();
-            const cargo = (fila.getAttribute('data-cargo') || '').toLowerCase();
-            const id = (fila.getAttribute('data-id') || '').toLowerCase();
+            const nombre = normalizarTexto(fila.getAttribute('data-nombre'));
+            const telefono = normalizarTexto(fila.getAttribute('data-telefono')).replace(/\s+/g, '');
+            const correo = normalizarTexto(fila.getAttribute('data-correo'));
+            const cargo = normalizarTexto(fila.getAttribute('data-cargo'));
+            const id = normalizarTexto(fila.getAttribute('data-id'));
 
             // Separar palabras de nombres, apellidos y cargo
             const palabrasNombre = nombre.split(/\s+/).filter(Boolean);
@@ -163,15 +177,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let coincideTexto = true;
             if (queryTokens.length > 0) {
-                // Cada término buscado debe coincidir con el inicio de alguna palabra o dato
+                // Cada palabra o token buscado debe coincidir con el inicio o contenido de las palabras del empleado
                 coincideTexto = queryTokens.every(function(token) {
-                    const iniciaEnNombre = palabrasNombre.some(function(p) { return p.startsWith(token); });
-                    const iniciaEnCargo = palabrasCargo.some(function(p) { return p.startsWith(token); });
-                    const iniciaEnTelefono = telefono.startsWith(token);
-                    const iniciaEnCorreo = correo.startsWith(token);
-                    const iniciaEnId = id === token || id.startsWith(token);
-
-                    return iniciaEnNombre || iniciaEnCargo || iniciaEnTelefono || iniciaEnCorreo || iniciaEnId;
+                    if (token.length === 1) {
+                        return palabrasNombre.some(function(p) { return p.startsWith(token); }) ||
+                               palabrasCargo.some(function(p) { return p.startsWith(token); }) ||
+                               telefono.startsWith(token) ||
+                               correo.startsWith(token) ||
+                               id === token || id.startsWith(token);
+                    }
+                    return palabrasNombre.some(function(p) { return p.startsWith(token) || p.includes(token); }) ||
+                           nombre.includes(token) ||
+                           palabrasCargo.some(function(p) { return p.startsWith(token) || p.includes(token); }) ||
+                           telefono.includes(token) ||
+                           correo.includes(token) ||
+                           id === token || id.startsWith(token);
                 });
             }
 
@@ -200,10 +220,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 badgeCount.className = 'badge badge-info';
             }
         }
-    }
+    };
 
     if (inputBuscar) {
-        inputBuscar.addEventListener('input', filtrarEmpleados);
+        inputBuscar.addEventListener('input', window.filtrarEmpleados);
+        inputBuscar.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                window.filtrarEmpleados();
+            }
+        });
         inputBuscar.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary, #F28C28)';
             this.style.boxShadow = '0 0 0 3px rgba(242, 140, 40, 0.15)';
@@ -215,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (selectCargo) {
-        selectCargo.addEventListener('change', filtrarEmpleados);
+        selectCargo.addEventListener('change', window.filtrarEmpleados);
         selectCargo.addEventListener('focus', function() {
             this.style.borderColor = 'var(--primary, #F28C28)';
         });
@@ -228,14 +254,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (inputBuscar) {
             inputBuscar.value = '';
             inputBuscar.focus();
-            filtrarEmpleados();
+            window.filtrarEmpleados();
         }
     };
 
     window.limpiarFiltros = function() {
         if (inputBuscar) inputBuscar.value = '';
         if (selectCargo) selectCargo.value = '';
-        filtrarEmpleados();
+        window.filtrarEmpleados();
         if (inputBuscar) inputBuscar.focus();
     };
 });
