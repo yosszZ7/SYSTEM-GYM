@@ -48,7 +48,14 @@ def BuscarEmpleadoPorNombre(Nombre):
             
         columnas = [desc[0] for desc in Cursor.description] if Cursor.description else []
         filas = Cursor.fetchall()
-        empleados = [dict(zip(columnas, fila)) for fila in filas] if columnas else []
+        empleados = []
+        for fila in filas:
+            emp = dict(zip(columnas, fila))
+            if emp.get('FechaContratacion'):
+                emp['FechaContratacion'] = str(emp['FechaContratacion'])
+            if emp.get('Salario') is not None:
+                emp['Salario'] = f"{float(emp['Salario']):.2f}"
+            empleados.append(emp)
         return True, empleados
     except Exception as e:
         return False, f"Error: {str(e)}"

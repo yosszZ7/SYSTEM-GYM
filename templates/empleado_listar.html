@@ -56,11 +56,11 @@
         </div>
 
         <div class="card-body" style="padding: 0;">
-            <div class="table-container">
-                <table class="data-table" id="tablaEmpleados" style="margin: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%; border: none; border-radius: 0; box-shadow: none;">
+                <table class="data-table" id="tablaEmpleados" style="width: 100%; min-width: 1080px; margin: 0; white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th style="width: 60px;">ID</th>
                             <th>PRIMER NOMBRE</th>
                             <th>SEGUNDO NOMBRE</th>
                             <th>PRIMER APELLIDO</th>
@@ -69,8 +69,8 @@
                             <th>CORREO</th>
                             <th>CARGO</th>
                             <th>SALARIO</th>
-                            <th>FECHA CONTRATACIÓN</th>
-                            <th style="text-align: center;">ACCIONES</th>
+                            <th style="min-width: 140px;">FECHA CONTRATACIÓN</th>
+                            <th style="text-align: center; width: 100px;">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaEmpleados">
@@ -125,6 +125,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalInicial = {{ empleados|length }};
 
     let debounceTimer = null;
+
+    function formatearFecha(fechaStr) {
+        if (!fechaStr || fechaStr === '-') return '-';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return fechaStr;
+        try {
+            const d = new Date(fechaStr);
+            if (isNaN(d.getTime())) return fechaStr;
+            const year = d.getUTCFullYear();
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        } catch (e) {
+            return fechaStr;
+        }
+    }
 
     window.ejecutarBusquedaEmpleado = function() {
         const nombre = inputBuscar ? inputBuscar.value.trim() : '';
@@ -188,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.forEach(function(e) {
                     const segundoNombre = e.SegundoNombre || '-';
                     const segundoApellido = e.SegundoApellido || '-';
-                    const fechaContratacion = e.FechaContratacion || '-';
+                    const fechaContratacion = formatearFecha(e.FechaContratacion);
                     const cargo = e.NombreCargo || '-';
                     const salario = e.Salario || '0.00';
 
