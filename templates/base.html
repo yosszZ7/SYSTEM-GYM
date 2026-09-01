@@ -78,9 +78,6 @@
                         <a href="/cliente_registrar" class="{% if request.endpoint == 'cliente_registrar' %}active{% endif %}">
                             <i class="fas fa-user-plus"></i> Registrar Cliente
                         </a>
-                        <a href="/cliente_buscar" class="{% if request.endpoint == 'cliente_buscar' %}active{% endif %}">
-                            <i class="fas fa-search"></i> Buscar Cliente
-                        </a>
                         <a href="/cliente_asistencia" class="{% if request.endpoint == 'cliente_asistencia' %}active{% endif %}">
                             <i class="fas fa-calendar-check"></i> Registrar Asistencia
                         </a>
@@ -106,9 +103,6 @@
                         </a>
                         <a href="/empleado_registrar" class="{% if request.endpoint == 'empleado_registrar' %}active{% endif %}">
                             <i class="fas fa-user-plus"></i> Registrar Empleado
-                        </a>
-                        <a href="/empleado_buscar" class="{% if request.endpoint == 'empleado_buscar' %}active{% endif %}">
-                            <i class="fas fa-search"></i> Buscar Empleado
                         </a>
                         <a href="/empleado_asistencias" class="{% if request.endpoint == 'empleado_asistencias' %}active{% endif %}">
                             <i class="fas fa-clock"></i> Asistencia Empleados
@@ -149,9 +143,6 @@
                         </a>
                         <a href="/ejercicio_registrar" class="{% if request.endpoint == 'ejercicio_registrar' %}active{% endif %}">
                             <i class="fas fa-plus-circle"></i> Registrar Ejercicio
-                        </a>
-                        <a href="/ejercicio_buscar" class="{% if request.endpoint == 'ejercicio_buscar' %}active{% endif %}">
-                            <i class="fas fa-search"></i> Buscar Ejercicio
                         </a>
                         <!-- "Actualizar Ejercicio" se quitó: necesita /ejercicio_actualizar/<id>,
                              se llega desde el botón de editar en "Listar Ejercicios". -->
@@ -337,9 +328,6 @@
                         </a>
                         <a href="/usuario_crear" class="{% if request.endpoint == 'usuario_crear' %}active{% endif %}">
                             <i class="fas fa-user-plus"></i> Crear Usuario
-                        </a>
-                        <a href="/usuario_buscar" class="{% if request.endpoint == 'usuario_buscar' %}active{% endif %}">
-                            <i class="fas fa-search"></i> Buscar Usuario
                         </a>
                         <!-- "Cambiar Contraseña" se quitó: necesita /usuario_cambiar_contrasena/<id>,
                              se llega desde el botón correspondiente en "Listar Usuarios". -->
