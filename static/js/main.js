@@ -3606,8 +3606,67 @@ function mostrarLoading(mostrar) {
     overlay.style.display = mostrar ? 'flex' : 'none';
 }
 
+function limpiarErrorSql(mensaje) {
+    if (!mensaje) return 'Ha ocurrido un error inesperado.';
+    var texto = String(mensaje).trim();
+    
+    // Si contiene patrones de restricciones SQL
+    if (/REFERENCE constraint/i.test(texto) || (/FOREIGN KEY constraint/i.test(texto) && /DELETE|elimin/i.test(texto))) {
+        return 'No se puede eliminar este registro porque tiene información relacionada en el sistema.';
+    }
+    if (/FOREIGN KEY constraint/i.test(texto) || /REFERENCE constraint/i.test(texto)) {
+        return 'No se puede completar la operación porque hace referencia a un dato que no existe o fue modificado.';
+    }
+    if (/UNIQUE KEY constraint/i.test(texto) || /Cannot insert duplicate key/i.test(texto) || /PRIMARY KEY constraint/i.test(texto) || /clave duplicada/i.test(texto)) {
+        return 'Ya existe un registro con estos mismos datos en el sistema.';
+    }
+    if (/Login failed/i.test(texto) || /Cannot open database/i.test(texto) || /08001/.test(texto)) {
+        return 'No se pudo conectar con la base de datos. Intente nuevamente.';
+    }
+    if (/String or binary data would be truncated/i.test(texto) || /truncarían/i.test(texto)) {
+        return 'Uno de los textos ingresados supera el límite de caracteres permitido.';
+    }
+    if (/Conversion failed when converting/i.test(texto) || /Error al convertir/i.test(texto)) {
+        return 'Uno de los valores ingresados no tiene el formato o tipo de dato correcto.';
+    }
+    
+    // Extraer mensaje de [SQL Server] si existe
+    var matchSql = texto.match(/\[SQL Server\](.*?)(?:\(\d+\)\s*\([A-Za-z0-9_]+\)|$)/i);
+    if (matchSql && matchSql[1]) {
+        texto = matchSql[1].trim();
+    }
+    
+    // Limpieza de códigos de driver y ODBC
+    texto = texto.replace(/\[\d+\]\s*/g, '');
+    texto = texto.replace(/\[Microsoft\]\[ODBC[^\]]*\]\s*/gi, '');
+    texto = texto.replace(/\[SQL Server\]\s*/gi, '');
+    texto = texto.replace(/\(\d+\)\s*\([A-Za-z0-9_]+\)/g, '');
+    texto = texto.replace(/The statement has been terminated\.?/gi, '');
+    texto = texto.replace(/Se ha terminado la instrucción\.?/gi, '');
+    
+    // Limpieza de tuplas pyodbc
+    texto = texto.replace(/^\s*\(\s*['"]\d+['"]\s*,\s*['"]?/, '');
+    texto = texto.replace(/['"]\s*\)\s*$/, '');
+    texto = texto.replace(/\s+/g, ' ').trim();
+    
+    // Quitar prefijos duplicados como "Error: Error al..."
+    texto = texto.replace(/^(Error\s*:\s*)+/gi, '').trim();
+    
+    if (!texto || texto.length < 3) {
+        return 'Ocurrió un error al procesar la solicitud.';
+    }
+    
+    return texto;
+}
+
 function mostrarToast(mensaje, tipo) {
     tipo = tipo || 'info';
+    
+    // Sanitizar mensaje si es error/warning o si contiene rastros de SQL/ODBC
+    if (tipo === 'error' || tipo === 'warning' || /SQL Server|ODBC|\[\d+\]/i.test(String(mensaje))) {
+        mensaje = limpiarErrorSql(mensaje);
+    }
+
     var container = document.getElementById('toastContainer');
     if (!container) {
         initToastContainer();

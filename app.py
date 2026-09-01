@@ -91,9 +91,30 @@ from ConexionBD import ConectarBD
 from backend.servicios.ActualizarGrupoMuscular import ActualizarGrupoMuscular
 from backend.servicios.ListarNotificaciones import ListarNotificaciones
 from backend.servicios.MarcarTodasLeidas import MarcarTodasLeidas
+from backend.servicios.limpiar_error import limpiar_error_sql
 
 app = Flask(__name__)
 app.secret_key = 'gym_sistem_secret_key_2026_xyz'
+
+# Wrapper global para que ningún flash de alerta o error muestre trazas o códigos SQL
+_flask_flash = flash
+def flash(message, category='message'):
+    if category in ('error', 'warning', 'danger') or (isinstance(message, str) and ('SQL Server' in message or 'ODBC' in message or '[42000]' in message or '[23000]' in message)):
+        message = limpiar_error_sql(message)
+    return _flask_flash(message, category)
+
+# Wrapper global para que ningún jsonify de error devuelva texto crudo de SQL Server
+_flask_jsonify = jsonify
+def jsonify(*args, **kwargs):
+    if args and isinstance(args[0], dict) and 'error' in args[0] and args[0]['error']:
+        args[0]['error'] = limpiar_error_sql(args[0]['error'])
+    elif 'error' in kwargs and kwargs['error']:
+        kwargs['error'] = limpiar_error_sql(kwargs['error'])
+    return _flask_jsonify(*args, **kwargs)
+
+@app.template_filter('limpiar_error')
+def filter_limpiar_error(s):
+    return limpiar_error_sql(s)
 
 # ==================================================
 # DECORADORES
