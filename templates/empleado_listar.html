@@ -8,7 +8,7 @@
     <div class="page-header">
         <div class="page-header-left">
             <h1><i class="fas fa-user-tie"></i> Lista de Empleados</h1>
-            <p>Gestión completa de todos los empleados registrados</p>
+            <p>Gestión y búsqueda en tiempo real de todos los empleados registrados</p>
         </div>
         <a href="/empleado_registrar" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Nuevo Empleado
@@ -16,13 +16,49 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <h2><i class="fas fa-list"></i> Empleados Registrados</h2>
-            <span class="badge badge-info">{{ empleados|length }} registros</span>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0;"><i class="fas fa-list"></i> Empleados Registrados</h2>
+                <span id="empleadoCountBadge" class="badge badge-info" style="font-size: 13px; padding: 5px 12px; border-radius: 20px;">
+                    <i class="fas fa-users" style="margin-right: 4px;"></i> {{ empleados|length }} empleados
+                </span>
+            </div>
         </div>
-        <div class="card-body">
+
+        <!-- BARRA DE BÚSQUEDA Y FILTRADO INTEGRADA -->
+        <div class="table-filter-bar" style="padding: 16px 20px; background: var(--bg-sidebar, #FAF1E6); border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            <div style="display: flex; gap: 12px; flex: 1; min-width: 280px; max-width: 600px; position: relative;">
+                <div style="position: relative; width: 100%;">
+                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-secondary, #8B6F5A); pointer-events: none;"></i>
+                    <input type="text" id="buscadorEmpleados" placeholder="Buscar por nombre, apellido, teléfono, correo o cargo..." 
+                           style="width: 100%; padding: 10px 38px 10px 38px; border-radius: 10px; border: 1.5px solid var(--border-color, #EFE6DC); background: #FFFFFF; font-size: 14px; color: var(--text, #4A3728); outline: none; transition: all 0.2s ease;">
+                    <button type="button" id="btnLimpiarBusqueda" onclick="limpiarBusqueda()" title="Limpiar búsqueda" 
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 14px;">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <label for="filtroCargo" style="font-size: 13px; font-weight: 600; color: var(--text-secondary, #8B6F5A); margin: 0; white-space: nowrap;">
+                    <i class="fas fa-filter" style="margin-right: 4px;"></i> Cargo:
+                </label>
+                <select id="filtroCargo" style="padding: 9px 14px; border-radius: 10px; border: 1.5px solid var(--border-color, #EFE6DC); background: #FFFFFF; font-size: 13px; color: var(--text, #4A3728); outline: none; cursor: pointer;">
+                    <option value="">Todos los cargos</option>
+                    {% set cargos = [] %}
+                    {% for emp in empleados %}
+                        {% if emp.NombreCargo and emp.NombreCargo not in cargos %}
+                            {% set _ = cargos.append(emp.NombreCargo) %}
+                            <option value="{{ emp.NombreCargo }}">{{ emp.NombreCargo }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
             <div class="table-container">
-                <table class="data-table">
+                <table class="data-table" id="tablaEmpleados" style="margin: 0;">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -35,38 +71,162 @@
                             <th>Cargo</th>
                             <th>Salario</th>
                             <th>Fecha Contratación</th>
-                            <th>Acciones</th>
+                            <th style="text-align: center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for empleado in empleados %}
-                        <tr>
-                            <td>{{ empleado.IdEmpleado }}</td>
+                        <tr class="fila-empleado" 
+                            data-nombre="{{ empleado.PrimerNombre }} {{ empleado.SegundoNombre or '' }} {{ empleado.PrimerApellido }} {{ empleado.SegundoApellido or '' }}"
+                            data-telefono="{{ empleado.Telefono }}"
+                            data-correo="{{ empleado.Correo }}"
+                            data-cargo="{{ empleado.NombreCargo }}"
+                            data-id="{{ empleado.IdEmpleado }}">
+                            <td><strong>#{{ empleado.IdEmpleado }}</strong></td>
                             <td>{{ empleado.PrimerNombre }}</td>
                             <td>{{ empleado.SegundoNombre or '-' }}</td>
                             <td>{{ empleado.PrimerApellido }}</td>
                             <td>{{ empleado.SegundoApellido or '-' }}</td>
                             <td>{{ empleado.Telefono }}</td>
                             <td>{{ empleado.Correo }}</td>
-                            <td>{{ empleado.NombreCargo }}</td>
-                            <td>C${{ empleado.Salario }}</td>
+                            <td>
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 4px 10px; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                                    {{ empleado.NombreCargo }}
+                                </span>
+                            </td>
+                            <td><strong>C${{ empleado.Salario }}</strong></td>
                             <td>{{ empleado.FechaContratacion }}</td>
-                            <td class="table-actions">
-                                <!--  CORRECTO -->
-                                <a href="/empleado_actualizar/{{ empleado.IdEmpleado }}" class="btn-edit" title="Editar">
+                            <td class="table-actions" style="text-align: center;">
+                                <a href="/empleado_actualizar/{{ empleado.IdEmpleado }}" class="btn-edit" title="Editar Empleado">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="11" class="text-center">No hay empleados registrados</td>
+                        <tr id="filaSinRegistros">
+                            <td colspan="11" class="text-center" style="padding: 3rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-user-slash" style="font-size: 2.5rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.75rem;"></i>
+                                No hay empleados registrados en el sistema
+                            </td>
                         </tr>
                         {% endfor %}
+                        <!-- Fila de no resultados al filtrar -->
+                        <tr id="filaSinCoincidencias" style="display: none;">
+                            <td colspan="11" class="text-center" style="padding: 3rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-search" style="font-size: 2.5rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.75rem;"></i>
+                                <span style="font-size: 1.05rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron empleados coincidentes</span>
+                                <p style="margin: 6px 0 16px 0; font-size: 13px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o limpie los filtros de búsqueda</p>
+                                <button type="button" onclick="limpiarFiltros()" class="btn btn-secondary" style="font-size: 13px; padding: 7px 16px; border-radius: 8px;">
+                                    <i class="fas fa-times" style="margin-right: 5px;"></i> Restablecer filtros
+                                </button>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputBuscar = document.getElementById('buscadorEmpleados');
+    const selectCargo = document.getElementById('filtroCargo');
+    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+    const filas = document.querySelectorAll('.fila-empleado');
+    const badgeCount = document.getElementById('empleadoCountBadge');
+    const filaSinCoincidencias = document.getElementById('filaSinCoincidencias');
+    const totalEmpleados = filas.length;
+
+    function filtrarEmpleados() {
+        const query = (inputBuscar.value || '').toLowerCase().trim();
+        const cargoSeleccionado = (selectCargo.value || '').toLowerCase().trim();
+
+        // Mostrar u ocultar botón de limpiar búsqueda rápida
+        if (btnLimpiar) {
+            btnLimpiar.style.display = query ? 'block' : 'none';
+        }
+
+        let visibles = 0;
+
+        filas.forEach(function(fila) {
+            const nombre = (fila.getAttribute('data-nombre') || '').toLowerCase();
+            const telefono = (fila.getAttribute('data-telefono') || '').toLowerCase();
+            const correo = (fila.getAttribute('data-correo') || '').toLowerCase();
+            const cargo = (fila.getAttribute('data-cargo') || '').toLowerCase();
+            const id = (fila.getAttribute('data-id') || '').toLowerCase();
+
+            const coincideTexto = !query || 
+                nombre.includes(query) || 
+                telefono.includes(query) || 
+                correo.includes(query) || 
+                cargo.includes(query) || 
+                id.includes(query);
+
+            const coincideCargo = !cargoSeleccionado || cargo === cargoSeleccionado;
+
+            if (coincideTexto && coincideCargo) {
+                fila.style.display = '';
+                visibles++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        // Mostrar / ocultar fila de sin coincidencias
+        if (filaSinCoincidencias) {
+            filaSinCoincidencias.style.display = (visibles === 0 && totalEmpleados > 0) ? '' : 'none';
+        }
+
+        // Actualizar contador dinámico
+        if (badgeCount) {
+            if (query || cargoSeleccionado) {
+                badgeCount.innerHTML = `<i class="fas fa-filter" style="margin-right: 4px;"></i> ${visibles} de ${totalEmpleados} empleados`;
+                badgeCount.className = visibles > 0 ? 'badge badge-primary' : 'badge badge-danger';
+            } else {
+                badgeCount.innerHTML = `<i class="fas fa-users" style="margin-right: 4px;"></i> ${totalEmpleados} empleados`;
+                badgeCount.className = 'badge badge-info';
+            }
+        }
+    }
+
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', filtrarEmpleados);
+        inputBuscar.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary, #F28C28)';
+            this.style.boxShadow = '0 0 0 3px rgba(242, 140, 40, 0.15)';
+        });
+        inputBuscar.addEventListener('blur', function() {
+            this.style.borderColor = 'var(--border-color, #EFE6DC)';
+            this.style.boxShadow = 'none';
+        });
+    }
+
+    if (selectCargo) {
+        selectCargo.addEventListener('change', filtrarEmpleados);
+        selectCargo.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary, #F28C28)';
+        });
+        selectCargo.addEventListener('blur', function() {
+            this.style.borderColor = 'var(--border-color, #EFE6DC)';
+        });
+    }
+
+    window.limpiarBusqueda = function() {
+        if (inputBuscar) {
+            inputBuscar.value = '';
+            inputBuscar.focus();
+            filtrarEmpleados();
+        }
+    };
+
+    window.limpiarFiltros = function() {
+        if (inputBuscar) inputBuscar.value = '';
+        if (selectCargo) selectCargo.value = '';
+        filtrarEmpleados();
+        if (inputBuscar) inputBuscar.focus();
+    };
+});
+</script>
 </div>
 {% endblock %}
