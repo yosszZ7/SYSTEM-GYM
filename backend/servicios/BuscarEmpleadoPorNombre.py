@@ -14,9 +14,15 @@ def BuscarEmpleadoPorNombre(Nombre):
         if palabras:
             condiciones = []
             parametros = []
-            for p in palabras:
-                condiciones.append("(E.PrimerNombre COLLATE Latin1_General_CI_AI LIKE ? OR E.SegundoNombre COLLATE Latin1_General_CI_AI LIKE ? OR E.PrimerApellido COLLATE Latin1_General_CI_AI LIKE ? OR E.SegundoApellido COLLATE Latin1_General_CI_AI LIKE ?)")
-                parametros.extend([f"%{p}%", f"%{p}%", f"%{p}%", f"%{p}%"])
+            
+            # La primera palabra debe coincidir con el inicio del Primer Nombre
+            condiciones.append("E.PrimerNombre COLLATE Latin1_General_CI_AI LIKE ?")
+            parametros.append(f"{palabras[0]}%")
+            
+            # Las siguientes palabras (si las hay) buscan en segundo nombre o apellidos
+            for p in palabras[1:]:
+                condiciones.append("(E.SegundoNombre COLLATE Latin1_General_CI_AI LIKE ? OR E.PrimerApellido COLLATE Latin1_General_CI_AI LIKE ? OR E.SegundoApellido COLLATE Latin1_General_CI_AI LIKE ?)")
+                parametros.extend([f"{p}%", f"{p}%", f"{p}%"])
             
             where_clause = " AND ".join(condiciones)
             sql = f"""
