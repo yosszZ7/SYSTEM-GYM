@@ -16,7 +16,17 @@ def ListarEmpleados():
         Cursor.execute("EXEC SpListarEmpleados")
         Filas = Cursor.fetchall()
         Columnas = [desc[0] for desc in Cursor.description]
-        Empleados = [dict(zip(Columnas, fila)) for fila in Filas]
+        Empleados = []
+        for fila in Filas:
+            emp = dict(zip(Columnas, fila))
+            if emp.get('FechaContratacion'):
+                if hasattr(emp['FechaContratacion'], 'strftime'):
+                    emp['FechaContratacion'] = emp['FechaContratacion'].strftime('%d/%m/%Y')
+                else:
+                    emp['FechaContratacion'] = str(emp['FechaContratacion'])
+            if emp.get('Salario') is not None:
+                emp['Salario'] = f"{float(emp['Salario']):.2f}"
+            Empleados.append(emp)
         return True, Empleados
 
     except Exception as Error:
