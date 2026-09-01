@@ -8,54 +8,50 @@
     <div class="page-header">
         <div class="page-header-left">
             <h1><i class="fas fa-user-tie"></i> Lista de Empleados</h1>
-            <p>Gestión y búsqueda en tiempo real de todos los empleados registrados</p>
+            <p>Búsqueda y gestión completa de todos los empleados registrados</p>
         </div>
         <a href="/empleado_registrar" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Nuevo Empleado
         </a>
     </div>
 
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <h2 style="margin: 0;"><i class="fas fa-list"></i> Empleados Registrados</h2>
-                <span id="empleadoCountBadge" class="badge badge-info" style="font-size: 13px; padding: 5px 12px; border-radius: 20px;">
-                    <i class="fas fa-users" style="margin-right: 4px;"></i> {{ empleados|length }} empleados
-                </span>
-            </div>
-        </div>
-
-        <!-- BARRA DE BÚSQUEDA Y FILTRADO INTEGRADA -->
-        <div class="table-filter-bar" style="padding: 16px 20px; background: var(--bg-sidebar, #FAF1E6); border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-            <div style="display: flex; gap: 10px; flex: 1; min-width: 280px; max-width: 620px;">
-                <div style="position: relative; flex: 1;">
-                    <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-secondary, #8B6F5A); pointer-events: none;"></i>
-                    <input type="text" id="buscadorEmpleados" placeholder="Nombre del empleado a buscar..." 
-                           style="width: 100%; padding: 10px 38px 10px 38px; border-radius: 10px; border: 1.5px solid var(--border-color, #EFE6DC); background: #FFFFFF; font-size: 14px; color: var(--text, #4A3728); outline: none; transition: all 0.2s ease;">
-                    <button type="button" id="btnLimpiarBusqueda" onclick="limpiarBusqueda()" title="Limpiar búsqueda" 
-                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 14px;">
-                        <i class="fas fa-times-circle"></i>
+    <!-- TARJETA DE BÚSQUEDA SUPERIOR (IDÉNTICA A BUSCAR EMPLEADO) -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-body" style="padding: 1.75rem 1.5rem;">
+            <div class="search-box" style="max-width: 620px; margin: 0 auto;">
+                <div class="search-input-group" style="display: flex; gap: 10px; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="buscadorEmpleados" placeholder="Nombre del empleado a buscar..." aria-label="Nombre del empleado"
+                               style="width: 100%; padding: 12px 38px 12px 16px; border: 2px solid var(--border-color, #EFE6DC); border-radius: 10px; background: #FFFFFF; color: var(--text, #4A3728); font-size: 14px; outline: none; transition: all 0.2s ease;">
+                        <button type="button" id="btnLimpiarBusqueda" onclick="limpiarBusqueda()" title="Limpiar búsqueda" 
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 14px;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <button type="button" onclick="window.filtrarEmpleados()" class="btn btn-primary" style="padding: 12px 24px; border-radius: 10px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <i class="fas fa-search"></i> Buscar
                     </button>
                 </div>
-                <button type="button" onclick="filtrarEmpleados()" class="btn btn-primary" style="padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <i class="fas fa-search"></i> Buscar
-                </button>
+                <small class="form-text" style="display: block; margin-top: 0.6rem; color: var(--text-secondary, #8B6F5A); font-size: 13px; text-align: center;">
+                    Presione Enter o haga clic en el botón para buscar
+                </small>
             </div>
+        </div>
+    </div>
 
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <label for="filtroCargo" style="font-size: 13px; font-weight: 600; color: var(--text-secondary, #8B6F5A); margin: 0; white-space: nowrap;">
-                    <i class="fas fa-filter" style="margin-right: 4px;"></i> Cargo:
-                </label>
-                <select id="filtroCargo" style="padding: 9px 14px; border-radius: 10px; border: 1.5px solid var(--border-color, #EFE6DC); background: #FFFFFF; font-size: 13px; color: var(--text, #4A3728); outline: none; cursor: pointer;">
-                    <option value="">Todos los cargos</option>
-                    {% set cargos = [] %}
-                    {% for emp in empleados %}
-                        {% if emp.NombreCargo and emp.NombreCargo not in cargos %}
-                            {% set _ = cargos.append(emp.NombreCargo) %}
-                            <option value="{{ emp.NombreCargo }}">{{ emp.NombreCargo }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
+    <!-- TARJETA DE RESULTADOS / LISTA DE EMPLEADOS -->
+    <div class="card" id="cardResultados">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0;" id="tituloTabla"><i class="fas fa-list"></i> Empleados Registrados</h2>
+                <span id="empleadoCountBadge" class="badge badge-info" style="font-size: 13px; padding: 5px 12px; border-radius: 20px;">
+                    {{ empleados|length }} registro{{ 's' if empleados|length != 1 else '' }}
+                </span>
+            </div>
+            <div id="btnVerTodosContainer" style="display: none;">
+                <button type="button" onclick="limpiarBusqueda()" class="btn btn-secondary" style="font-size: 13px; padding: 6px 14px; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-list"></i> Ver todos los empleados
+                </button>
             </div>
         </div>
 
@@ -65,16 +61,16 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Primer Nombre</th>
-                            <th>Segundo Nombre</th>
-                            <th>Primer Apellido</th>
-                            <th>Segundo Apellido</th>
-                            <th>Teléfono</th>
-                            <th>Correo</th>
-                            <th>Cargo</th>
-                            <th>Salario</th>
-                            <th>Fecha Contratación</th>
-                            <th style="text-align: center;">Acciones</th>
+                            <th>PRIMER NOMBRE</th>
+                            <th>SEGUNDO NOMBRE</th>
+                            <th>PRIMER APELLIDO</th>
+                            <th>SEGUNDO APELLIDO</th>
+                            <th>TELÉFONO</th>
+                            <th>CORREO</th>
+                            <th>CARGO</th>
+                            <th>SALARIO</th>
+                            <th>FECHA CONTRATACIÓN</th>
+                            <th style="text-align: center;">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -85,8 +81,8 @@
                             data-correo="{{ empleado.Correo }}"
                             data-cargo="{{ empleado.NombreCargo }}"
                             data-id="{{ empleado.IdEmpleado }}">
-                            <td><strong>#{{ empleado.IdEmpleado }}</strong></td>
-                            <td>{{ empleado.PrimerNombre }}</td>
+                            <td>{{ empleado.IdEmpleado }}</td>
+                            <td><strong>{{ empleado.PrimerNombre }}</strong></td>
                             <td>{{ empleado.SegundoNombre or '-' }}</td>
                             <td>{{ empleado.PrimerApellido }}</td>
                             <td>{{ empleado.SegundoApellido or '-' }}</td>
@@ -117,10 +113,10 @@
                         <tr id="filaSinCoincidencias" style="display: none;">
                             <td colspan="11" class="text-center" style="padding: 3rem 1rem; color: var(--text-secondary, #8B6F5A);">
                                 <i class="fas fa-search" style="font-size: 2.5rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.75rem;"></i>
-                                <span style="font-size: 1.05rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron empleados coincidentes</span>
-                                <p style="margin: 6px 0 16px 0; font-size: 13px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o limpie los filtros de búsqueda</p>
-                                <button type="button" onclick="limpiarFiltros()" class="btn btn-secondary" style="font-size: 13px; padding: 7px 16px; border-radius: 8px;">
-                                    <i class="fas fa-times" style="margin-right: 5px;"></i> Restablecer filtros
+                                <span style="font-size: 1.05rem; font-weight: 600; color: var(--text, #4A3728);" id="mensajeSinCoincidencias">No se encontraron empleados coincidentes</span>
+                                <p style="margin: 6px 0 16px 0; font-size: 13px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                                <button type="button" onclick="limpiarBusqueda()" class="btn btn-secondary" style="font-size: 13px; padding: 7px 16px; border-radius: 8px; cursor: pointer;">
+                                    <i class="fas fa-list" style="margin-right: 5px;"></i> Ver todos los empleados
                                 </button>
                             </td>
                         </tr>
@@ -134,11 +130,13 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const inputBuscar = document.getElementById('buscadorEmpleados');
-    const selectCargo = document.getElementById('filtroCargo');
     const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
-    const filas = document.querySelectorAll('.fila-empleado');
+    const btnVerTodosContainer = document.getElementById('btnVerTodosContainer');
+    const tituloTabla = document.getElementById('tituloTabla');
     const badgeCount = document.getElementById('empleadoCountBadge');
     const filaSinCoincidencias = document.getElementById('filaSinCoincidencias');
+    const mensajeSinCoincidencias = document.getElementById('mensajeSinCoincidencias');
+    const filas = document.querySelectorAll('.fila-empleado');
     const totalEmpleados = filas.length;
 
     // Normaliza eliminando acentos y convirtiendo a minúsculas (igual que Latin1_General_CI_AI en SQL Server)
@@ -152,11 +150,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.filtrarEmpleados = function() {
-        const queryRaw = inputBuscar ? inputBuscar.value : '';
+        const queryRaw = inputBuscar ? inputBuscar.value.trim() : '';
         const query = normalizarTexto(queryRaw);
-        const cargoSeleccionado = normalizarTexto(selectCargo ? selectCargo.value : '');
 
-        // Mostrar u ocultar botón de limpiar búsqueda rápida
+        // Mostrar u ocultar botón de limpiar
         if (btnLimpiar) {
             btnLimpiar.style.display = query ? 'block' : 'none';
         }
@@ -171,33 +168,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const cargo = normalizarTexto(fila.getAttribute('data-cargo'));
             const id = normalizarTexto(fila.getAttribute('data-id'));
 
-            // Separar palabras de nombres, apellidos y cargo
+            // Palabras separadas del nombre completo
             const palabrasNombre = nombre.split(/\s+/).filter(Boolean);
-            const palabrasCargo = cargo.split(/\s+/).filter(Boolean);
 
-            let coincideTexto = true;
+            let coincide = true;
             if (queryTokens.length > 0) {
-                // Cada palabra o token buscado debe coincidir con el inicio o contenido de las palabras del empleado
-                coincideTexto = queryTokens.every(function(token) {
+                // Coincidencia estricta con nombre / apellidos (o teléfono, ID)
+                coincide = queryTokens.every(function(token) {
                     if (token.length === 1) {
-                        return palabrasNombre.some(function(p) { return p.startsWith(token); }) ||
-                               palabrasCargo.some(function(p) { return p.startsWith(token); }) ||
-                               telefono.startsWith(token) ||
-                               correo.startsWith(token) ||
-                               id === token || id.startsWith(token);
+                        return palabrasNombre.some(p => p.startsWith(token)) ||
+                               id.startsWith(token) ||
+                               telefono.startsWith(token);
                     }
-                    return palabrasNombre.some(function(p) { return p.startsWith(token) || p.includes(token); }) ||
+                    return palabrasNombre.some(p => p.startsWith(token) || p.includes(token)) ||
                            nombre.includes(token) ||
-                           palabrasCargo.some(function(p) { return p.startsWith(token) || p.includes(token); }) ||
                            telefono.includes(token) ||
                            correo.includes(token) ||
+                           cargo.includes(token) ||
                            id === token || id.startsWith(token);
                 });
             }
 
-            const coincideCargo = !cargoSeleccionado || cargo === cargoSeleccionado;
-
-            if (coincideTexto && coincideCargo) {
+            if (coincide) {
                 fila.style.display = '';
                 visibles++;
             } else {
@@ -205,19 +197,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Mostrar / ocultar fila de sin coincidencias
-        if (filaSinCoincidencias) {
-            filaSinCoincidencias.style.display = (visibles === 0 && totalEmpleados > 0) ? '' : 'none';
-        }
-
-        // Actualizar contador dinámico
-        if (badgeCount) {
-            if (query || cargoSeleccionado) {
-                badgeCount.innerHTML = `<i class="fas fa-filter" style="margin-right: 4px;"></i> ${visibles} de ${totalEmpleados} empleados`;
-                badgeCount.className = visibles > 0 ? 'badge badge-primary' : 'badge badge-danger';
-            } else {
-                badgeCount.innerHTML = `<i class="fas fa-users" style="margin-right: 4px;"></i> ${totalEmpleados} empleados`;
+        // Actualizar estados visuales de la tarjeta
+        if (query) {
+            if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Resultados de la Búsqueda';
+            if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'block';
+            if (badgeCount) {
+                badgeCount.textContent = visibles + (visibles === 1 ? ' registro' : ' registros');
+                badgeCount.className = visibles > 0 ? 'badge badge-info' : 'badge badge-danger';
+            }
+            if (filaSinCoincidencias) {
+                filaSinCoincidencias.style.display = (visibles === 0 && totalEmpleados > 0) ? '' : 'none';
+                if (mensajeSinCoincidencias) {
+                    mensajeSinCoincidencias.innerHTML = `No se encontraron empleados con el nombre "<strong>${queryRaw}</strong>"`;
+                }
+            }
+        } else {
+            if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Empleados Registrados';
+            if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'none';
+            if (badgeCount) {
+                badgeCount.textContent = totalEmpleados + (totalEmpleados === 1 ? ' registro' : ' registros');
                 badgeCount.className = 'badge badge-info';
+            }
+            if (filaSinCoincidencias) {
+                filaSinCoincidencias.style.display = 'none';
             }
         }
     };
@@ -240,31 +242,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    if (selectCargo) {
-        selectCargo.addEventListener('change', window.filtrarEmpleados);
-        selectCargo.addEventListener('focus', function() {
-            this.style.borderColor = 'var(--primary, #F28C28)';
-        });
-        selectCargo.addEventListener('blur', function() {
-            this.style.borderColor = 'var(--border-color, #EFE6DC)';
-        });
-    }
-
     window.limpiarBusqueda = function() {
         if (inputBuscar) {
             inputBuscar.value = '';
-            inputBuscar.focus();
             window.filtrarEmpleados();
+            inputBuscar.focus();
         }
-    };
-
-    window.limpiarFiltros = function() {
-        if (inputBuscar) inputBuscar.value = '';
-        if (selectCargo) selectCargo.value = '';
-        window.filtrarEmpleados();
-        if (inputBuscar) inputBuscar.focus();
     };
 });
 </script>
-</div>
 {% endblock %}
