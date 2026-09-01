@@ -148,20 +148,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         let visibles = 0;
+        const queryTokens = query.split(/\s+/).filter(Boolean);
 
         filas.forEach(function(fila) {
             const nombre = (fila.getAttribute('data-nombre') || '').toLowerCase();
-            const telefono = (fila.getAttribute('data-telefono') || '').toLowerCase();
+            const telefono = (fila.getAttribute('data-telefono') || '').toLowerCase().replace(/\s+/g, '');
             const correo = (fila.getAttribute('data-correo') || '').toLowerCase();
             const cargo = (fila.getAttribute('data-cargo') || '').toLowerCase();
             const id = (fila.getAttribute('data-id') || '').toLowerCase();
 
-            const coincideTexto = !query || 
-                nombre.includes(query) || 
-                telefono.includes(query) || 
-                correo.includes(query) || 
-                cargo.includes(query) || 
-                id.includes(query);
+            // Separar palabras de nombres, apellidos y cargo
+            const palabrasNombre = nombre.split(/\s+/).filter(Boolean);
+            const palabrasCargo = cargo.split(/\s+/).filter(Boolean);
+
+            let coincideTexto = true;
+            if (queryTokens.length > 0) {
+                // Cada término buscado debe coincidir con el inicio de alguna palabra o dato
+                coincideTexto = queryTokens.every(function(token) {
+                    const iniciaEnNombre = palabrasNombre.some(function(p) { return p.startsWith(token); });
+                    const iniciaEnCargo = palabrasCargo.some(function(p) { return p.startsWith(token); });
+                    const iniciaEnTelefono = telefono.startsWith(token);
+                    const iniciaEnCorreo = correo.startsWith(token);
+                    const iniciaEnId = id === token || id.startsWith(token);
+
+                    return iniciaEnNombre || iniciaEnCargo || iniciaEnTelefono || iniciaEnCorreo || iniciaEnId;
+                });
+            }
 
             const coincideCargo = !cargoSeleccionado || cargo === cargoSeleccionado;
 
