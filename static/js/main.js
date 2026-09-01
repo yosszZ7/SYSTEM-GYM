@@ -1896,7 +1896,7 @@ function actualizarElementosUsuario() {
                 var initial = nombre.charAt(0).toUpperCase();
                 if (!el.querySelector('i')) {
                     el.textContent = initial;
-                    el.style.backgroundColor = '#2563eb';
+                    el.style.backgroundColor = '#F28C28';
                     el.style.color = 'white';
                     el.style.display = 'flex';
                     el.style.alignItems = 'center';
@@ -2051,8 +2051,8 @@ function initDarkMode() {
 
 function aplicarColoresIconos(theme) {
     var isDark = theme === 'dark';
-    var iconColor = isDark ? '#e0e7f0' : '#1e293b';
-    var primaryColor = isDark ? '#4a8cf7' : '#2563eb';
+    var iconColor = isDark ? '#e0e7f0' : '#8B6F5A';
+    var primaryColor = isDark ? '#FFA048' : '#F28C28';
     
     document.querySelectorAll('.fas, .far, .fal, .fab').forEach(function(icon) {
         if (!icon.closest('.btn') && !icon.closest('.stat-icon') && !icon.closest('.input-group-text')) {
@@ -2654,7 +2654,7 @@ function cargarQuickActions() {
     if (!container) return;
     
     var acciones = [
-        { url: '/cliente_registrar', icono: 'fa-user-plus', texto: 'Registrar Cliente', desc: 'Nuevo cliente en el sistema', color: '#2563eb' },
+        { url: '/cliente_registrar', icono: 'fa-user-plus', texto: 'Registrar Cliente', desc: 'Nuevo cliente en el sistema', color: '#F28C28' },
         { url: '/venta_registrar', icono: 'fa-cart-plus', texto: 'Nueva Venta', desc: 'Registrar una venta', color: '#10b981' },
         { url: '/ejercicio_registrar', icono: 'fa-dumbbell', texto: 'Nuevo Ejercicio', desc: 'Agregar ejercicio', color: '#f59e0b' },
         { url: '/empleado_registrar', icono: 'fa-user-tie', texto: 'Nuevo Empleado', desc: 'Registrar empleado', color: '#8b5cf6' }
