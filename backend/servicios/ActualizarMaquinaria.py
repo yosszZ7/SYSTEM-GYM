@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD, TraducirErrorBD
+from ConexionBD import ConectarBD
 
 def ActualizarMaquinaria(IdMaquina, Nombre, Tipo, Estado, FechaCompra):
     """
@@ -40,7 +40,7 @@ def ActualizarMaquinaria(IdMaquina, Nombre, Tipo, Estado, FechaCompra):
             return True, "Máquina actualizada correctamente (directo)."
 
     except Exception as Error:
-        return False, TraducirErrorBD(Error, "Error al actualizar máquina")
+        return False, f"Error al actualizar máquina: {str(Error)}"
     finally:
         if Conexion:
             Conexion.close()

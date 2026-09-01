@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD, TraducirErrorBD
+from ConexionBD import ConectarBD
 
 def RegistrarEmpleado(PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido,
                       Telefono, Correo, FechaContratacion, IdCargo, Salario):
@@ -41,7 +41,7 @@ def RegistrarEmpleado(PrimerNombre, SegundoNombre, PrimerApellido, SegundoApelli
             return False, "No se pudo obtener el ID del empleado registrado."
 
     except Exception as Error:
-        return False, TraducirErrorBD(Error, "Error al registrar empleado")
+        return False, f"Error al registrar empleado: {str(Error)}"
     finally:
         if Conexion:
             Conexion.close()

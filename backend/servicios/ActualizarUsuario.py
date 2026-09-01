@@ -1,4 +1,4 @@
-from ConexionBD import ConectarBD, TraducirErrorBD
+from ConexionBD import ConectarBD
 
 def ActualizarUsuario(IdUsuario, NombreUsuario, IdRol, Estado, IdCliente=None, IdEmpleado=None):
     """
@@ -37,7 +37,7 @@ def ActualizarUsuario(IdUsuario, NombreUsuario, IdRol, Estado, IdCliente=None, I
             return True, "Usuario actualizado correctamente (directo)."
 
     except Exception as Error:
-        return False, TraducirErrorBD(Error, "Error al actualizar usuario")
+        return False, f"Error al actualizar usuario: {str(Error)}"
     finally:
         if Conexion:
             Conexion.close()
