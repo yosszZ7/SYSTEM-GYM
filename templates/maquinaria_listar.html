@@ -123,69 +123,131 @@ document.addEventListener('DOMContentLoaded', function() {
     const badgeCount = document.getElementById('maquinariaCountBadge');
     const cuerpoTabla = document.getElementById('cuerpoTablaMaquinaria');
     
-    const filasOriginales = Array.from(document.querySelectorAll('.fila-maquinaria-item'));
-    const totalInicial = filasOriginales.length;
+    const htmlInicialTabla = cuerpoTabla ? cuerpoTabla.innerHTML : '';
+    const totalInicial = {{ maquinaria|length }};
 
     let debounceTimer = null;
 
+    function formatearFecha(fechaStr) {
+        if (!fechaStr || fechaStr === '-' || fechaStr === '—') return '—';
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr;
+        const matchISO = String(fechaStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (matchISO) {
+            return `${matchISO[3]}/${matchISO[2]}/${matchISO[1]}`;
+        }
+        try {
+            const d = new Date(fechaStr);
+            if (isNaN(d.getTime())) return fechaStr;
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const year = d.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return fechaStr;
+        }
+    }
+
     window.ejecutarBusquedaMaquinaria = function() {
-        const query = inputBuscar ? inputBuscar.value.trim().toLowerCase() : '';
+        const nombre = inputBuscar ? inputBuscar.value.trim() : '';
 
         if (btnLimpiar) {
-            btnLimpiar.style.display = query ? 'block' : 'none';
+            btnLimpiar.style.display = nombre ? 'block' : 'none';
         }
 
-        if (!query) {
+        if (!nombre) {
             restablecerListaCompleta();
             return;
         }
 
-        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Resultados de la Búsqueda';
-        if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'block';
-
-        let count = 0;
-        filasOriginales.forEach(fila => {
-            const nombre = fila.getAttribute('data-nombre') || '';
-            const tipo = fila.getAttribute('data-tipo') || '';
-            
-            // Coincidencia que inicia con la query o está contenida
-            if (nombre.startsWith(query) || nombre.includes(query) || tipo.includes(query)) {
-                fila.style.display = '';
-                count++;
-            } else {
-                fila.style.display = 'none';
-            }
-        });
-
-        // Eliminar fila de 'no resultados' si ya existía
-        const existingNoResults = document.getElementById('filaNoResultadosMaq');
-        if (existingNoResults) existingNoResults.remove();
-
-        if (count === 0) {
-            if (badgeCount) {
-                badgeCount.textContent = '0 registros';
-                badgeCount.className = 'badge badge-danger';
-            }
-            if (cuerpoTabla) {
-                const tr = document.createElement('tr');
-                tr.id = 'filaNoResultadosMaq';
-                tr.innerHTML = `
-                    <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
-                        <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
-                        <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron equipos con el término "<strong>${query}</strong>"</span>
-                        <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
-                        <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
-                            <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los equipos
-                        </button>
-                    </td>`;
-                cuerpoTabla.appendChild(tr);
-            }
-        } else {
-            if (badgeCount) {
-                badgeCount.textContent = count + (count === 1 ? ' registro' : ' registros');
-                badgeCount.className = 'badge badge-info';
-            }
+        if (cuerpoTabla) {
+            cuerpoTabla.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 2rem 1rem;">
+                        <div class="spinner-border" role="status" style="width: 1.8rem; height: 1.8rem; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F28C28);">
+                            <span class="sr-only">Buscando...</span>
+                        </div>
+                        <p style="margin: 6px 0 0 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Buscando equipos...</p>
+                    </td>
+                </tr>`;
         }
+
+        fetch('/api/maquinaria/buscar?nombre=' + encodeURIComponent(nombre))
+            .then(r => r.json())
+            .then(data => {
+                if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Resultados de la Búsqueda';
+                if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'block';
+
+                if (!data || data.length === 0) {
+                    if (badgeCount) {
+                        badgeCount.textContent = '0 registros';
+                        badgeCount.className = 'badge badge-danger';
+                    }
+                    if (cuerpoTabla) {
+                        cuerpoTabla.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                    <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron equipos con el nombre "<strong>${nombre}</strong>"</span>
+                                    <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                                    <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                                        <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los equipos
+                                    </button>
+                                </td>
+                            </tr>`;
+                    }
+                    return;
+                }
+
+                if (badgeCount) {
+                    badgeCount.textContent = data.length + (data.length === 1 ? ' registro' : ' registros');
+                    badgeCount.className = 'badge badge-info';
+                }
+
+                let htmlFilas = '';
+                data.forEach(function(m) {
+                    const tipo = m.Tipo || 'General';
+                    const fechaCompra = formatearFecha(m.FechaCompra);
+                    const estadoHtml = m.Estado ? 
+                        `<span class="badge badge-success" style="font-size: 11.5px; padding: 3px 8px; border-radius: 10px;"><i class="fas fa-check-circle" style="margin-right: 3px;"></i> Operativo</span>` :
+                        `<span class="badge badge-danger" style="font-size: 11.5px; padding: 3px 8px; border-radius: 10px;"><i class="fas fa-exclamation-triangle" style="margin-right: 3px;"></i> Fuera de Servicio</span>`;
+
+                    htmlFilas += `
+                        <tr class="fila-maquinaria-item">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">${m.IdMaquina}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>${m.NombreMaquinaria}</strong></td>
+                            <td style="padding: 8px 10px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
+                                    ${tipo}
+                                </span>
+                            </td>
+                            <td style="text-align: center; padding: 8px 8px;">${estadoHtml}</td>
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">${fechaCompra}</td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/maquinaria_editar/${m.IdMaquina}" class="btn-edit" title="Editar Equipo" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="eliminarMaquina(${m.IdMaquina})" class="btn-delete-item" title="Eliminar Equipo" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 6px; font-size: 13px; transition: transform 0.2s ease;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+
+                if (cuerpoTabla) {
+                    cuerpoTabla.innerHTML = htmlFilas;
+                }
+            })
+            .catch(() => {
+                if (cuerpoTabla) {
+                    cuerpoTabla.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: #EF4444;">
+                                <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                Error al buscar equipos. Intente nuevamente.
+                            </td>
+                        </tr>`;
+                }
+            });
     };
 
     window.restablecerListaCompleta = function() {
@@ -197,14 +259,9 @@ document.addEventListener('DOMContentLoaded', function() {
             badgeCount.textContent = totalInicial + (totalInicial === 1 ? ' registro' : ' registros');
             badgeCount.className = 'badge badge-info';
         }
-        
-        const existingNoResults = document.getElementById('filaNoResultadosMaq');
-        if (existingNoResults) existingNoResults.remove();
-
-        filasOriginales.forEach(fila => {
-            fila.style.display = '';
-        });
-
+        if (cuerpoTabla) {
+            cuerpoTabla.innerHTML = htmlInicialTabla;
+        }
         if (inputBuscar) inputBuscar.focus();
     };
 
@@ -215,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!val) {
                 restablecerListaCompleta();
             } else {
-                debounceTimer = setTimeout(window.ejecutarBusquedaMaquinaria, 200);
+                debounceTimer = setTimeout(window.ejecutarBusquedaMaquinaria, 250);
             }
         });
 

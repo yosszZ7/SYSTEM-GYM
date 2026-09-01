@@ -52,6 +52,7 @@ from backend.servicios.ActualizarUsuario import ActualizarUsuario
 from backend.servicios.ListaDeMaquinaria import ListarMaquinaria
 from backend.servicios.RegistrarMaquinaria import RegistrarMaquinaria
 from backend.servicios.ActualizarMaquinaria import ActualizarMaquinaria
+from backend.servicios.BuscarMaquinariaPorNombre import BuscarMaquinariaPorNombre
 from backend.servicios.RegistrarMantenimiento import RegistrarMantenimiento
 from backend.servicios.ListarMantenimientos import ListarMantenimientos
 from backend.servicios.ActualizarMantenimiento import ActualizarMantenimiento
@@ -384,6 +385,15 @@ def api_productos_buscar():
     if nombre:
         _, productos = BuscarProductoPorNombre(nombre)
     return jsonify(productos or [])
+
+@app.route('/api/maquinaria/buscar')
+@login_required
+def api_maquinaria_buscar():
+    nombre = request.args.get('nombre')
+    maquinas = []
+    if nombre:
+        _, maquinas = BuscarMaquinariaPorNombre(nombre)
+    return jsonify(maquinas or [])
 
 @app.route('/api/rutinas/cliente/<int:id>')
 @login_required
