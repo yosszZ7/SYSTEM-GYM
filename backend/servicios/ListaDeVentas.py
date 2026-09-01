@@ -20,7 +20,19 @@ def ListarVentas():
 
         # Convertir filas a lista de diccionarios
         Filas = Cursor.fetchall()
-        Ventas = [dict(zip(Columnas, fila)) for fila in Filas]
+        Ventas = []
+        for fila in Filas:
+            v = dict(zip(Columnas, fila))
+            if v.get('FechaVenta'):
+                if hasattr(v['FechaVenta'], 'strftime'):
+                    v['FechaVenta'] = v['FechaVenta'].strftime('%d/%m/%Y')
+                else:
+                    v['FechaVenta'] = str(v['FechaVenta'])
+            if v.get('PrecioUnitario') is not None:
+                v['PrecioUnitario'] = f"{float(v['PrecioUnitario']):.2f}"
+            if v.get('Total') is not None:
+                v['Total'] = f"{float(v['Total']):.2f}"
+            Ventas.append(v)
 
         return True, Ventas
 

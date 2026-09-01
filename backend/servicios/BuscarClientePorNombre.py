@@ -20,9 +20,15 @@ def BuscarClientePorNombre(Nombre):
         if palabras:
             condiciones = []
             parametros = []
-            for p in palabras:
-                condiciones.append("(PrimerNombre COLLATE Latin1_General_CI_AI LIKE ? OR SegundoNombre COLLATE Latin1_General_CI_AI LIKE ? OR PrimerApellido COLLATE Latin1_General_CI_AI LIKE ? OR SegundoApellido COLLATE Latin1_General_CI_AI LIKE ?)")
-                parametros.extend([f"%{p}%", f"%{p}%", f"%{p}%", f"%{p}%"])
+            
+            # La primera palabra debe coincidir con el inicio del Primer Nombre
+            condiciones.append("PrimerNombre COLLATE Latin1_General_CI_AI LIKE ?")
+            parametros.append(f"{palabras[0]}%")
+            
+            # Las siguientes palabras (si las hay) buscan en segundo nombre o apellidos
+            for p in palabras[1:]:
+                condiciones.append("(SegundoNombre COLLATE Latin1_General_CI_AI LIKE ? OR PrimerApellido COLLATE Latin1_General_CI_AI LIKE ? OR SegundoApellido COLLATE Latin1_General_CI_AI LIKE ?)")
+                parametros.extend([f"{p}%", f"{p}%", f"{p}%"])
             
             where_clause = " AND ".join(condiciones)
             sql = f"""
@@ -47,7 +53,15 @@ def BuscarClientePorNombre(Nombre):
 
         Columnas = [desc[0] for desc in Cursor.description]
         Filas = Cursor.fetchall()
-        Clientes = [dict(zip(Columnas, fila)) for fila in Filas]
+        Clientes = []
+        for fila in Filas:
+            cli = dict(zip(Columnas, fila))
+            if cli.get('FechaRegistro'):
+                if hasattr(cli['FechaRegistro'], 'strftime'):
+                    cli['FechaRegistro'] = cli['FechaRegistro'].strftime('%d/%m/%Y')
+                else:
+                    cli['FechaRegistro'] = str(cli['FechaRegistro'])
+            Clientes.append(cli)
 
         return True, Clientes
 

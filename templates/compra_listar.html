@@ -15,67 +15,227 @@
         </a>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h2><i class="fas fa-list"></i> Compras Registradas</h2>
-            <span class="badge badge-info">{{ compras|length }} registros</span>
+    <!-- TARJETA DE BÚSQUEDA COMPACTA Y DELGADA -->
+    <div class="card" style="margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(74, 55, 40, 0.05);">
+        <div class="card-body" style="padding: 10px 16px;">
+            <div class="search-box" style="max-width: 580px; margin: 0 auto;">
+                <div class="search-input-group" style="display: flex; gap: 8px; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="buscadorCompras" placeholder="Proveedor, producto o estado a buscar..." aria-label="Término de compra"
+                               style="width: 100%; height: 38px; padding: 6px 34px 6px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: #FFFFFF; color: var(--text, #4A3728); font-size: 13.5px; outline: none; transition: all 0.2s ease;">
+                        <button type="button" id="btnLimpiarBusqueda" onclick="restablecerListaCompleta()" title="Limpiar búsqueda" 
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 13px;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <button type="button" onclick="ejecutarBusquedaCompra()" class="btn btn-primary" style="height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <small class="form-text" style="display: block; margin-top: 4px; color: var(--text-secondary, #8B6F5A); font-size: 11.5px; text-align: center;">
+                    Presione Enter o haga clic en el botón para buscar
+                </small>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-container">
-                <table class="data-table">
+    </div>
+
+    <!-- TARJETA DE RESULTADOS / LISTA DE COMPRAS -->
+    <div class="card" id="cardResultados">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.1rem;" id="tituloTabla"><i class="fas fa-list"></i> Compras Registradas</h2>
+                <span id="compraCountBadge" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                    {{ compras|length }} registro{{ 's' if compras|length != 1 else '' }}
+                </span>
+            </div>
+            <div id="btnVerTodosContainer" style="display: none;">
+                <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12.5px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-list"></i> Ver todas las compras
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%; border: none; border-radius: 0; box-shadow: none;">
+                <table class="data-table data-table-compact" id="tablaCompras" style="width: 100%; margin: 0;">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Proveedor</th>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio Compra</th>
-                            <th>Total</th>
-                            <th>Fecha Compra</th>
-                            <th>Estado</th>
-                            <th>Observación</th>
-                            <th>Acciones</th>
+                            <th style="width: 45px; text-align: center; padding: 10px 8px; font-size: 11px;">ID</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PROVEEDOR</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRODUCTO</th>
+                            <th style="width: 65px; text-align: center; padding: 10px 8px; font-size: 11px;">CANTIDAD</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRECIO COMPRA</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">TOTAL</th>
+                            <th style="width: 115px; text-align: center; padding: 10px 10px; font-size: 11px; white-space: nowrap;">FECHA COMPRA</th>
+                            <th style="width: 95px; text-align: center; padding: 10px 8px; font-size: 11px;">ESTADO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">OBSERVACIÓN</th>
+                            <th style="text-align: center; width: 65px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="cuerpoTablaCompras">
                         {% for compra in compras %}
-                        <tr>
-                            <td>{{ compra.IdCompra }}</td>
-                            <td>{{ compra.Nombre }}</td>
-                            <td>{{ compra.NombreProducto }}</td>
-                            <td>{{ compra.Cantidad }}</td>
-                            <td>C${{ compra.PrecioCompra }}</td>
-                            <td><strong>C${{ compra.Total }}</strong></td>
-                            <td>{{ compra.FechaCompra }}</td>
-                            <td>
-                                <span class="badge {% if compra.Estado == 'Recibida' %}badge-success{% else %}badge-warning{% endif %}">
+                        <tr class="fila-compra-item" data-prov="{{ compra.Nombre|lower }}" data-prod="{{ compra.NombreProducto|lower }}" data-estado="{{ (compra.Estado or '')|lower }}">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ compra.IdCompra }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ compra.Nombre }}</strong></td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ compra.NombreProducto }}</td>
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ compra.Cantidad }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px; white-space: nowrap;">C${{ compra.PrecioCompra }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px; font-weight: 700; color: #10B981; white-space: nowrap;">C${{ compra.Total }}</td>
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">{{ compra.FechaCompra }}</td>
+                            <td style="text-align: center; padding: 8px 8px;">
+                                <span class="badge {% if compra.Estado == 'Recibida' %}badge-success{% else %}badge-warning{% endif %}" style="font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
                                     {{ compra.Estado }}
                                 </span>
                             </td>
-                            <td>{{ compra.Observacion or '-' }}</td>
-                             <td class="table-actions">
-                                 {% if compra.Estado != 'Cancelada' %}
-                                 <button onclick="anularCompra({{ compra.IdCompra }})" class="btn-delete-item" title="Anular Compra" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 8px; font-size: 14px; transition: transform 0.2s ease;">
-                                     <i class="fas fa-ban"></i>
-                                 </button>
-                                 {% else %}
-                                 <span style="color: var(--text-secondary); font-size: 12px; font-style: italic;">Anulada</span>
-                                 {% endif %}
-                             </td>
-                         </tr>
-                         {% else %}
-                         <tr>
-                             <td colspan="10" class="text-center">No hay compras registradas</td>
-                         </tr>
-                         {% endfor %}
-                     </tbody>
-                 </table>
-             </div>
-         </div>
-     </div>
- </div>
+                            <td style="padding: 8px 10px; font-size: 13px; color: var(--text-secondary, #8B6F5A);">{{ compra.Observacion or '-' }}</td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                {% if compra.Estado != 'Cancelada' %}
+                                <button onclick="anularCompra({{ compra.IdCompra }})" class="btn-delete-item" title="Anular Compra" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 6px; font-size: 13px; transition: transform 0.2s ease;">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                                {% else %}
+                                <span style="color: var(--text-secondary, #8B6F5A); font-size: 11.5px; font-style: italic;">Anulada</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-truck" style="font-size: 2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                No hay compras registradas en el sistema
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputBuscar = document.getElementById('buscadorCompras');
+    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+    const btnVerTodosContainer = document.getElementById('btnVerTodosContainer');
+    const tituloTabla = document.getElementById('tituloTabla');
+    const badgeCount = document.getElementById('compraCountBadge');
+    const cuerpoTabla = document.getElementById('cuerpoTablaCompras');
+    
+    const filasOriginales = Array.from(document.querySelectorAll('.fila-compra-item'));
+    const totalInicial = filasOriginales.length;
+
+    let debounceTimer = null;
+
+    window.ejecutarBusquedaCompra = function() {
+        const query = inputBuscar ? inputBuscar.value.trim().toLowerCase() : '';
+
+        if (btnLimpiar) {
+            btnLimpiar.style.display = query ? 'block' : 'none';
+        }
+
+        if (!query) {
+            restablecerListaCompleta();
+            return;
+        }
+
+        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Resultados de la Búsqueda';
+        if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'block';
+
+        let count = 0;
+        filasOriginales.forEach(fila => {
+            const prov = fila.getAttribute('data-prov') || '';
+            const prod = fila.getAttribute('data-prod') || '';
+            const estado = fila.getAttribute('data-estado') || '';
+            
+            if (prov.startsWith(query) || prov.includes(query) || prod.includes(query) || estado.includes(query)) {
+                fila.style.display = '';
+                count++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        const existingNoResults = document.getElementById('filaNoResultadosComp');
+        if (existingNoResults) existingNoResults.remove();
+
+        if (count === 0) {
+            if (badgeCount) {
+                badgeCount.textContent = '0 registros';
+                badgeCount.className = 'badge badge-danger';
+            }
+            if (cuerpoTabla) {
+                const tr = document.createElement('tr');
+                tr.id = 'filaNoResultadosComp';
+                tr.innerHTML = `
+                    <td colspan="10" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                        <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                        <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron compras con el término "<strong>${query}</strong>"</span>
+                        <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                        <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                            <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todas las compras
+                        </button>
+                    </td>`;
+                cuerpoTabla.appendChild(tr);
+            }
+        } else {
+            if (badgeCount) {
+                badgeCount.textContent = count + (count === 1 ? ' registro' : ' registros');
+                badgeCount.className = 'badge badge-info';
+            }
+        }
+    };
+
+    window.restablecerListaCompleta = function() {
+        if (inputBuscar) inputBuscar.value = '';
+        if (btnLimpiar) btnLimpiar.style.display = 'none';
+        if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'none';
+        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Compras Registradas';
+        if (badgeCount) {
+            badgeCount.textContent = totalInicial + (totalInicial === 1 ? ' registro' : ' registros');
+            badgeCount.className = 'badge badge-info';
+        }
+        
+        const existingNoResults = document.getElementById('filaNoResultadosComp');
+        if (existingNoResults) existingNoResults.remove();
+
+        filasOriginales.forEach(fila => {
+            fila.style.display = '';
+        });
+
+        if (inputBuscar) inputBuscar.focus();
+    };
+
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const val = this.value.trim();
+            if (!val) {
+                restablecerListaCompleta();
+            } else {
+                debounceTimer = setTimeout(window.ejecutarBusquedaCompra, 200);
+            }
+        });
+
+        inputBuscar.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                window.ejecutarBusquedaCompra();
+            }
+        });
+
+        inputBuscar.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary, #F28C28)';
+            this.style.boxShadow = '0 0 0 3px rgba(242, 140, 40, 0.15)';
+        });
+        inputBuscar.addEventListener('blur', function() {
+            this.style.borderColor = 'var(--border-color, #EFE6DC)';
+            this.style.boxShadow = 'none';
+        });
+    }
+});
+
 function anularCompra(id) {
     mostrarConfirmacion({
         titulo: '¿Anular Compra?',

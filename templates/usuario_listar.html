@@ -15,55 +15,98 @@
         </a>
     </div>
 
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <h2><i class="fas fa-list"></i> Usuarios Registrados</h2>
-                <span class="badge badge-info" id="usuariosRegCount">{{ usuarios|length }} registros</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="showInactiveUsers" style="width: 16px; height: 16px; cursor: pointer;">
-                <label for="showInactiveUsers" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Mostrar Inactivos</label>
+    <!-- TARJETA DE BÚSQUEDA COMPACTA Y DELGADA -->
+    <div class="card" style="margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(74, 55, 40, 0.05);">
+        <div class="card-body" style="padding: 10px 16px;">
+            <div class="search-box" style="max-width: 580px; margin: 0 auto;">
+                <div class="search-input-group" style="display: flex; gap: 8px; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="buscadorUsuarios" placeholder="Nombre del usuario a buscar..." aria-label="Nombre del usuario"
+                               style="width: 100%; height: 38px; padding: 6px 34px 6px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: #FFFFFF; color: var(--text, #4A3728); font-size: 13.5px; outline: none; transition: all 0.2s ease;">
+                        <button type="button" id="btnLimpiarBusqueda" onclick="restablecerListaCompleta()" title="Limpiar búsqueda" 
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 13px;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <button type="button" onclick="ejecutarBusquedaUsuario()" class="btn btn-primary" style="height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <small class="form-text" style="display: block; margin-top: 4px; color: var(--text-secondary, #8B6F5A); font-size: 11.5px; text-align: center;">
+                    Presione Enter o haga clic en el botón para buscar
+                </small>
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-container">
-                <table class="data-table">
+    </div>
+
+    <!-- TARJETA DE RESULTADOS / LISTA DE USUARIOS -->
+    <div class="card" id="cardResultados">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.1rem;" id="tituloTabla"><i class="fas fa-list"></i> Usuarios Registrados</h2>
+                <span id="usuariosRegCount" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                    {{ usuarios|length }} registro{{ 's' if usuarios|length != 1 else '' }}
+                </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div id="btnVerTodosContainer" style="display: none;">
+                    <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12.5px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-list"></i> Ver todos los usuarios
+                    </button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="showInactiveUsers" style="width: 15px; height: 15px; cursor: pointer;">
+                    <label for="showInactiveUsers" style="font-size: 12.5px; color: var(--text-secondary, #8B6F5A); cursor: pointer; user-select: none; margin: 0;">Mostrar Inactivos</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%; border: none; border-radius: 0; box-shadow: none;">
+                <table class="data-table data-table-compact" id="tablaUsuarios" style="width: 100%; margin: 0;">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nombre Usuario</th>
-                            <th>Rol</th>
-                            <th>Estado</th>
-                            <th>Fecha Registro</th>
-                            <th>Acciones</th>
+                            <th style="width: 45px; text-align: center; padding: 10px 8px; font-size: 11px;">ID</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">NOMBRE USUARIO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">ROL</th>
+                            <th style="width: 110px; text-align: center; padding: 10px 8px; font-size: 11px;">ESTADO</th>
+                            <th style="width: 115px; text-align: center; padding: 10px 10px; font-size: 11px; white-space: nowrap;">FECHA REGISTRO</th>
+                            <th style="text-align: center; width: 85px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="cuerpoTablaUsuarios">
                         {% for usuario in usuarios %}
-                        <tr>
-                            <td>{{ usuario.IdUsuario }}</td>
-                            <td>{{ usuario.NombreUsuario }}</td>
-                            <td>{{ usuario.NombreRol }}</td>
-                            <td>
-                                <span class="badge {% if usuario.Estado %}badge-success{% else %}badge-danger{% endif %}">
+                        <tr class="fila-usuario-item" data-estado="{{ '1' if usuario.Estado else '0' }}">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ usuario.IdUsuario }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ usuario.NombreUsuario }}</strong></td>
+                            <td style="padding: 8px 10px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
+                                    {{ usuario.NombreRol }}
+                                </span>
+                            </td>
+                            <td style="text-align: center; padding: 8px 8px;">
+                                <span class="badge {% if usuario.Estado %}badge-success{% else %}badge-danger{% endif %}" style="font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
                                     {% if usuario.Estado %}Activo{% else %}Inactivo{% endif %}
                                 </span>
                             </td>
-                            <td>{{ usuario.FechaRegistro }}</td>
-                            <td class="table-actions">
-                                <!-- ✅ CORRECTO -->
-                                <a href="/usuario_editar/{{ usuario.IdUsuario }}" class="btn-edit" title="Editar">
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">
+                                {{ usuario.FechaRegistro }}
+                            </td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/usuario_editar/{{ usuario.IdUsuario }}" class="btn-edit" title="Editar" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="/usuario_cambiar_contrasena/{{ usuario.IdUsuario }}" class="btn-view" title="Cambiar Contraseña">
+                                <a href="/usuario_cambiar_contrasena/{{ usuario.IdUsuario }}" class="btn-view" title="Cambiar Contraseña" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-key"></i>
                                 </a>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center">No hay usuarios registrados</td>
+                            <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-users-slash" style="font-size: 2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                No hay usuarios registrados en el sistema
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -71,5 +114,219 @@
             </div>
         </div>
     </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputBuscar = document.getElementById('buscadorUsuarios');
+    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+    const btnVerTodosContainer = document.getElementById('btnVerTodosContainer');
+    const tituloTabla = document.getElementById('tituloTabla');
+    const badgeCount = document.getElementById('usuariosRegCount');
+    const cuerpoTabla = document.getElementById('cuerpoTablaUsuarios');
+    const checkInactive = document.getElementById('showInactiveUsers');
+    
+    const htmlInicialTabla = cuerpoTabla ? cuerpoTabla.innerHTML : '';
+    const totalInicial = {{ usuarios|length }};
+
+    let debounceTimer = null;
+
+    function formatearFecha(fechaStr) {
+        if (!fechaStr || fechaStr === '-') return '-';
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr;
+        const matchISO = String(fechaStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (matchISO) {
+            return `${matchISO[3]}/${matchISO[2]}/${matchISO[1]}`;
+        }
+        try {
+            const d = new Date(fechaStr);
+            if (isNaN(d.getTime())) return fechaStr;
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const year = d.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return fechaStr;
+        }
+    }
+
+    function aplicarFiltroInactivos() {
+        const mostrarInactivos = checkInactive ? checkInactive.checked : false;
+        const filas = document.querySelectorAll('.fila-usuario-item');
+        let visibles = 0;
+        filas.forEach(f => {
+            const estado = f.getAttribute('data-estado');
+            if (!mostrarInactivos && estado === '0') {
+                f.style.display = 'none';
+            } else {
+                f.style.display = '';
+                visibles++;
+            }
+        });
+        if (badgeCount && !inputBuscar.value.trim()) {
+            badgeCount.textContent = visibles + (visibles === 1 ? ' registro' : ' registros');
+        }
+    }
+
+    window.ejecutarBusquedaUsuario = function() {
+        const nombre = inputBuscar ? inputBuscar.value.trim() : '';
+
+        if (btnLimpiar) {
+            btnLimpiar.style.display = nombre ? 'block' : 'none';
+        }
+
+        if (!nombre) {
+            restablecerListaCompleta();
+            return;
+        }
+
+        if (cuerpoTabla) {
+            cuerpoTabla.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 2rem 1rem;">
+                        <div class="spinner-border" role="status" style="width: 1.8rem; height: 1.8rem; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F28C28);">
+                            <span class="sr-only">Buscando...</span>
+                        </div>
+                        <p style="margin: 6px 0 0 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Buscando usuarios...</p>
+                    </td>
+                </tr>`;
+        }
+
+        fetch('/api/usuarios/buscar?nombre=' + encodeURIComponent(nombre))
+            .then(r => r.json())
+            .then(data => {
+                if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Resultados de la Búsqueda';
+                if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'block';
+
+                if (!data || data.length === 0) {
+                    if (badgeCount) {
+                        badgeCount.textContent = '0 registros';
+                        badgeCount.className = 'badge badge-danger';
+                    }
+                    if (cuerpoTabla) {
+                        cuerpoTabla.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                    <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron usuarios con el término "<strong>${nombre}</strong>"</span>
+                                    <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                                    <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                                        <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los usuarios
+                                    </button>
+                                </td>
+                            </tr>`;
+                    }
+                    return;
+                }
+
+                if (badgeCount) {
+                    badgeCount.textContent = data.length + (data.length === 1 ? ' registro' : ' registros');
+                    badgeCount.className = 'badge badge-info';
+                }
+
+                let htmlFilas = '';
+                data.forEach(function(u) {
+                    const rol = u.NombreRol || 'Usuario';
+                    const estadoText = u.Estado ? 'Activo' : 'Inactivo';
+                    const estadoBadge = u.Estado ? 'badge-success' : 'badge-danger';
+                    const fechaRegistro = formatearFecha(u.FechaRegistro);
+
+                    htmlFilas += `
+                        <tr class="fila-usuario-item" data-estado="${u.Estado ? '1' : '0'}">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">${u.IdUsuario}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>${u.NombreUsuario}</strong></td>
+                            <td style="padding: 8px 10px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
+                                    ${rol}
+                                </span>
+                            </td>
+                            <td style="text-align: center; padding: 8px 8px;">
+                                <span class="badge ${estadoBadge}" style="font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
+                                    ${estadoText}
+                                </span>
+                            </td>
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">${fechaRegistro}</td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/usuario_editar/${u.IdUsuario}" class="btn-edit" title="Editar" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/usuario_cambiar_contrasena/${u.IdUsuario}" class="btn-view" title="Cambiar Contraseña" style="padding: 4px 8px; font-size: 12px;">
+                                    <i class="fas fa-key"></i>
+                                </a>
+                            </td>
+                        </tr>`;
+                });
+
+                if (cuerpoTabla) {
+                    cuerpoTabla.innerHTML = htmlFilas;
+                    aplicarFiltroInactivos();
+                }
+            })
+            .catch(() => {
+                if (cuerpoTabla) {
+                    cuerpoTabla.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: #EF4444;">
+                                <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                Error al buscar usuarios. Intente nuevamente.
+                            </td>
+                        </tr>`;
+                }
+            });
+    };
+
+    window.restablecerListaCompleta = function() {
+        if (inputBuscar) inputBuscar.value = '';
+        if (btnLimpiar) btnLimpiar.style.display = 'none';
+        if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'none';
+        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Usuarios Registrados';
+        if (badgeCount) {
+            badgeCount.textContent = totalInicial + (totalInicial === 1 ? ' registro' : ' registros');
+            badgeCount.className = 'badge badge-info';
+        }
+        if (cuerpoTabla) {
+            cuerpoTabla.innerHTML = htmlInicialTabla;
+            aplicarFiltroInactivos();
+        }
+        if (inputBuscar) inputBuscar.focus();
+    };
+
+    if (checkInactive) {
+        checkInactive.addEventListener('change', aplicarFiltroInactivos);
+    }
+
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const val = this.value.trim();
+            if (!val) {
+                restablecerListaCompleta();
+            } else {
+                debounceTimer = setTimeout(window.ejecutarBusquedaUsuario, 250);
+            }
+        });
+
+        inputBuscar.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                window.ejecutarBusquedaUsuario();
+            }
+        });
+
+        inputBuscar.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary, #F28C28)';
+            this.style.boxShadow = '0 0 0 3px rgba(242, 140, 40, 0.15)';
+        });
+        inputBuscar.addEventListener('blur', function() {
+            this.style.borderColor = 'var(--border-color, #EFE6DC)';
+            this.style.boxShadow = 'none';
+        });
+    }
+
+    // Inicializar filtro de inactivos
+    aplicarFiltroInactivos();
+});
+</script>
 </div>
 {% endblock %}

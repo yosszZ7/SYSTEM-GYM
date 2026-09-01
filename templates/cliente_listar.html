@@ -15,50 +15,90 @@
         </a>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h2><i class="fas fa-list"></i> Clientes Registrados</h2>
-            <span class="badge badge-info">{{ clientes|length }} registros</span>
+    <!-- TARJETA DE BÚSQUEDA COMPACTA Y DELGADA -->
+    <div class="card" style="margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(74, 55, 40, 0.05);">
+        <div class="card-body" style="padding: 10px 16px;">
+            <div class="search-box" style="max-width: 580px; margin: 0 auto;">
+                <div class="search-input-group" style="display: flex; gap: 8px; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="buscadorClientes" placeholder="Nombre del cliente a buscar..." aria-label="Nombre del cliente"
+                               style="width: 100%; height: 38px; padding: 6px 34px 6px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: #FFFFFF; color: var(--text, #4A3728); font-size: 13.5px; outline: none; transition: all 0.2s ease;">
+                        <button type="button" id="btnLimpiarBusqueda" onclick="restablecerListaCompleta()" title="Limpiar búsqueda" 
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 13px;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <button type="button" onclick="ejecutarBusquedaCliente()" class="btn btn-primary" style="height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <small class="form-text" style="display: block; margin-top: 4px; color: var(--text-secondary, #8B6F5A); font-size: 11.5px; text-align: center;">
+                    Presione Enter o haga clic en el botón para buscar
+                </small>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-container">
-                <table class="data-table">
+    </div>
+
+    <!-- TARJETA DE RESULTADOS / LISTA DE CLIENTES -->
+    <div class="card" id="cardResultados">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.1rem;" id="tituloTabla"><i class="fas fa-list"></i> Clientes Registrados</h2>
+                <span id="clienteCountBadge" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                    {{ clientes|length }} registro{{ 's' if clientes|length != 1 else '' }}
+                </span>
+            </div>
+            <div id="btnVerTodosContainer" style="display: none;">
+                <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12.5px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-list"></i> Ver todos los clientes
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%; border: none; border-radius: 0; box-shadow: none;">
+                <table class="data-table data-table-compact" id="tablaClientes" style="width: 100%; margin: 0;">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Primer Nombre</th>
-                            <th>Segundo Nombre</th>
-                            <th>Primer Apellido</th>
-                            <th>Segundo Apellido</th>
-                            <th>Teléfono</th>
-                            <th>Correo</th>
-                            <th>Fecha Registro</th>
-                            <th>Acciones</th>
+                            <th style="width: 45px; text-align: center; padding: 10px 8px; font-size: 11px;">ID</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRIMER NOMBRE</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">SEGUNDO NOMBRE</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRIMER APELLIDO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">SEGUNDO APELLIDO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">TELÉFONO</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">CORREO</th>
+                            <th style="width: 115px; text-align: center; padding: 10px 10px; font-size: 11px; white-space: nowrap;">FECHA REGISTRO</th>
+                            <th style="text-align: center; width: 80px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="cuerpoTablaClientes">
                         {% for cliente in clientes %}
-                        <tr>
-                            <td>{{ cliente.IdCliente }}</td>
-                            <td>{{ cliente.PrimerNombre }}</td>
-                            <td>{{ cliente.SegundoNombre or '-' }}</td>
-                            <td>{{ cliente.PrimerApellido }}</td>
-                            <td>{{ cliente.SegundoApellido or '-' }}</td>
-                            <td>{{ cliente.Telefono }}</td>
-                            <td>{{ cliente.Correo }}</td>
-                            <td>{{ cliente.FechaRegistro }}</td>
-                            <td class="table-actions">
-                                <a href="/cliente_perfil/{{ cliente.IdCliente }}" class="btn-view" title="Ver Perfil">
+                        <tr class="fila-cliente-inicial">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ cliente.IdCliente }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ cliente.PrimerNombre }}</strong></td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ cliente.SegundoNombre or '-' }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ cliente.PrimerApellido }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ cliente.SegundoApellido or '-' }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ cliente.Telefono }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">{{ cliente.Correo }}</td>
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">
+                                {{ cliente.FechaRegistro }}
+                            </td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/cliente_perfil/{{ cliente.IdCliente }}" class="btn-view" title="Ver Perfil" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">
                                     <i class="fas fa-user-circle"></i>
                                 </a>
-                                <a href="/cliente_actualizar/{{ cliente.IdCliente }}" class="btn-edit" title="Editar">
+                                <a href="/cliente_actualizar/{{ cliente.IdCliente }}" class="btn-edit" title="Editar" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="9" class="text-center">No hay clientes registrados</td>
+                            <td colspan="9" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-user-slash" style="font-size: 2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                No hay clientes registrados en el sistema
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -66,5 +106,185 @@
             </div>
         </div>
     </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputBuscar = document.getElementById('buscadorClientes');
+    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+    const btnVerTodosContainer = document.getElementById('btnVerTodosContainer');
+    const tituloTabla = document.getElementById('tituloTabla');
+    const badgeCount = document.getElementById('clienteCountBadge');
+    const cuerpoTabla = document.getElementById('cuerpoTablaClientes');
+    
+    const htmlInicialTabla = cuerpoTabla ? cuerpoTabla.innerHTML : '';
+    const totalInicial = {{ clientes|length }};
+
+    let debounceTimer = null;
+
+    function formatearFecha(fechaStr) {
+        if (!fechaStr || fechaStr === '-') return '-';
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr;
+        const matchISO = String(fechaStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (matchISO) {
+            return `${matchISO[3]}/${matchISO[2]}/${matchISO[1]}`;
+        }
+        try {
+            const d = new Date(fechaStr);
+            if (isNaN(d.getTime())) return fechaStr;
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const year = d.getUTCFullYear();
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return fechaStr;
+        }
+    }
+
+    window.ejecutarBusquedaCliente = function() {
+        const nombre = inputBuscar ? inputBuscar.value.trim() : '';
+
+        if (btnLimpiar) {
+            btnLimpiar.style.display = nombre ? 'block' : 'none';
+        }
+
+        if (!nombre) {
+            restablecerListaCompleta();
+            return;
+        }
+
+        if (cuerpoTabla) {
+            cuerpoTabla.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center" style="padding: 2rem 1rem;">
+                        <div class="spinner-border" role="status" style="width: 1.8rem; height: 1.8rem; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F28C28);">
+                            <span class="sr-only">Buscando...</span>
+                        </div>
+                        <p style="margin: 6px 0 0 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Buscando clientes...</p>
+                    </td>
+                </tr>`;
+        }
+
+        fetch('/api/clientes/buscar?nombre=' + encodeURIComponent(nombre))
+            .then(r => r.json())
+            .then(data => {
+                if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Resultados de la Búsqueda';
+                if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'block';
+
+                if (!data || data.length === 0) {
+                    if (badgeCount) {
+                        badgeCount.textContent = '0 registros';
+                        badgeCount.className = 'badge badge-danger';
+                    }
+                    if (cuerpoTabla) {
+                        cuerpoTabla.innerHTML = `
+                            <tr>
+                                <td colspan="9" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                    <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron clientes con el nombre "<strong>${nombre}</strong>"</span>
+                                    <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                                    <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                                        <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los clientes
+                                    </button>
+                                </td>
+                            </tr>`;
+                    }
+                    return;
+                }
+
+                if (badgeCount) {
+                    badgeCount.textContent = data.length + (data.length === 1 ? ' registro' : ' registros');
+                    badgeCount.className = 'badge badge-info';
+                }
+
+                let htmlFilas = '';
+                data.forEach(function(c) {
+                    const segundoNombre = c.SegundoNombre || '-';
+                    const segundoApellido = c.SegundoApellido || '-';
+                    const fechaRegistro = formatearFecha(c.FechaRegistro);
+
+                    htmlFilas += `
+                        <tr>
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">${c.IdCliente}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>${c.PrimerNombre}</strong></td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${segundoNombre}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${c.PrimerApellido}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${segundoApellido}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${c.Telefono || '-'}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;">${c.Correo || '-'}</td>
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">${fechaRegistro}</td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/cliente_perfil/${c.IdCliente}" class="btn-view" title="Ver Perfil" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
+                                <a href="/cliente_actualizar/${c.IdCliente}" class="btn-edit" title="Editar" style="padding: 4px 8px; font-size: 12px;">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>`;
+                });
+
+                if (cuerpoTabla) {
+                    cuerpoTabla.innerHTML = htmlFilas;
+                }
+            })
+            .catch(() => {
+                if (cuerpoTabla) {
+                    cuerpoTabla.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="text-center" style="padding: 2.5rem 1rem; color: #EF4444;">
+                                <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                Error al buscar clientes. Intente nuevamente.
+                            </td>
+                        </tr>`;
+                }
+            });
+    };
+
+    window.restablecerListaCompleta = function() {
+        if (inputBuscar) inputBuscar.value = '';
+        if (btnLimpiar) btnLimpiar.style.display = 'none';
+        if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'none';
+        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Clientes Registrados';
+        if (badgeCount) {
+            badgeCount.textContent = totalInicial + (totalInicial === 1 ? ' registro' : ' registros');
+            badgeCount.className = 'badge badge-info';
+        }
+        if (cuerpoTabla) {
+            cuerpoTabla.innerHTML = htmlInicialTabla;
+        }
+        if (inputBuscar) inputBuscar.focus();
+    };
+
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const val = this.value.trim();
+            if (!val) {
+                restablecerListaCompleta();
+            } else {
+                debounceTimer = setTimeout(window.ejecutarBusquedaCliente, 250);
+            }
+        });
+
+        inputBuscar.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                window.ejecutarBusquedaCliente();
+            }
+        });
+
+        inputBuscar.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary, #F28C28)';
+            this.style.boxShadow = '0 0 0 3px rgba(242, 140, 40, 0.15)';
+        });
+        inputBuscar.addEventListener('blur', function() {
+            this.style.borderColor = 'var(--border-color, #EFE6DC)';
+            this.style.boxShadow = 'none';
+        });
+    }
+});
+</script>
 </div>
 {% endblock %}

@@ -18,7 +18,19 @@ def ListarCompras():
 
         # Convertir a lista de diccionarios
         Columnas = [desc[0] for desc in Cursor.description]
-        Compras = [dict(zip(Columnas, fila)) for fila in Filas]
+        Compras = []
+        for fila in Filas:
+            c = dict(zip(Columnas, fila))
+            if c.get('FechaCompra'):
+                if hasattr(c['FechaCompra'], 'strftime'):
+                    c['FechaCompra'] = c['FechaCompra'].strftime('%d/%m/%Y')
+                else:
+                    c['FechaCompra'] = str(c['FechaCompra'])
+            if c.get('PrecioCompra') is not None:
+                c['PrecioCompra'] = f"{float(c['PrecioCompra']):.2f}"
+            if c.get('Total') is not None:
+                c['Total'] = f"{float(c['Total']):.2f}"
+            Compras.append(c)
 
         return True, Compras
 

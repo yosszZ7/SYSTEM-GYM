@@ -20,7 +20,15 @@ def ListarUsuarios():
 
         # Convertir filas a lista de diccionarios
         Filas = Cursor.fetchall()
-        Usuarios = [dict(zip(Columnas, fila)) for fila in Filas]
+        Usuarios = []
+        for fila in Filas:
+            u = dict(zip(Columnas, fila))
+            if u.get('FechaRegistro'):
+                if hasattr(u['FechaRegistro'], 'strftime'):
+                    u['FechaRegistro'] = u['FechaRegistro'].strftime('%d/%m/%Y')
+                else:
+                    u['FechaRegistro'] = str(u['FechaRegistro'])
+            Usuarios.append(u)
 
         return True, Usuarios
 

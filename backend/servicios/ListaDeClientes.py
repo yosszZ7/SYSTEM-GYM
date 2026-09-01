@@ -18,7 +18,15 @@ def ListarClientes():
 
         # Convertir a lista de diccionarios
         Columnas = [desc[0] for desc in Cursor.description]
-        Clientes = [dict(zip(Columnas, fila)) for fila in Filas]
+        Clientes = []
+        for fila in Filas:
+            cli = dict(zip(Columnas, fila))
+            if cli.get('FechaRegistro'):
+                if hasattr(cli['FechaRegistro'], 'strftime'):
+                    cli['FechaRegistro'] = cli['FechaRegistro'].strftime('%d/%m/%Y')
+                else:
+                    cli['FechaRegistro'] = str(cli['FechaRegistro'])
+            Clientes.append(cli)
 
         return True, Clientes
 

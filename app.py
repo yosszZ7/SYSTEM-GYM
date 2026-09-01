@@ -33,6 +33,7 @@ from backend.servicios.ListarEntrenadores import ListarEntrenadores
 from backend.servicios.ListaDeProductos import ListarProductos
 from backend.servicios.RegistrarProducto import RegistrarProducto
 from backend.servicios.ActualizarProducto import ActualizarProducto
+from backend.servicios.BuscarProductoPorNombre import BuscarProductoPorNombre
 from backend.servicios.ListarEjercicios import ListarEjercicios
 from backend.servicios.RegistrarEjercicio import RegistrarEjercicio
 from backend.servicios.ActualizarEjercicio import ActualizarEjercicio
@@ -374,6 +375,15 @@ def api_usuarios_buscar():
     if nombre:
         _, usuarios = BuscarUsuarioPorNombre(nombre)
     return jsonify(usuarios or [])
+
+@app.route('/api/productos/buscar')
+@login_required
+def api_productos_buscar():
+    nombre = request.args.get('nombre')
+    productos = []
+    if nombre:
+        _, productos = BuscarProductoPorNombre(nombre)
+    return jsonify(productos or [])
 
 @app.route('/api/rutinas/cliente/<int:id>')
 @login_required

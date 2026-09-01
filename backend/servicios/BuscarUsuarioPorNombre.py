@@ -21,7 +21,11 @@ def BuscarUsuarioPorNombre(NombreUsuario):
         if palabras:
             condiciones = []
             parametros = []
-            for p in palabras:
+            # Primera palabra inicia con el término
+            condiciones.append("U.NombreUsuario COLLATE Latin1_General_CI_AI LIKE ?")
+            parametros.append(f"{palabras[0]}%")
+            
+            for p in palabras[1:]:
                 condiciones.append("U.NombreUsuario COLLATE Latin1_General_CI_AI LIKE ?")
                 parametros.append(f"%{p}%")
             
@@ -44,7 +48,15 @@ def BuscarUsuarioPorNombre(NombreUsuario):
 
         Columnas = [desc[0] for desc in Cursor.description]
         Filas = Cursor.fetchall()
-        Usuarios = [dict(zip(Columnas, fila)) for fila in Filas]
+        Usuarios = []
+        for fila in Filas:
+            u = dict(zip(Columnas, fila))
+            if u.get('FechaRegistro'):
+                if hasattr(u['FechaRegistro'], 'strftime'):
+                    u['FechaRegistro'] = u['FechaRegistro'].strftime('%d/%m/%Y')
+                else:
+                    u['FechaRegistro'] = str(u['FechaRegistro'])
+            Usuarios.append(u)
 
         return True, Usuarios
 

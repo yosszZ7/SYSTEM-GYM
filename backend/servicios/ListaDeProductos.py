@@ -20,7 +20,17 @@ def ListarProductos():
 
         # Convertir filas a lista de diccionarios
         Filas = Cursor.fetchall()
-        Productos = [dict(zip(Columnas, fila)) for fila in Filas]
+        Productos = []
+        for fila in Filas:
+            prod = dict(zip(Columnas, fila))
+            if prod.get('FechaRegistro'):
+                if hasattr(prod['FechaRegistro'], 'strftime'):
+                    prod['FechaRegistro'] = prod['FechaRegistro'].strftime('%d/%m/%Y')
+                else:
+                    prod['FechaRegistro'] = str(prod['FechaRegistro'])
+            if prod.get('Precio') is not None:
+                prod['Precio'] = f"{float(prod['Precio']):.2f}"
+            Productos.append(prod)
 
         return True, Productos
 

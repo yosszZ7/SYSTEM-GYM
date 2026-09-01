@@ -15,54 +15,96 @@
         </a>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h2><i class="fas fa-list"></i> Equipos Registrados</h2>
-            <span class="badge badge-info">{{ maquinaria|length }} registros</span>
+    <!-- TARJETA DE BÚSQUEDA COMPACTA Y DELGADA -->
+    <div class="card" style="margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(74, 55, 40, 0.05);">
+        <div class="card-body" style="padding: 10px 16px;">
+            <div class="search-box" style="max-width: 580px; margin: 0 auto;">
+                <div class="search-input-group" style="display: flex; gap: 8px; align-items: center;">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="buscadorMaquinaria" placeholder="Nombre de máquina o categoría a buscar..." aria-label="Nombre de máquina"
+                               style="width: 100%; height: 38px; padding: 6px 34px 6px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: #FFFFFF; color: var(--text, #4A3728); font-size: 13.5px; outline: none; transition: all 0.2s ease;">
+                        <button type="button" id="btnLimpiarBusqueda" onclick="restablecerListaCompleta()" title="Limpiar búsqueda" 
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 13px;">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <button type="button" onclick="ejecutarBusquedaMaquinaria()" class="btn btn-primary" style="height: 38px; padding: 0 18px; border-radius: 8px; font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <small class="form-text" style="display: block; margin-top: 4px; color: var(--text-secondary, #8B6F5A); font-size: 11.5px; text-align: center;">
+                    Presione Enter o haga clic en el botón para buscar
+                </small>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-container">
-                <table class="data-table">
+    </div>
+
+    <!-- TARJETA DE RESULTADOS / LISTA DE MAQUINARIA -->
+    <div class="card" id="cardResultados">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.1rem;" id="tituloTabla"><i class="fas fa-list"></i> Equipos Registrados</h2>
+                <span id="maquinariaCountBadge" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                    {{ maquinaria|length }} registro{{ 's' if maquinaria|length != 1 else '' }}
+                </span>
+            </div>
+            <div id="btnVerTodosContainer" style="display: none;">
+                <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12.5px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-list"></i> Ver todos los equipos
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%; border: none; border-radius: 0; box-shadow: none;">
+                <table class="data-table data-table-compact" id="tablaMaquinaria" style="width: 100%; margin: 0;">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Nombre Máquina</th>
-                            <th>Tipo / Categoría</th>
-                            <th>Estado</th>
-                            <th>Fecha Compra</th>
-                            <th>Acciones</th>
+                            <th style="width: 45px; text-align: center; padding: 10px 8px; font-size: 11px;">ID</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">NOMBRE MÁQUINA</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">TIPO / CATEGORÍA</th>
+                            <th style="width: 120px; text-align: center; padding: 10px 8px; font-size: 11px;">ESTADO</th>
+                            <th style="width: 115px; text-align: center; padding: 10px 10px; font-size: 11px; white-space: nowrap;">FECHA COMPRA</th>
+                            <th style="text-align: center; width: 75px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="cuerpoTablaMaquinaria">
                         {% for m in maquinaria %}
-                        <tr>
-                            <td>{{ m.IdMaquina }}</td>
-                            <td><strong>{{ m.NombreMaquinaria }}</strong></td>
-                            <td><span class="badge-category" style="background: var(--bg-primary); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">{{ m.Tipo }}</span></td>
-                            <td>
+                        <tr class="fila-maquinaria-item" data-nombre="{{ m.NombreMaquinaria|lower }}" data-tipo="{{ (m.Tipo or '')|lower }}">
+                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ m.IdMaquina }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ m.NombreMaquinaria }}</strong></td>
+                            <td style="padding: 8px 10px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
+                                    {{ m.Tipo }}
+                                </span>
+                            </td>
+                            <td style="text-align: center; padding: 8px 8px;">
                                 {% if m.Estado %}
-                                <span class="badge-status active" style="font-size: 12px; font-weight: bold; background: var(--success-light); color: var(--success); padding: 4px 10px; border-radius: 12px;">
-                                    <i class="fas fa-check-circle" style="margin-right: 4px;"></i> Operativo
+                                <span class="badge badge-success" style="font-size: 11.5px; padding: 3px 8px; border-radius: 10px;">
+                                    <i class="fas fa-check-circle" style="margin-right: 3px;"></i> Operativo
                                 </span>
                                 {% else %}
-                                <span class="badge-status inactive" style="font-size: 12px; font-weight: bold; background: var(--danger-light); color: var(--danger); padding: 4px 10px; border-radius: 12px;">
-                                    <i class="fas fa-exclamation-triangle" style="margin-right: 4px;"></i> Fuera de Servicio
+                                <span class="badge badge-danger" style="font-size: 11.5px; padding: 3px 8px; border-radius: 10px;">
+                                    <i class="fas fa-exclamation-triangle" style="margin-right: 3px;"></i> Fuera de Servicio
                                 </span>
                                 {% endif %}
                             </td>
-                            <td>{{ m.FechaCompra or '—' }}</td>
-                            <td class="table-actions">
-                                <a href="/maquinaria_editar/{{ m.IdMaquina }}" class="btn-edit" title="Editar Equipo">
+                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">{{ m.FechaCompra or '—' }}</td>
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                                <a href="/maquinaria_editar/{{ m.IdMaquina }}" class="btn-edit" title="Editar Equipo" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button onclick="eliminarMaquina({{ m.IdMaquina }})" class="btn-delete-item" title="Eliminar Equipo" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 8px; font-size: 14px; transition: transform 0.2s ease;">
+                                <button onclick="eliminarMaquina({{ m.IdMaquina }})" class="btn-delete-item" title="Eliminar Equipo" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 6px; font-size: 13px; transition: transform 0.2s ease;">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center" style="color: var(--text-secondary); padding: 2rem;">No hay maquinaria registrada</td>
+                            <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-dumbbell" style="font-size: 2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                                No hay maquinaria registrada en el sistema
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -73,6 +115,129 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputBuscar = document.getElementById('buscadorMaquinaria');
+    const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+    const btnVerTodosContainer = document.getElementById('btnVerTodosContainer');
+    const tituloTabla = document.getElementById('tituloTabla');
+    const badgeCount = document.getElementById('maquinariaCountBadge');
+    const cuerpoTabla = document.getElementById('cuerpoTablaMaquinaria');
+    
+    const filasOriginales = Array.from(document.querySelectorAll('.fila-maquinaria-item'));
+    const totalInicial = filasOriginales.length;
+
+    let debounceTimer = null;
+
+    window.ejecutarBusquedaMaquinaria = function() {
+        const query = inputBuscar ? inputBuscar.value.trim().toLowerCase() : '';
+
+        if (btnLimpiar) {
+            btnLimpiar.style.display = query ? 'block' : 'none';
+        }
+
+        if (!query) {
+            restablecerListaCompleta();
+            return;
+        }
+
+        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Resultados de la Búsqueda';
+        if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'block';
+
+        let count = 0;
+        filasOriginales.forEach(fila => {
+            const nombre = fila.getAttribute('data-nombre') || '';
+            const tipo = fila.getAttribute('data-tipo') || '';
+            
+            // Coincidencia que inicia con la query o está contenida
+            if (nombre.startsWith(query) || nombre.includes(query) || tipo.includes(query)) {
+                fila.style.display = '';
+                count++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        // Eliminar fila de 'no resultados' si ya existía
+        const existingNoResults = document.getElementById('filaNoResultadosMaq');
+        if (existingNoResults) existingNoResults.remove();
+
+        if (count === 0) {
+            if (badgeCount) {
+                badgeCount.textContent = '0 registros';
+                badgeCount.className = 'badge badge-danger';
+            }
+            if (cuerpoTabla) {
+                const tr = document.createElement('tr');
+                tr.id = 'filaNoResultadosMaq';
+                tr.innerHTML = `
+                    <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
+                        <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                        <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron equipos con el término "<strong>${query}</strong>"</span>
+                        <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                        <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
+                            <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los equipos
+                        </button>
+                    </td>`;
+                cuerpoTabla.appendChild(tr);
+            }
+        } else {
+            if (badgeCount) {
+                badgeCount.textContent = count + (count === 1 ? ' registro' : ' registros');
+                badgeCount.className = 'badge badge-info';
+            }
+        }
+    };
+
+    window.restablecerListaCompleta = function() {
+        if (inputBuscar) inputBuscar.value = '';
+        if (btnLimpiar) btnLimpiar.style.display = 'none';
+        if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'none';
+        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Equipos Registrados';
+        if (badgeCount) {
+            badgeCount.textContent = totalInicial + (totalInicial === 1 ? ' registro' : ' registros');
+            badgeCount.className = 'badge badge-info';
+        }
+        
+        const existingNoResults = document.getElementById('filaNoResultadosMaq');
+        if (existingNoResults) existingNoResults.remove();
+
+        filasOriginales.forEach(fila => {
+            fila.style.display = '';
+        });
+
+        if (inputBuscar) inputBuscar.focus();
+    };
+
+    if (inputBuscar) {
+        inputBuscar.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const val = this.value.trim();
+            if (!val) {
+                restablecerListaCompleta();
+            } else {
+                debounceTimer = setTimeout(window.ejecutarBusquedaMaquinaria, 200);
+            }
+        });
+
+        inputBuscar.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                window.ejecutarBusquedaMaquinaria();
+            }
+        });
+
+        inputBuscar.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary, #F28C28)';
+            this.style.boxShadow = '0 0 0 3px rgba(242, 140, 40, 0.15)';
+        });
+        inputBuscar.addEventListener('blur', function() {
+            this.style.borderColor = 'var(--border-color, #EFE6DC)';
+            this.style.boxShadow = 'none';
+        });
+    }
+});
+
 function eliminarMaquina(id) {
     mostrarConfirmacion({
         titulo: '¿Eliminar Equipo?',
