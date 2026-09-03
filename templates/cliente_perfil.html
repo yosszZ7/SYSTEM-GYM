@@ -813,11 +813,17 @@
         }
     }
 
-    // Finalizar la rutina activa actual del cliente
+    // Finalizar la rutina activa actual del cliente con modal personalizado WORLD GYM
     async function finalizarRutinaActiva() {
-        if (!confirm('¿Estás seguro de que deseas finalizar la rutina activa de este cliente?\n\nEl cliente quedará sin rutina vigente hasta que se le asigne una nueva.')) {
-            return;
-        }
+        var confirmado = await mostrarConfirmacion({
+            titulo: '¿Finalizar Rutina Activa?',
+            mensaje: '¿Estás seguro de que deseas finalizar la rutina activa de este cliente? El cliente quedará sin rutina vigente hasta que se le asigne una nueva.',
+            tipo: 'danger',
+            textoConfirmar: 'Sí, finalizar rutina',
+            textoCancelar: 'Cancelar'
+        });
+
+        if (!confirmado) return;
 
         mostrarLoading(true);
         try {
