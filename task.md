@@ -1,4 +1,0 @@
-- `[x]` Quitar el apartado de URL/Ruta del flujo de reporte de errores en el sistema.
-  - `[x]` Eliminar el campo `Ruta / URL` de la plantilla de correo electrónico HTML generada en `backend/servicios/EnviarEmail.py`.
-  - `[x]` Limpiar las referencias al parámetro `Ruta` de `verDetalleError` en `templates/error_listar.html` y corregir estructura HTML del modal.
-  - `[x]` Validar el registro de errores y la generación del correo electrónico simulado mediante el script `test_error_reporting.py`.
