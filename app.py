@@ -1789,21 +1789,31 @@ def rutina_asignar():
 @app.route('/api/rutina/guardar_completa', methods=['POST'])
 @login_required
 def api_rutina_guardar_completa():
-    data = request.json or {}
-    id_cliente = int(data.get('IdCliente'))
-    nombre_rutina = data.get('NombreRutina')
-    fecha_inicio = data.get('FechaInicio')
-    duracion_dias = int(data.get('DuracionDias'))
-    frecuencia_semanal = int(data.get('FrecuenciaSemanal'))
-    dias = data.get('dias', [])
-    
-    success, res = AsignarRutinaCompleta(
-        id_cliente, fecha_inicio, duracion_dias, frecuencia_semanal, nombre_rutina, dias
-    )
-    if success:
-        return jsonify({'success': True, 'message': 'Rutina completa asignada exitosamente.', 'id_rutina': res})
-    else:
-        return jsonify({'success': False, 'error': res}), 500
+    try:
+        data = request.json or {}
+        id_cliente = data.get('IdCliente')
+        if not id_cliente:
+            return jsonify({'success': False, 'error': 'ID de cliente no especificado.'}), 400
+            
+        id_cliente = int(id_cliente)
+        nombre_rutina = data.get('NombreRutina') or 'Rutina de Entrenamiento'
+        fecha_inicio = data.get('FechaInicio')
+        duracion_dias = int(data.get('DuracionDias', 30))
+        frecuencia_semanal = int(data.get('FrecuenciaSemanal', 3))
+        dias = data.get('dias', [])
+        
+        if not dias:
+            return jsonify({'success': False, 'error': 'Debe configurar al menos un día de entrenamiento.'}), 400
+        
+        success, res = AsignarRutinaCompleta(
+            id_cliente, fecha_inicio, duracion_dias, frecuencia_semanal, nombre_rutina, dias
+        )
+        if success:
+            return jsonify({'success': True, 'message': 'Rutina completa asignada exitosamente.', 'id_rutina': res})
+        else:
+            return jsonify({'success': False, 'error': res}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/rutina_hoy')
 @login_required

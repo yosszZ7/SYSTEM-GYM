@@ -223,24 +223,24 @@
                 <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-calendar-plus" style="margin-right: 8px; color: var(--primary);"></i>Creador de Rutina Semanal Unificado</h3>
             </div>
             <div class="card-body">
-                <form id="wizard-form" onsubmit="saveCompleteRoutine(event)">
+                <form id="wizard-form" novalidate onsubmit="saveCompleteRoutine(event)">
                     <!-- Datos de Cabecera -->
                     <div class="form-grid" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
                         <div class="form-group">
                             <label for="wizNombreRutina">Nombre de la Rutina *</label>
-                            <input type="text" id="wizNombreRutina" required placeholder="Ej: Rutina de Hipertrofia o Fuerza" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                            <input type="text" id="wizNombreRutina" placeholder="Ej: Rutina de Hipertrofia o Fuerza" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                         </div>
                         <div class="form-group">
                             <label for="wizFechaInicio">Fecha Inicio *</label>
-                            <input type="date" id="wizFechaInicio" required style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                            <input type="date" id="wizFechaInicio" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                         </div>
                         <div class="form-group">
                             <label for="wizDuracion">Duración (Días) *</label>
-                            <input type="number" id="wizDuracion" required min="1" value="30" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                            <input type="number" id="wizDuracion" min="1" value="30" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                         </div>
                         <div class="form-group">
                             <label for="wizFrecuencia">Frecuencia Semanal *</label>
-                            <select id="wizFrecuencia" required onchange="generateWizardDays(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                            <select id="wizFrecuencia" onchange="generateWizardDays(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                                 <option value="1">1 día a la semana</option>
                                 <option value="2">2 días a la semana</option>
                                 <option value="3" selected>3 días a la semana</option>
@@ -275,10 +275,10 @@
         <tbody>
             <tr class="exercise-row">
                 <td style="width: 60px;">
-                    <input type="number" class="row-orden" required min="1" value="1" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text); font-weight: bold;">
+                    <input type="number" class="row-orden" min="1" value="1" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text); font-weight: bold;">
                 </td>
                 <td>
-                    <select class="row-ejercicio" required style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                    <select class="row-ejercicio" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                         <option value="">Seleccionar ejercicio...</option>
                         {% for ej in ejercicios %}
                             <option value="{{ ej.IdEjercicio }}" data-grupo="{{ ej.IdGrupoMuscular }}">{{ ej.NombreEjercicio }}</option>
@@ -286,10 +286,10 @@
                     </select>
                 </td>
                 <td style="width: 80px;">
-                    <input type="number" class="row-series" required min="1" value="4" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                    <input type="number" class="row-series" min="1" value="4" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                 </td>
                 <td style="width: 120px;">
-                    <input type="text" class="row-reps" required placeholder="Ej: 12 o 10-12" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
+                    <input type="text" class="row-reps" placeholder="Ej: 12 o 10-12" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
                 </td>
                 <td style="width: 120px;">
                     <input type="text" class="row-peso" placeholder="Ej: 100 lbs" style="width: 100%; padding: 6px; border-radius: 6px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
@@ -420,7 +420,7 @@
                 <div id="wiz-day-header-grid-${d}" style="display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 3.5fr; gap: 15px; margin-bottom: 20px; background: var(--bg-primary); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); transition: all 0.3s ease;">
                     <div class="form-group">
                         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Día de la Semana *</label>
-                        <select class="wiz-day-name" required style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                        <select class="wiz-day-name" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
                             <option value="1" ${d===1?'selected':''}>Lunes</option>
                             <option value="2" ${d===2?'selected':''}>Martes</option>
                             <option value="3" ${d===3?'selected':''}>Miércoles</option>
@@ -432,7 +432,7 @@
                     </div>
                     <div class="form-group">
                         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:4px;">Enfoque Muscular 1 *</label>
-                        <select class="wiz-day-enfoque1" required onchange="filterExercisesForDay(${d})" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
+                        <select class="wiz-day-enfoque1" onchange="filterExercisesForDay(${d})" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text);">
                             <option value="">Seleccionar...</option>
                             ${enfoqueOptionsHtml.replace('value=""', 'disabled')}
                         </select>
@@ -636,26 +636,52 @@
 
     // Guardar la rutina completa por AJAX
     async function saveCompleteRoutine(event) {
-        event.preventDefault();
+        if (event) event.preventDefault();
         
         var idCliente = {{ cliente.IdCliente }};
-        var nombreRutina = document.getElementById('wizNombreRutina').value;
-        var fechaInicio = document.getElementById('wizFechaInicio').value;
-        var duracion = parseInt(document.getElementById('wizDuracion').value);
-        var frecuencia = parseInt(document.getElementById('wizFrecuencia').value);
+        var nombreRutinaInput = document.getElementById('wizNombreRutina');
+        var nombreRutina = nombreRutinaInput ? nombreRutinaInput.value.trim() : '';
+        if (!nombreRutina) {
+            mostrarToast('Debe ingresar un nombre para la rutina.', 'warning');
+            if (nombreRutinaInput) nombreRutinaInput.focus();
+            return;
+        }
+
+        var fechaInicioInput = document.getElementById('wizFechaInicio');
+        var fechaInicio = fechaInicioInput ? fechaInicioInput.value : '';
+        if (!fechaInicio) {
+            mostrarToast('Debe seleccionar la fecha de inicio de la rutina.', 'warning');
+            if (fechaInicioInput) fechaInicioInput.focus();
+            return;
+        }
+
+        var duracionInput = document.getElementById('wizDuracion');
+        var duracion = duracionInput ? parseInt(duracionInput.value) : 0;
+        if (!duracion || duracion <= 0) {
+            mostrarToast('La duración en días debe ser mayor a 0.', 'warning');
+            if (duracionInput) duracionInput.focus();
+            return;
+        }
+
+        var frecuenciaInput = document.getElementById('wizFrecuencia');
+        var frecuencia = frecuenciaInput ? parseInt(frecuenciaInput.value) : 3;
         
         // 1. Recopilar datos de cada día
         var dias = [];
         var panels = document.querySelectorAll('.wiz-day-panel');
+        var tabBtns = document.querySelectorAll('.wiz-day-tab-btn');
         
         for (var i = 0; i < panels.length; i++) {
             var panel = panels[i];
+            var dayNum = parseInt(panel.getAttribute('data-day-num')) || (i + 1);
             var idDia = parseInt(panel.querySelector('.wiz-day-name').value);
-            var enfoque1 = parseInt(panel.querySelector('.wiz-day-enfoque1').value);
+            var enfoque1Select = panel.querySelector('.wiz-day-enfoque1');
+            var enfoque1 = enfoque1Select ? parseInt(enfoque1Select.value) : 0;
             
             if (!enfoque1) {
-                mostrarToast('Debe seleccionar el Enfoque Muscular 1 para el Día ' + panel.getAttribute('data-day-num'), 'warning');
-                panel.querySelector('.wiz-day-enfoque1').focus();
+                if (tabBtns[i]) switchWizardDay(tabBtns[i], dayNum);
+                mostrarToast('Debe seleccionar el Enfoque Muscular 1 para el Día ' + dayNum, 'warning');
+                if (enfoque1Select) enfoque1Select.focus();
                 return;
             }
             
@@ -673,23 +699,42 @@
             var rows = panel.querySelectorAll('.exercise-row');
             
             if (rows.length === 0) {
-                mostrarToast('Debe agregar al menos un ejercicio en el Día ' + panel.getAttribute('data-day-num'), 'warning');
+                if (tabBtns[i]) switchWizardDay(tabBtns[i], dayNum);
+                mostrarToast('Debe agregar al menos un ejercicio en el Día ' + dayNum, 'warning');
                 return;
             }
             
             for (var j = 0; j < rows.length; j++) {
                 var row = rows[j];
-                var orden = parseInt(row.querySelector('.row-orden').value);
-                var idEjercicio = parseInt(row.querySelector('.row-ejercicio').value);
+                var idEjercicioSelect = row.querySelector('.row-ejercicio');
+                var idEjercicio = idEjercicioSelect ? parseInt(idEjercicioSelect.value) : 0;
                 
                 if (!idEjercicio) {
-                    mostrarToast('Debe seleccionar un ejercicio en la fila ' + (j + 1) + ' del Día ' + panel.getAttribute('data-day-num'), 'warning');
-                    row.querySelector('.row-ejercicio').focus();
+                    if (tabBtns[i]) switchWizardDay(tabBtns[i], dayNum);
+                    mostrarToast('Debe seleccionar un ejercicio en la fila ' + (j + 1) + ' del Día ' + dayNum, 'warning');
+                    if (idEjercicioSelect) idEjercicioSelect.focus();
                     return;
                 }
                 
-                var series = parseInt(row.querySelector('.row-series').value);
-                var reps = row.querySelector('.row-reps').value;
+                var seriesInput = row.querySelector('.row-series');
+                var series = seriesInput ? parseInt(seriesInput.value) : 4;
+                if (!series || series <= 0) {
+                    if (tabBtns[i]) switchWizardDay(tabBtns[i], dayNum);
+                    mostrarToast('Las series deben ser mayor a 0 en la fila ' + (j + 1) + ' del Día ' + dayNum, 'warning');
+                    if (seriesInput) seriesInput.focus();
+                    return;
+                }
+
+                var repsInput = row.querySelector('.row-reps');
+                var reps = repsInput ? repsInput.value.trim() : '';
+                if (!reps) {
+                    if (tabBtns[i]) switchWizardDay(tabBtns[i], dayNum);
+                    mostrarToast('Debe indicar las repeticiones en la fila ' + (j + 1) + ' del Día ' + dayNum, 'warning');
+                    if (repsInput) repsInput.focus();
+                    return;
+                }
+
+                var orden = parseInt(row.querySelector('.row-orden').value) || (j + 1);
                 var peso = row.querySelector('.row-peso').value || null;
                 var descansoVal = row.querySelector('.row-descanso').value;
                 var descanso = descansoVal ? parseInt(descansoVal) : null;
@@ -752,7 +797,6 @@
             console.error('Error al guardar rutina:', err);
             mostrarToast('Ocurrió un error al enviar los datos del plan.', 'error');
         } finally {
-            maxLoading = false; // safe check
             mostrarLoading(false);
         }
     }

@@ -1,6 +1,11 @@
-from servicios.AsignarRutinaCliente import AsignarRutinaCliente
-from servicios.DefinirDiaRutina import DefinirDiaRutina
-from servicios.AgregarEjercicioRutinaDia import AgregarEjercicioRutinaDia
+try:
+    from backend.servicios.AsignarRutinaCliente import AsignarRutinaCliente
+    from backend.servicios.DefinirDiaRutina import DefinirDiaRutina
+    from backend.servicios.AgregarEjercicioRutinaDia import AgregarEjercicioRutinaDia
+except ImportError:
+    from servicios.AsignarRutinaCliente import AsignarRutinaCliente
+    from servicios.DefinirDiaRutina import DefinirDiaRutina
+    from servicios.AgregarEjercicioRutinaDia import AgregarEjercicioRutinaDia
 
 def AsignarRutinaCompleta(IdCliente, FechaInicio, DuracionDias, FrecuenciaSemanal,
                           NombreRutina, dias):

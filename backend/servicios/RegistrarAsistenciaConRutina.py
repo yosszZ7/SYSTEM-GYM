@@ -1,5 +1,9 @@
-from servicios.RegistrarAsistenciaCliente import RegistrarAsistenciaCliente
-from servicios.ObtenerRutinaHoy import ObtenerRutinaHoy
+try:
+    from backend.servicios.RegistrarAsistenciaCliente import RegistrarAsistenciaCliente
+    from backend.servicios.ObtenerRutinaHoy import ObtenerRutinaHoy
+except ImportError:
+    from servicios.RegistrarAsistenciaCliente import RegistrarAsistenciaCliente
+    from servicios.ObtenerRutinaHoy import ObtenerRutinaHoy
 
 def RegistrarAsistenciaConRutina(IdCliente):
     """

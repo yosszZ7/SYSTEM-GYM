@@ -1,6 +1,11 @@
-from servicios.Login import LoginUsuario
-from servicios.ObtenerMembresiaActivaCliente import ObtenerMembresiaActivaCliente
-from servicios.ObtenerRutinaActivaCliente import ObtenerRutinaActivaCliente
+try:
+    from backend.servicios.Login import LoginUsuario
+    from backend.servicios.ObtenerMembresiaActivaCliente import ObtenerMembresiaActivaCliente
+    from backend.servicios.ObtenerRutinaActivaCliente import ObtenerRutinaActivaCliente
+except ImportError:
+    from servicios.Login import LoginUsuario
+    from servicios.ObtenerMembresiaActivaCliente import ObtenerMembresiaActivaCliente
+    from servicios.ObtenerRutinaActivaCliente import ObtenerRutinaActivaCliente
 
 def LoginCompleto(NombreUsuario, Contrasena):
     success, usuario = LoginUsuario(NombreUsuario, Contrasena)

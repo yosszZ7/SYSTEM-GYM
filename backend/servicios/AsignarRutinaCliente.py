@@ -31,6 +31,7 @@ def AsignarRutinaCliente(IdCliente, FechaInicio, DuracionDias, FrecuenciaSemanal
         Fila = Cursor.fetchone()
         if Fila:
             resultado = dict(zip(Columnas, Fila))
+            Conexion.commit()
             return True, resultado
         else:
             return False, "No se pudo obtener el ID de la rutina creada."

@@ -1,6 +1,11 @@
-from servicios.RegistrarCliente import RegistrarCliente
-from servicios.AsignarMembresia import AsignarMembresia
-from servicios.CrearUsuario import CrearUsuario
+try:
+    from backend.servicios.RegistrarCliente import RegistrarCliente
+    from backend.servicios.AsignarMembresia import AsignarMembresia
+    from backend.servicios.CrearUsuario import CrearUsuario
+except ImportError:
+    from servicios.RegistrarCliente import RegistrarCliente
+    from servicios.AsignarMembresia import AsignarMembresia
+    from servicios.CrearUsuario import CrearUsuario
 
 def RegistrarClienteCompleto(datos_cliente, datos_membresia, datos_usuario):
     """
