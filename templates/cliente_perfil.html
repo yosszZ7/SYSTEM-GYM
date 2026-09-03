@@ -40,7 +40,7 @@
             <!-- Tarjeta de Entrenador -->
             <div class="card">
                 <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
-                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-user-tie" style="margin-right: 8px; color: var(--success);"></i>Entrenador Asignado</h3>
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text);"><i class="fas fa-user-tie" style="margin-right: 8px; color: var(--success);"></i>Entrenador Asignado</h3>
                 </div>
                 <div class="card-body">
                     {% if cliente.IdEntrenador %}
@@ -77,13 +77,13 @@
             <!-- Tarjeta de Membresía -->
             <div class="card">
                 <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
-                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-id-badge" style="margin-right: 8px; color: var(--info);"></i>Membresía Activa</h3>
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text);"><i class="fas fa-id-badge" style="margin-right: 8px; color: var(--info);"></i>Membresía Activa</h3>
                 </div>
                 <div class="card-body">
                     {% if membresia %}
                         <div style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                <span style="font-weight: bold; font-size: 1.1rem; color: var(--text-inverse);">{{ membresia.NombreMembresia }}</span>
+                                <span style="font-weight: bold; font-size: 1.1rem; color: var(--text);">{{ membresia.NombreMembresia }}</span>
                                 <span class="badge badge-success" style="font-size: 12px; font-weight: bold; background: var(--success-light); color: var(--success); padding: 4px 10px; border-radius: 12px;">{{ membresia.Estado }}</span>
                             </div>
                             <p style="margin: 5px 0; font-size: 0.95rem;">Precio: <strong>C${{ membresia.Precio }}</strong></p>
@@ -141,7 +141,7 @@
         <div class="card">
             <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-dumbbell" style="margin-right: 8px; color: var(--primary);"></i>Rutina de Ejercicios Activa</h3>
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text);"><i class="fas fa-dumbbell" style="margin-right: 8px; color: var(--primary);"></i>Rutina de Ejercicios Activa</h3>
                     {% if rutina %}
                         <span class="badge badge-info" style="font-size: 13px; font-weight: bold; background: var(--primary-bg); color: var(--primary); padding: 4px 10px; border-radius: 12px;">{{ rutina.NombreRutina or 'Rutina Activa' }}</span>
                     {% endif %}
@@ -168,7 +168,7 @@
                     {% for dia in rutina_dias %}
                         <div style="margin-bottom: 30px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); overflow: hidden;">
                             <div style="background: var(--bg-primary); padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                                <h4 style="margin: 0; font-size: 1.05rem; color: var(--text-inverse); font-weight: bold;">
+                                <h4 style="margin: 0; font-size: 1.05rem; color: var(--text); font-weight: bold;">
                                     <i class="fas fa-calendar-day" style="margin-right: 6px; color: var(--success);"></i>
                                     {{ dia.NombreDia }}
                                 </h4>
@@ -178,7 +178,7 @@
                             </div>
                             <div style="padding: 15px;">
                                 {% if dia.NotaGeneral %}
-                                    <p style="margin: 0 0 15px 0; font-size: 0.9rem; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid var(--info); border-radius: 4px; color: var(--text-inverse);">
+                                    <p style="margin: 0 0 15px 0; font-size: 0.9rem; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid var(--info); border-radius: 4px; color: var(--text);">
                                         <strong>Nota General:</strong> {{ dia.NotaGeneral }}
                                     </p>
                                 {% endif %}
@@ -232,7 +232,7 @@
     <div id="tab-wizard" class="tab-content" style="display: none;">
         <div class="card">
             <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
-                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-calendar-plus" style="margin-right: 8px; color: var(--primary);"></i>Creador de Rutina Semanal Unificado</h3>
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text);"><i class="fas fa-calendar-plus" style="margin-right: 8px; color: var(--primary);"></i>Creador de Rutina Semanal Unificado</h3>
             </div>
             <div class="card-body">
                 <form id="wizard-form" novalidate onsubmit="saveCompleteRoutine(event)">
@@ -865,7 +865,7 @@
         margin: 25px 0 10px 0;
         border-bottom: 2px solid var(--border-color);
         padding-bottom: 6px;
-        color: var(--text-inverse);
+        color: var(--text);
     }
     
     .day-note {
