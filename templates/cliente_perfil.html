@@ -139,10 +139,22 @@
     <!-- PESTAÑA 2: RUTINA ACTIVA -->
     <div id="tab-rutina-activa" class="tab-content" style="display: none;">
         <div class="card">
-            <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-dumbbell" style="margin-right: 8px; color: var(--primary);"></i>Rutina de Ejercicios Activa</h3>
+            <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-inverse);"><i class="fas fa-dumbbell" style="margin-right: 8px; color: var(--primary);"></i>Rutina de Ejercicios Activa</h3>
+                    {% if rutina %}
+                        <span class="badge badge-info" style="font-size: 13px; font-weight: bold; background: var(--primary-bg); color: var(--primary); padding: 4px 10px; border-radius: 12px;">{{ rutina.NombreRutina or 'Rutina Activa' }}</span>
+                    {% endif %}
+                </div>
                 {% if rutina %}
-                    <span class="badge badge-info" style="font-size: 13px; font-weight: bold; background: var(--primary-bg); color: var(--primary); padding: 4px 10px; border-radius: 12px;">{{ rutina.NombreRutina or 'Rutina Activa' }}</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="triggerWizardTab()" title="Cambiar o diseñar una nueva rutina para este cliente" style="padding: 6px 14px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-sync-alt"></i> Cambiar Rutina
+                        </button>
+                        <button type="button" class="btn btn-sm" onclick="finalizarRutinaActiva()" title="Finalizar la rutina activa del cliente" style="background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid var(--danger); padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                            <i class="fas fa-times-circle"></i> Finalizar Rutina
+                        </button>
+                    </div>
                 {% endif %}
             </div>
             <div class="card-body">
@@ -796,6 +808,39 @@
         } catch (err) {
             console.error('Error al guardar rutina:', err);
             mostrarToast('Ocurrió un error al enviar los datos del plan.', 'error');
+        } finally {
+            mostrarLoading(false);
+        }
+    }
+
+    // Finalizar la rutina activa actual del cliente
+    async function finalizarRutinaActiva() {
+        if (!confirm('¿Estás seguro de que deseas finalizar la rutina activa de este cliente?\n\nEl cliente quedará sin rutina vigente hasta que se le asigne una nueva.')) {
+            return;
+        }
+
+        mostrarLoading(true);
+        try {
+            var response = await fetch('/api/rutina/finalizar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ IdCliente: {{ cliente.IdCliente }} })
+            });
+
+            var data = await response.json();
+            if (response.ok && data.success) {
+                mostrarToast('Rutina finalizada correctamente.', 'success');
+                setTimeout(function() {
+                    location.reload();
+                }, 800);
+            } else {
+                mostrarToast(data.error || 'No se pudo finalizar la rutina.', 'error');
+            }
+        } catch (err) {
+            console.error('Error al finalizar rutina:', err);
+            mostrarToast('Ocurrió un error al procesar la solicitud.', 'error');
         } finally {
             mostrarLoading(false);
         }

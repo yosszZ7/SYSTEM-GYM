@@ -70,6 +70,7 @@ from backend.servicios.ObtenerRutinaPorDia import ObtenerRutinaPorDia
 from backend.servicios.DefinirDiaRutina import DefinirDiaRutina
 from backend.servicios.AgregarEjercicioRutinaDia import AgregarEjercicioRutinaDia
 from backend.servicios.EliminarEjercicioRutina import EliminarEjercicioRutina
+from backend.servicios.FinalizarRutinaCliente import FinalizarRutinaCliente
 from backend.servicios.ObtenerMembresiaActivaCliente import ObtenerMembresiaActivaCliente
 from backend.servicios.ObtenerRutinaActivaCliente import ObtenerRutinaActivaCliente
 from backend.servicios.ListarDetalleRutina import ListarDetalleRutina
@@ -1812,6 +1813,23 @@ def api_rutina_guardar_completa():
             return jsonify({'success': True, 'message': 'Rutina completa asignada exitosamente.', 'id_rutina': res})
         else:
             return jsonify({'success': False, 'error': res}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/rutina/finalizar', methods=['POST'])
+@login_required
+def api_rutina_finalizar():
+    try:
+        data = request.json or {}
+        id_cliente = data.get('IdCliente')
+        if not id_cliente:
+            return jsonify({'success': False, 'error': 'ID de cliente no especificado.'}), 400
+        
+        success, msg = FinalizarRutinaCliente(int(id_cliente))
+        if success:
+            return jsonify({'success': True, 'message': 'Rutina finalizada correctamente.'})
+        else:
+            return jsonify({'success': False, 'error': msg}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
