@@ -70,7 +70,7 @@
             border-color: #F28C28;
             box-shadow: 0 0 0 3px rgba(242, 140, 40, 0.15);
         }
-        .login-form button {
+        .login-form button[type="submit"] {
             width: 100%;
             padding: 14px;
             background: linear-gradient(135deg, #F28C28, #D77218); /* Degradado Naranja */
@@ -84,10 +84,40 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px rgba(242, 140, 40, 0.1);
         }
-        .login-form button:hover {
+        .login-form button[type="submit"]:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px -10px rgba(242, 140, 40, 0.4);
             filter: brightness(1.05);
+        }
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .password-wrapper input {
+            margin: 0 !important;
+            padding-right: 48px !important;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #8B6F5A;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease, transform 0.2s ease;
+            z-index: 2;
+        }
+        .toggle-password:hover {
+            color: #F28C28;
+            transform: translateY(-50%) scale(1.1);
         }
         .message {
             margin-top: 15px;
@@ -152,7 +182,12 @@
             </div>
             <form id="loginForm" class="login-form">
                 <input type="text" id="NombreUsuario" placeholder="Usuario" required autocomplete="off">
-                <input type="password" id="Contrasena" placeholder="Contraseña" required>
+                <div class="password-wrapper">
+                    <input type="password" id="Contrasena" placeholder="Contraseña" required>
+                    <button type="button" id="togglePasswordBtn" class="toggle-password" title="Mostrar contraseña" aria-label="Mostrar contraseña">
+                        <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                    </button>
+                </div>
                 <button type="submit" id="loginBtn">Iniciar Sesión</button>
             </form>
             <div id="message" class="message"></div>
@@ -236,6 +271,31 @@
                 loginForm.dispatchEvent(new Event('submit'));
             }
         });
+
+        // Alternar ver / ocultar contraseña
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const contrasenaInput = document.getElementById('Contrasena');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+        if (togglePasswordBtn && contrasenaInput && togglePasswordIcon) {
+            togglePasswordBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (contrasenaInput.type === 'password') {
+                    contrasenaInput.type = 'text';
+                    togglePasswordIcon.classList.remove('fa-eye');
+                    togglePasswordIcon.classList.add('fa-eye-slash');
+                    togglePasswordBtn.setAttribute('title', 'Ocultar contraseña');
+                    togglePasswordBtn.setAttribute('aria-label', 'Ocultar contraseña');
+                } else {
+                    contrasenaInput.type = 'password';
+                    togglePasswordIcon.classList.remove('fa-eye-slash');
+                    togglePasswordIcon.classList.add('fa-eye');
+                    togglePasswordBtn.setAttribute('title', 'Mostrar contraseña');
+                    togglePasswordBtn.setAttribute('aria-label', 'Mostrar contraseña');
+                }
+                contrasenaInput.focus();
+            });
+        }
     </script>
 </body>
 </html>
