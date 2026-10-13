@@ -92,9 +92,12 @@
                             <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">
                                 {{ empleado.FechaContratacion.strftime('%d/%m/%Y') if empleado.FechaContratacion and empleado.FechaContratacion.strftime else empleado.FechaContratacion }}
                             </td>
-                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px; white-space: nowrap;">
                                 <a href="/empleado_actualizar/{{ empleado.IdEmpleado }}" class="btn-edit" title="Editar Empleado" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/empleado_pago" class="btn-info" title="Ver Pagos / Nómina" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.12); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.25); margin-left: 4px;">
+                                    <i class="fas fa-file-invoice-dollar"></i>
                                 </a>
                             </td>
                         </tr>
@@ -231,9 +234,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             </td>
                             <td style="padding: 8px 10px; font-size: 13px; white-space: nowrap;">C$${salario}</td>
                             <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">${fechaContratacion}</td>
-                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
+                            <td class="table-actions" style="text-align: center; padding: 8px 8px; white-space: nowrap;">
                                 <a href="/empleado_actualizar/${e.IdEmpleado}" class="btn-edit" title="Editar Empleado" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/empleado_pago" class="btn-info" title="Ver Pagos / Nómina" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.12); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.25); margin-left: 4px;">
+                                    <i class="fas fa-file-invoice-dollar"></i>
                                 </a>
                             </td>
                         </tr>`;

@@ -82,61 +82,64 @@
 
             <!-- Tarjeta de Membresía -->
             <div class="card">
-                <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+                <div class="card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0; font-size: 1.15rem; color: var(--text);"><i class="fas fa-id-badge" style="margin-right: 8px; color: var(--info);"></i>Membresía Activa</h3>
+                    {% if membresia %}
+                        <span class="badge badge-success" style="font-size: 11.5px; font-weight: bold; background: var(--success-light); color: var(--success); padding: 3px 10px; border-radius: 12px;">{{ membresia.Estado }}</span>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     {% if membresia %}
-                        <div style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                <span style="font-weight: bold; font-size: 1.1rem; color: var(--text);">{{ membresia.NombreMembresia }}</span>
-                                <span class="badge badge-success" style="font-size: 12px; font-weight: bold; background: var(--success-light); color: var(--success); padding: 4px 10px; border-radius: 12px;">{{ membresia.Estado }}</span>
+                        <div style="background: var(--bg-primary); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(74, 55, 40, 0.03);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text);">{{ membresia.NombreMembresia }}</h4>
+                                    <small style="color: var(--text-secondary); font-size: 0.85rem;">Plan asignado al cliente</small>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="font-size: 1.35rem; font-weight: 800; color: #10B981;">C$ {{ membresia.Precio }}</span>
+                                </div>
                             </div>
-                            <p style="margin: 5px 0; font-size: 0.95rem;">Precio: <strong>C${{ membresia.Precio }}</strong></p>
-                            <p style="margin: 5px 0; font-size: 0.95rem;">Vigencia: <strong>{{ membresia.FechaInicio }}</strong> al <strong>{{ membresia.FechaFin }}</strong></p>
+                            <div style="padding-top: 10px; border-top: 1px dashed var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem;">
+                                <div>
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem; display: block;">Fecha de Inicio:</span>
+                                    <strong>{{ membresia.FechaInicio }}</strong>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem; display: block;">Fecha de Vencimiento:</span>
+                                    <strong>{{ membresia.FechaFin }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button type="button" onclick="abrirModalCobro()" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px;">
+                                <i class="fas fa-sync-alt"></i> Renovar Membresía
+                            </button>
+                            <button type="button" onclick="switchProfileTab(document.getElementById('btn-tab-pagos'), 'tab-pagos')" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px;">
+                                <i class="fas fa-receipt"></i> Ver Historial de Pagos ({{ pagos_cliente|length }})
+                            </button>
                         </div>
                     {% else %}
-                        <div class="alert alert-warning" style="margin-bottom: 20px; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--warning); padding: 12px; border-radius: 8px; color: #f59e0b;">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 20px; margin-right: 8px; vertical-align: middle;"></i>
-                            <span style="font-weight: bold; vertical-align: middle;">Sin membresía activa actualmente.</span>
+                        <div class="alert alert-warning" style="margin-bottom: 18px; background: rgba(245, 158, 11, 0.12); border: 1px solid var(--warning); padding: 14px; border-radius: 10px; color: #b45309;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 22px;"></i>
+                                <div>
+                                    <span style="font-weight: 700; font-size: 1rem; display: block;">Sin membresía activa actualmente.</span>
+                                    <small style="font-size: 0.85rem; color: var(--text-secondary);">El cliente aún no cuenta con un plan vigente o ha expirado su ciclo anterior.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button type="button" onclick="abrirModalCobro()" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px;">
+                                <i class="fas fa-plus-circle"></i> Asignar Membresía y Cobrar
+                            </button>
+                            <button type="button" onclick="switchProfileTab(document.getElementById('btn-tab-pagos'), 'tab-pagos')" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px;">
+                                <i class="fas fa-receipt"></i> Ver Historial de Pagos ({{ pagos_cliente|length }})
+                            </button>
                         </div>
                     {% endif %}
-
-                    <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--text-secondary);">Asignar / Renovar Membresía:</h4>
-                    <form method="POST" action="/cliente_membresia">
-                        <input type="hidden" name="IdCliente" value="{{ cliente.IdCliente }}">
-                        <input type="hidden" name="from_profile" value="true">
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                            <div class="form-group">
-                                <label for="IdMembresia" style="font-size: 0.85rem; display:block; margin-bottom: 4px;">Membresía</label>
-                                <select id="IdMembresia" name="IdMembresia" required onchange="updateMontoMembresia(this)" style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
-                                    <option value="">Seleccionar...</option>
-                                    {% for m in membresias %}
-                                        <option value="{{ m.IdMembresia }}" data-precio="{{ m.Precio }}">{{ m.NombreMembresia }} (C${{ m.Precio }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="IdMetodoPago" style="font-size: 0.85rem; display:block; margin-bottom: 4px;">Método de Pago</label>
-                                <select id="IdMetodoPago" name="IdMetodoPago" required style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
-                                    <option value="">Seleccionar...</option>
-                                    {% for mp in metodos_pago %}
-                                        <option value="{{ mp.IdMetodoPago }}">{{ mp.Nombre }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label for="Monto" style="font-size: 0.85rem; display:block; margin-bottom: 4px;">Monto a Pagar (C$)</label>
-                            <input type="number" id="Monto" name="Monto" step="0.01" required placeholder="0.00" style="width: 100%; padding: 8px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text);">
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">
-                            <i class="fas fa-save"></i> Registrar Pago y Activar
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>
@@ -302,7 +305,7 @@
                     <a href="/pago_historial" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 6px 12px;">
                         <i class="fas fa-external-link-alt"></i> Ver Historial General
                     </a>
-                    <button type="button" onclick="document.querySelector('.tab-btn[onclick*=\'tab-asignaciones\']').click()" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 6px 14px;">
+                    <button type="button" onclick="abrirModalCobro()" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 6px 14px;">
                         <i class="fas fa-plus-circle"></i> Nuevo Cobro / Membresía
                     </button>
                 </div>
@@ -430,7 +433,7 @@
                     <p style="margin: 0 0 16px 0; color: var(--text-secondary); font-size: 0.92rem;">
                         Cuando se le asigne o renueve una membresía, el recibo se registrará automáticamente en este historial.
                     </p>
-                    <button type="button" onclick="document.querySelector('.tab-btn[onclick*=\'tab-asignaciones\']').click()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                    <button type="button" onclick="abrirModalCobro()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
                         <i class="fas fa-id-card"></i> Asignar Membresía Ahora
                     </button>
                 </div>
@@ -1061,6 +1064,45 @@
     function imprimirReciboIndividual() {
         window.print();
     }
+
+    // Modal para Asignar / Renovar Membresía
+    function abrirModalCobro() {
+        var m = document.getElementById('modalAsignarMembresia');
+        if (m) {
+            m.style.display = 'flex';
+            setTimeout(function() { m.classList.add('active'); }, 10);
+        }
+    }
+
+    function cerrarModalCobro() {
+        var m = document.getElementById('modalAsignarMembresia');
+        if (m) {
+            m.classList.remove('active');
+            setTimeout(function() { m.style.display = 'none'; }, 200);
+        }
+    }
+
+    function actualizarPrecioModalMembresia(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        var precio = opt ? opt.getAttribute('data-precio') : '';
+        if (precio) {
+            var inp = document.getElementById('modalMonto');
+            if (inp) inp.value = parseFloat(precio).toFixed(2);
+        }
+    }
+
+    // Auto-activar Historial de Pagos y abrir Recibo si viene de un cobro recién registrado
+    {% if request.args.get('pago_exitoso') and pagos_cliente and pagos_cliente|length > 0 %}
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            var btnPagos = document.getElementById('btn-tab-pagos');
+            if (btnPagos) {
+                switchProfileTab(btnPagos, 'tab-pagos');
+                abrirReciboModal({{ pagos_cliente[0].IdPagos }});
+            }
+        }, 300);
+    });
+    {% endif %}
 </script>
 
 <!-- MODAL DE RECIBO DIGITAL OFICIAL WORLD GYM -->
@@ -1167,6 +1209,70 @@
                 <i class="fas fa-print"></i> Imprimir Recibo
             </button>
         </div>
+    </div>
+</div>
+
+<!-- MODAL PARA REGISTRAR COBRO Y ASIGNAR MEMBRESÍA -->
+<div id="modalAsignarMembresia" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99998;">
+    <div class="custom-modal-box" style="max-width: 520px; width: 95%; padding: 0; border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(74, 55, 40, 0.25);">
+        <div style="background: var(--bg-secondary); padding: 16px 22px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-id-card" style="color: var(--primary); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text); font-weight: 700;">Asignar / Renovar Membresía</h3>
+            </div>
+            <button type="button" onclick="cerrarModalCobro()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary); cursor: pointer; padding: 4px;" title="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form method="POST" action="/cliente_membresia" style="margin: 0; padding: 22px;">
+            <input type="hidden" name="IdCliente" value="{{ cliente.IdCliente }}">
+            <input type="hidden" name="from_profile" value="true">
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="modalIdMembresia" style="font-size: 0.88rem; font-weight: 600; color: var(--text); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-id-badge" style="color: var(--primary); margin-right: 4px;"></i> Membresía / Plan <span class="required" style="color: red;">*</span>
+                </label>
+                <select id="modalIdMembresia" name="IdMembresia" required onchange="actualizarPrecioModalMembresia(this)"
+                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary); border: 1.5px solid var(--border-color); color: var(--text); font-size: 14px; outline: none;">
+                    <option value="">Seleccionar membresía...</option>
+                    {% for m in membresias %}
+                        <option value="{{ m.IdMembresia }}" data-precio="{{ m.Precio }}">{{ m.NombreMembresia }} (C${{ m.Precio }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="modalIdMetodoPago" style="font-size: 0.88rem; font-weight: 600; color: var(--text); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-credit-card" style="color: var(--primary); margin-right: 4px;"></i> Método de Pago <span class="required" style="color: red;">*</span>
+                </label>
+                <select id="modalIdMetodoPago" name="IdMetodoPago" required
+                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary); border: 1.5px solid var(--border-color); color: var(--text); font-size: 14px; outline: none;">
+                    <option value="">Seleccionar método...</option>
+                    {% for mp in metodos_pago %}
+                        <option value="{{ mp.IdMetodoPago }}">{{ mp.Nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 22px;">
+                <label for="modalMonto" style="font-size: 0.88rem; font-weight: 600; color: var(--text); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-coins" style="color: var(--primary); margin-right: 4px;"></i> Monto a Cancelar (C$) <span class="required" style="color: red;">*</span>
+                </label>
+                <input type="number" id="modalMonto" name="Monto" step="0.01" min="0" required placeholder="0.00"
+                       style="width: 100%; height: 42px; padding: 8px 14px; border-radius: 8px; background: var(--bg-primary); border: 1.5px solid var(--border-color); color: var(--text); font-size: 15px; font-weight: 700; outline: none;">
+                <small style="color: var(--text-secondary); font-size: 11.5px; margin-top: 4px; display: block;">Se autocompleta con el precio de la membresía seleccionada.</small>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 18px;">
+                <button type="button" onclick="cerrarModalCobro()" class="btn btn-secondary" style="padding: 10px 18px; font-size: 14px;">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 22px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-save"></i> Registrar Pago y Activar
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

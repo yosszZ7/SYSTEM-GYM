@@ -29,6 +29,8 @@ from backend.servicios.BuscarEmpleadoPorNombre import BuscarEmpleadoPorNombre
 from backend.servicios.RegistrarAsistenciaEmpleado import RegistrarAsistenciaEmpleado
 from backend.servicios.ListarAsistenciasEmpleados import ListarAsistenciasEmpleados
 from backend.servicios.RegistrarPagoEmpleado import RegistrarPagoEmpleado
+from backend.servicios.ListarPagosEmpleados import ListarPagosEmpleados
+from backend.servicios.ObtenerDetallePagoEmpleado import ObtenerDetallePagoEmpleado
 from backend.servicios.ListarEntrenadores import ListarEntrenadores
 from backend.servicios.ListaDeProductos import ListarProductos
 from backend.servicios.RegistrarProducto import RegistrarProducto
@@ -400,6 +402,50 @@ def api_pagos_detalle(id):
         pago_dict['FechaPagoStr'] = '—'
     if pago_dict.get('Monto') is not None:
         pago_dict['Monto'] = float(pago_dict['Monto'])
+    return jsonify({'success': True, 'pago': pago_dict})
+
+@app.route('/api/empleados/pagos/listar')
+@login_required
+def api_empleados_pagos_listar():
+    id_empleado = request.args.get('IdEmpleado', type=int)
+    success, pagos = ListarPagosEmpleados(IdEmpleado=id_empleado)
+    if success:
+        pagos_serializados = []
+        for p in (pagos or []):
+            pd = dict(p)
+            if pd.get('FechaPago'):
+                try:
+                    pd['FechaPagoStr'] = pd['FechaPago'].strftime('%d/%m/%Y %H:%M')
+                    pd['FechaPago'] = str(pd['FechaPago'])
+                except Exception:
+                    pd['FechaPagoStr'] = str(pd['FechaPago'])
+            if pd.get('Monto') is not None:
+                pd['Monto'] = float(pd['Monto'])
+            if pd.get('SalarioBase') is not None:
+                pd['SalarioBase'] = float(pd['SalarioBase'])
+            pagos_serializados.append(pd)
+        return jsonify({'success': True, 'pagos': pagos_serializados})
+    return jsonify({'success': False, 'error': str(pagos)}), 500
+
+@app.route('/api/empleados/pagos/detalle/<int:id>')
+@login_required
+def api_empleados_pagos_detalle(id):
+    success, pago = ObtenerDetallePagoEmpleado(id)
+    if not success or not pago:
+        return jsonify({'success': False, 'error': pago if isinstance(pago, str) else 'Comprobante no encontrado'}), 404
+    pago_dict = dict(pago)
+    if pago_dict.get('FechaPago'):
+        try:
+            pago_dict['FechaPagoStr'] = pago_dict['FechaPago'].strftime('%d/%m/%Y %H:%M')
+            pago_dict['FechaPago'] = str(pago_dict['FechaPago'])
+        except Exception:
+            pago_dict['FechaPagoStr'] = str(pago_dict['FechaPago'])
+    else:
+        pago_dict['FechaPagoStr'] = '—'
+    if pago_dict.get('Monto') is not None:
+        pago_dict['Monto'] = float(pago_dict['Monto'])
+    if pago_dict.get('SalarioBase') is not None:
+        pago_dict['SalarioBase'] = float(pago_dict['SalarioBase'])
     return jsonify({'success': True, 'pago': pago_dict})
 
 # ==================================================
@@ -1088,7 +1134,7 @@ def cliente_membresia():
         if success:
             flash('Membresía asignada exitosamente', 'success')
             if request.form.get('from_profile') == 'true' or (request.referrer and 'cliente_perfil' in request.referrer):
-                return redirect(url_for('cliente_perfil', id=id_cliente))
+                return redirect(url_for('cliente_perfil', id=id_cliente, pago_exitoso=1))
             return redirect(url_for('cliente_listar'))
         else:
             flash(f'Error: {res}', 'error')
@@ -1279,23 +1325,65 @@ def api_empleados_asistencia():
         return redirect(url_for('empleado_asistencias', error=msg))
 
 @app.route('/empleado_pago', methods=['GET', 'POST'])
+@app.route('/empleados_pagos', methods=['GET', 'POST'])
 @login_required
 def empleado_pago():
     if request.method == 'POST':
-        id_empleado = int(request.form.get('IdEmpleado'))
-        monto = float(request.form.get('Monto'))
-        id_metodo_pago = int(request.form.get('IdMetodoPago'))
-        
-        success, res = RegistrarPagoEmpleado(id_empleado, monto, id_metodo_pago)
-        if success:
-            flash('Pago registrado exitosamente', 'success')
-            return redirect(url_for('empleado_listar'))
-        else:
-            flash(f'Error: {res}', 'error')
+        try:
+            id_empleado = int(request.form.get('IdEmpleado'))
+            monto = float(request.form.get('Monto'))
+            id_metodo_pago = int(request.form.get('IdMetodoPago'))
             
+            success, res = RegistrarPagoEmpleado(id_empleado, monto, id_metodo_pago)
+            if success:
+                flash('Pago de nómina registrado exitosamente', 'success')
+                return redirect(url_for('empleado_pago', pago_exitoso=1))
+            else:
+                flash(f'Error al registrar pago: {res}', 'error')
+        except Exception as e:
+            flash(f'Error en datos de pago: {str(e)}', 'error')
+            
+    _, pagos_empleados = ListarPagosEmpleados()
+    pagos_empleados = pagos_empleados or []
+    
+    # KPIs de Nómina
+    total_nomina = sum(float(p.get('Monto') or 0) for p in pagos_empleados)
+    total_pagos = len(pagos_empleados)
+    salario_promedio = (total_nomina / total_pagos) if total_pagos > 0 else 0.0
+
+    ahora = datetime.now()
+    pagos_mes = [
+        p for p in pagos_empleados
+        if p.get('FechaPago') and getattr(p['FechaPago'], 'year', None) == ahora.year and getattr(p['FechaPago'], 'month', None) == ahora.month
+    ]
+    total_mes = sum(float(p.get('Monto') or 0) for p in pagos_mes)
+    pagos_mes_count = len(pagos_mes)
+
+    conteo_metodos = {}
+    for p in pagos_empleados:
+        m = p.get('NombreMetodo') or 'Desconocido'
+        conteo_metodos[m] = conteo_metodos.get(m, 0) + 1
+    metodo_top = max(conteo_metodos.items(), key=lambda x: x[1])[0] if conteo_metodos else 'N/A'
+
+    stats = {
+        'total_nomina': total_nomina,
+        'total_mes': total_mes,
+        'pagos_mes_count': pagos_mes_count,
+        'total_pagos': total_pagos,
+        'salario_promedio': salario_promedio,
+        'metodo_top': metodo_top
+    }
+
     _, empleados = ListarEmpleados()
     _, metodos_pago = ListarMetodosPago()
-    return render_template('empleado_pago.html', usuario=session.get('usuario_nombre'), empleados=empleados or [], metodos_pago=metodos_pago or [])
+    return render_template(
+        'empleado_pago.html',
+        usuario=session.get('usuario_nombre'),
+        pagos=pagos_empleados,
+        empleados=empleados or [],
+        metodos_pago=metodos_pago or [],
+        stats=stats
+    )
 
 @app.route('/empleado_entrenadores')
 @login_required

@@ -107,8 +107,8 @@
                         <a href="/empleado_asistencias" class="{% if request.endpoint == 'empleado_asistencias' %}active{% endif %}">
                             <i class="fas fa-clock"></i> Asistencia Empleados
                         </a>
-                        <a href="/empleado_pago" class="{% if request.endpoint == 'empleado_pago' %}active{% endif %}">
-                            <i class="fas fa-money-bill"></i> Pagos Empleados
+                        <a href="/empleado_pago" class="{% if request.endpoint == 'empleado_pago' or request.endpoint == 'empleados_pagos' %}active{% endif %}">
+                            <i class="fas fa-file-invoice-dollar"></i> Pagos y Nómina
                         </a>
                         <a href="/empleado_entrenadores" class="{% if request.endpoint == 'empleado_entrenadores' %}active{% endif %}">
                             <i class="fas fa-chalkboard-user"></i> Listar Entrenadores

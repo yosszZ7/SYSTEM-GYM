@@ -1,78 +1,676 @@
 {% extends "base.html" %}
 
-{% block title %}Registrar Pago Empleado{% endblock %}
-{% block breadcrumb %}Empleados / Registrar Pago{% endblock %}
+{% block title %}Historial y Pagos de Empleados (Nómina) - WORLD GYM{% endblock %}
+{% block breadcrumb %}Empleados / Pagos y Nómina{% endblock %}
 
 {% block content %}
 <div class="page-container">
-    <div class="page-header">
+    <!-- ENCABEZADO DE PÁGINA -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
         <div class="page-header-left">
-            <h1><i class="fas fa-money-bill"></i> Registrar Pago Empleado</h1>
-            <p>Registre el pago de un empleado</p>
+            <h1 style="margin: 0; font-size: 1.6rem; color: var(--text, #4A3728); display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-file-invoice-dollar" style="color: var(--primary, #F28C28);"></i> Pagos a Empleados (Nómina)
+            </h1>
+            <p style="margin: 5px 0 0 0; color: var(--text-secondary, #8B6F5A); font-size: 0.95rem;">
+                Auditoría salarial, registro de remuneraciones y emisión de comprobantes de pago de colaboradores
+            </p>
         </div>
-        <a href="/empleado_listar" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver
-        </a>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="imprimirTablaPagos()" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-print"></i> Imprimir Reporte
+            </button>
+            <button type="button" onclick="abrirModalNuevoPagoEmpleado()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-plus-circle"></i> Registrar Pago a Empleado
+            </button>
+        </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h2><i class="fas fa-money-bill"></i> Datos del Pago</h2>
-            <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
+    <!-- TARJETAS DE ESTADÍSTICAS / KPI DE NÓMINA -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 22px;">
+        <!-- KPI 1: Total Pagado en Nómina -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Total Nómina Pagada</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: #10B981; margin-top: 2px;">
+                    C$ {{ "%.2f"|format(stats.total_nomina) }}
+                </div>
+            </div>
         </div>
-        
-        <div class="card-body">
-            <form method="POST" action="/empleado_pago">
-                <!-- SpRegistrarPagoEmpleado: IdEmpleado, Monto, IdMetodoPago -->
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="IdEmpleado">
-                            <i class="fas fa-user-tie"></i> Empleado <span class="required">*</span>
-                        </label>
-                        <select id="IdEmpleado" name="IdEmpleado" required>
-                            <option value="">Seleccionar empleado...</option>
-                            <!-- Estos valores vienen de la base de datos -->
-                            <option value="1">Carlos Gómez</option>
-                            <option value="2">Ana Martínez</option>
-                            <option value="3">Luis Rodríguez</option>
-                        </select>
-                        <small class="help-text">Empleado que recibe el pago</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="IdMetodoPago">
-                            <i class="fas fa-credit-card"></i> Método de Pago <span class="required">*</span>
-                        </label>
-                        <select id="IdMetodoPago" name="IdMetodoPago" required>
-                            <option value="">Seleccionar método...</option>
-                            <option value="1">Efectivo</option>
-                            <option value="2">Transferencia</option>
-                            <option value="3">Cheque</option>
-                        </select>
-                        <small class="help-text">Método de pago</small>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="Monto">
-                            <i class="fas fa-dollar-sign"></i> Monto <span class="required">*</span>
-                        </label>
-                        <input type="number" id="Monto" name="Monto" 
-                               placeholder="Ej: 5000.00" step="0.01" min="0" required>
-                        <small class="help-text">Monto a pagar (debe ser mayor a 0)</small>
-                    </div>
+
+        <!-- KPI 2: Nómina del Mes Actual -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(242, 140, 40, 0.12); color: var(--primary, #F28C28); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Nómina Mes Actual</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                    C$ {{ "%.2f"|format(stats.total_mes) }}
+                </div>
+                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">{{ stats.pagos_mes_count }} desembolso{{ 's' if stats.pagos_mes_count != 1 else '' }}</small>
+            </div>
+        </div>
+
+        <!-- KPI 3: Total Transacciones -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(59, 130, 246, 0.12); color: #3B82F6; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-file-signature"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Comprobantes Emitidos</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                    {{ stats.total_pagos }}
+                </div>
+                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">Liquidaciones registradas</small>
+            </div>
+        </div>
+
+        <!-- KPI 4: Pago Promedio -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Pago Promedio</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                    C$ {{ "%.2f"|format(stats.salario_promedio) }}
+                </div>
+                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">Top método: {{ stats.metodo_top }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETA DE BÚSQUEDA Y FILTROS -->
+    <div class="card" style="margin-bottom: 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 2px 8px rgba(74, 55, 40, 0.04);">
+        <div class="card-body" style="padding: 16px 20px;">
+            <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.2fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
+                <!-- Buscador de texto -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="buscarPagos" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-search"></i> Buscar Empleado o Cargo
+                    </label>
+                    <input type="text" id="buscarPagos" placeholder="Nombre, apellido o cargo..." onkeyup="filtrarTablaPagosEmpleados()"
+                           style="width: 100%; height: 40px; padding: 8px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none;">
                 </div>
 
-                <!-- Botones -->
-                <div class="card-footer">
-                    <button type="reset" class="btn btn-secondary">
+                <!-- Filtro por Empleado -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="filtroEmpleado" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-user-tie"></i> Empleado
+                    </label>
+                    <select id="filtroEmpleado" onchange="filtrarTablaPagosEmpleados()"
+                            style="width: 100%; height: 40px; padding: 8px 12px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none;">
+                        <option value="">Todos los empleados</option>
+                        {% for emp in empleados %}
+                            <option value="{{ emp.PrimerNombre|lower }} {{ emp.PrimerApellido|lower }}">{{ emp.PrimerNombre }} {{ emp.PrimerApellido }} ({{ emp.NombreCargo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro Método de Pago -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="filtroMetodo" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-credit-card"></i> Método
+                    </label>
+                    <select id="filtroMetodo" onchange="filtrarTablaPagosEmpleados()"
+                            style="width: 100%; height: 40px; padding: 8px 12px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none;">
+                        <option value="">Todos los métodos</option>
+                        {% for mp in metodos_pago %}
+                            <option value="{{ mp.NombreMetodo|lower }}">{{ mp.NombreMetodo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Fecha Desde -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="fechaDesde" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-calendar-alt"></i> Desde
+                    </label>
+                    <input type="date" id="fechaDesde" onchange="filtrarTablaPagosEmpleados()"
+                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13px; outline: none;">
+                </div>
+
+                <!-- Fecha Hasta -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="fechaHasta" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-calendar-alt"></i> Hasta
+                    </label>
+                    <input type="date" id="fechaHasta" onchange="filtrarTablaPagosEmpleados()"
+                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13px; outline: none;">
+                </div>
+
+                <!-- Botón Limpiar -->
+                <div style="margin: 0;">
+                    <button type="button" onclick="limpiarFiltrosPagosEmpleados()" class="btn btn-secondary" title="Limpiar filtros"
+                            style="height: 40px; padding: 0 16px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
                         <i class="fas fa-undo"></i> Limpiar
                     </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Registrar Pago
-                    </button>
                 </div>
-            </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETA PRINCIPAL: TABLA DE PAGOS DE EMPLEADOS -->
+    <div class="card" id="cardTablaPagosEmpleados" style="border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); overflow: hidden; box-shadow: 0 4px 15px rgba(74, 55, 40, 0.04);">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-color, #EFE6DC); background: var(--bg-secondary, #FAF1E6);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.15rem; color: var(--text, #4A3728); font-weight: 700;">
+                    <i class="fas fa-list-check" style="color: var(--primary, #F28C28);"></i> Desembolsos y Comprobantes de Nómina
+                </h2>
+                <span id="badgeConteoPagosEmp" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                    {{ pagos|length }} registro{{ 's' if pagos|length != 1 else '' }}
+                </span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary, #8B6F5A);">
+                Moneda oficial: <strong>Córdobas (C$)</strong>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%;">
+                <table class="data-table" id="tablaPagosEmpleados" style="width: 100%; margin: 0; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg-secondary, #FAF1E6); border-bottom: 2px solid var(--border-color, #EFE6DC);">
+                            <th style="width: 90px; text-align: center; padding: 12px 10px; font-size: 12px;"># COMPROBANTE</th>
+                            <th style="width: 140px; text-align: center; padding: 12px 10px; font-size: 12px;">FECHA Y HORA</th>
+                            <th style="padding: 12px 15px; font-size: 12px;">COLABORADOR</th>
+                            <th style="padding: 12px 15px; font-size: 12px;">CARGO</th>
+                            <th style="width: 130px; text-align: right; padding: 12px 15px; font-size: 12px;">SALARIO BASE</th>
+                            <th style="width: 130px; text-align: center; padding: 12px 10px; font-size: 12px;">MÉTODO</th>
+                            <th style="width: 130px; text-align: right; padding: 12px 15px; font-size: 12px;">MONTO PAGADO</th>
+                            <th style="width: 100px; text-align: center; padding: 12px 10px; font-size: 12px;">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTablaPagosEmpleados">
+                        {% for p in pagos %}
+                        <tr class="fila-pago-emp" 
+                            data-empleado="{{ (p.NombreEmpleado or (p.PrimerNombre ~ ' ' ~ p.PrimerApellido))|lower }}"
+                            data-cargo="{{ (p.NombreCargo or '')|lower }}"
+                            data-metodo="{{ (p.NombreMetodo or '')|lower }}"
+                            data-fecha="{{ p.FechaPago.strftime('%Y-%m-%d') if p.FechaPago else '' }}"
+                            style="border-bottom: 1px solid var(--border-color, #EFE6DC); transition: background 0.15s ease;">
+                            
+                            <!-- No Comprobante -->
+                            <td style="text-align: center; padding: 10px 10px; font-size: 13px;">
+                                <span class="badge" style="background: rgba(242, 140, 40, 0.12); color: var(--primary, #F28C28); font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+                                    #NOM-{{ "%05d"|format(p.IdPagoEmpleado) }}
+                                </span>
+                            </td>
+
+                            <!-- Fecha y Hora -->
+                            <td style="text-align: center; padding: 10px 10px; font-size: 12.5px; color: var(--text-secondary, #8B6F5A); white-space: nowrap;">
+                                {{ p.FechaPago.strftime('%d/%m/%Y %H:%M') if p.FechaPago else '—' }}
+                            </td>
+
+                            <!-- Empleado -->
+                            <td style="padding: 10px 15px; font-size: 13.5px;">
+                                <div style="display: flex; align-items: center; gap: 9px;">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: rgba(242, 140, 40, 0.15); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--primary, #F28C28); font-weight: 700;">
+                                        <i class="fas fa-user-tie"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--text, #4A3728);">
+                                            {{ p.NombreEmpleado or (p.PrimerNombre ~ ' ' ~ p.PrimerApellido) }}
+                                        </div>
+                                        <small style="color: var(--text-secondary, #8B6F5A); font-size: 11.5px;">
+                                            Tel: {{ p.Telefono or '—' }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Cargo -->
+                            <td style="padding: 10px 15px; font-size: 13px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 3px 10px; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                                    {{ p.NombreCargo or 'Colaborador' }}
+                                </span>
+                            </td>
+
+                            <!-- Salario Base -->
+                            <td style="text-align: right; padding: 10px 15px; font-size: 13px; color: var(--text-secondary, #8B6F5A); white-space: nowrap;">
+                                C$ {{ "%.2f"|format(p.SalarioBase|float if p.SalarioBase else 0) }}
+                            </td>
+
+                            <!-- Método de Pago -->
+                            <td style="text-align: center; padding: 10px 10px;">
+                                {% set met = (p.NombreMetodo or '')|lower %}
+                                {% if 'efectivo' in met %}
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-money-bill-wave"></i> Efectivo
+                                    </span>
+                                {% elif 'tarjeta' in met %}
+                                    <span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-credit-card"></i> Tarjeta
+                                    </span>
+                                {% elif 'transf' in met %}
+                                    <span class="badge" style="background: rgba(139, 92, 246, 0.12); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-university"></i> Transferencia
+                                    </span>
+                                {% elif 'cheque' in met %}
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-money-check-alt"></i> Cheque
+                                    </span>
+                                {% else %}
+                                    <span class="badge" style="background: rgba(107, 114, 128, 0.12); color: #6B7280; border: 1px solid rgba(107, 114, 128, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-wallet"></i> {{ p.NombreMetodo }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Monto Pagado -->
+                            <td style="text-align: right; padding: 10px 15px; font-size: 14.5px; font-weight: 800; color: #10B981; white-space: nowrap;">
+                                C$ {{ "%.2f"|format(p.Monto) }}
+                            </td>
+
+                            <!-- Acciones -->
+                            <td style="text-align: center; padding: 10px 10px;">
+                                <button type="button" onclick="abrirComprobanteEmpleado({{ p.IdPagoEmpleado }})" class="btn btn-secondary btn-sm" title="Ver e imprimir comprobante oficial de nómina"
+                                        style="padding: 6px 10px; font-size: 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <i class="fas fa-file-invoice" style="color: var(--primary, #F28C28);"></i>
+                                    <span>Recibo</span>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="filaSinPagosEmp">
+                            <td colspan="8" style="text-align: center; padding: 50px 20px; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-file-invoice-dollar" style="font-size: 48px; color: var(--border-color, #EFE6DC); margin-bottom: 15px; display: block;"></i>
+                                <h3 style="margin: 0 0 5px 0; color: var(--text, #4A3728); font-size: 1.15rem;">No hay pagos de nómina registrados</h3>
+                                <p style="margin: 0 0 16px 0; font-size: 0.95rem;">Los salarios y desembolsos registrados a empleados aparecerán automáticamente aquí.</p>
+                                <button type="button" onclick="abrirModalNuevoPagoEmpleado()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-plus-circle"></i> Registrar Primer Pago
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- ============================================================== -->
+<!-- MODAL PARA REGISTRAR PAGO A EMPLEADO                          -->
+<!-- ============================================================== -->
+<div id="modalNuevoPagoEmpleado" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99998;">
+    <div class="custom-modal-box" style="max-width: 520px; width: 95%; padding: 0; border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border-color, #EFE6DC); box-shadow: 0 25px 50px rgba(74, 55, 40, 0.25);">
+        <div style="background: var(--bg-secondary, #FAF1E6); padding: 16px 22px; border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-money-bill-wave" style="color: var(--primary, #F28C28); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text, #4A3728); font-weight: 700;">Registrar Pago a Empleado</h3>
+            </div>
+            <button type="button" onclick="cerrarModalNuevoPagoEmpleado()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #8B6F5A); cursor: pointer; padding: 4px;" title="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form method="POST" action="/empleado_pago" style="margin: 0; padding: 22px;">
+            <!-- Select Empleado -->
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="empIdEmpleado" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #4A3728); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-user-tie" style="color: var(--primary, #F28C28); margin-right: 4px;"></i> Colaborador / Empleado <span class="required" style="color: red;">*</span>
+                </label>
+                <select id="empIdEmpleado" name="IdEmpleado" required onchange="autollenarSalarioEmpleado(this)"
+                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary, #FFFDF9); border: 1.5px solid var(--border-color, #EFE6DC); color: var(--text, #4A3728); font-size: 14px; outline: none;">
+                    <option value="">Seleccionar colaborador...</option>
+                    {% for emp in empleados %}
+                        <option value="{{ emp.IdEmpleado }}" data-salario="{{ emp.Salario }}">
+                            {{ emp.PrimerNombre }} {{ emp.PrimerApellido }} — {{ emp.NombreCargo }} (Salario base: C${{ emp.Salario }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <small id="txtSalarioSugerido" style="color: var(--text-secondary, #8B6F5A); font-size: 12px; margin-top: 4px; display: block;">
+                    Seleccione un colaborador para cargar su salario base registrado.
+                </small>
+            </div>
+
+            <!-- Select Método de Pago -->
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="empIdMetodoPago" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #4A3728); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-credit-card" style="color: var(--primary, #F28C28); margin-right: 4px;"></i> Método de Pago <span class="required" style="color: red;">*</span>
+                </label>
+                <select id="empIdMetodoPago" name="IdMetodoPago" required
+                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary, #FFFDF9); border: 1.5px solid var(--border-color, #EFE6DC); color: var(--text, #4A3728); font-size: 14px; outline: none;">
+                    <option value="">Seleccionar método...</option>
+                    {% for mp in metodos_pago %}
+                        <option value="{{ mp.IdMetodoPago }}">{{ mp.NombreMetodo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Input Monto -->
+            <div class="form-group" style="margin-bottom: 22px;">
+                <label for="empMonto" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #4A3728); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-coins" style="color: var(--primary, #F28C28); margin-right: 4px;"></i> Monto Desembolsado (C$) <span class="required" style="color: red;">*</span>
+                </label>
+                <input type="number" id="empMonto" name="Monto" step="0.01" min="0.01" required placeholder="0.00"
+                       style="width: 100%; height: 42px; padding: 8px 14px; border-radius: 8px; background: var(--bg-primary, #FFFDF9); border: 1.5px solid var(--border-color, #EFE6DC); color: var(--text, #4A3728); font-size: 15px; font-weight: 700; outline: none;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color, #EFE6DC); padding-top: 18px;">
+                <button type="button" onclick="cerrarModalNuevoPagoEmpleado()" class="btn btn-secondary" style="padding: 10px 18px; font-size: 14px;">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 22px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-save"></i> Guardar y Generar Comprobante
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL DE COMPROBANTE OFICIAL DE NÓMINA / SALARIO              -->
+<!-- ============================================================== -->
+<div id="modalComprobanteEmpleado" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99999;">
+    <div class="custom-modal-box" style="max-width: 600px; width: 95%; padding: 0; border-radius: 18px; overflow: hidden; text-align: left; background: #FFFFFF; border: 1px solid var(--border-color, #EFE6DC); box-shadow: 0 25px 50px -12px rgba(45, 31, 22, 0.35);">
+        
+        <!-- Header del Modal -->
+        <div style="background: var(--bg-secondary, #FAF1E6); padding: 15px 22px; border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-file-invoice-dollar" style="color: var(--primary, #F28C28); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text, #4A3728); font-weight: 700;">Comprobante Oficial de Salario / Nómina</h3>
+            </div>
+            <button type="button" onclick="cerrarComprobanteEmpleado()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #8B6F5A); cursor: pointer; padding: 4px;" title="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Cuerpo del Comprobante Imprimible -->
+        <div id="areaComprobanteImpresion" style="padding: 24px 28px; background: #FFFFFF; font-family: 'Inter', sans-serif;">
+            
+            <!-- Encabezado de la Empresa -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px dashed #E5E7EB; padding-bottom: 18px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #F28C28;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #4A3728; letter-spacing: -0.5px;">WORLD <span style="color: #F28C28;">GYM</span></h2>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #8B6F5A;">Administración de Recursos Humanos & Nómina</p>
+                        <p style="margin: 1px 0 0 0; font-size: 0.75rem; color: #9CA3AF;">RUC: J0310000000001 | Tel: +505 8888-9999</p>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div id="comprobanteNumero" style="font-size: 1.1rem; font-weight: 800; color: #F28C28;">#NOM-00000</div>
+                    <div style="margin-top: 4px;">
+                        <span class="badge" style="background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;">
+                            PAGADO / LIQUIDADO
+                        </span>
+                    </div>
+                    <div id="comprobanteFecha" style="margin-top: 4px; font-size: 0.8rem; color: #6B7280;">00/00/0000 00:00</div>
+                </div>
+            </div>
+
+            <!-- Datos del Colaborador -->
+            <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #6B7280; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Datos del Colaborador</span>
+                <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px;">
+                    <div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #1F2937;" id="comprobanteEmpleadoNombre">Empleado Nombre</div>
+                        <div style="font-size: 0.8rem; color: #4B5563;">Cargo: <strong id="comprobanteEmpleadoCargo" style="color: #F28C28;">Entrenador</strong></div>
+                        <div style="font-size: 0.8rem; color: #6B7280;" id="comprobanteEmpleadoCorreo">correo@ejemplo.com</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.8rem; color: #6B7280;">Salario Base Registrado:</div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #1F2937;" id="comprobanteSalarioBase">C$ 0.00</div>
+                        <div style="font-size: 0.8rem; color: #6B7280; margin-top: 2px;">Tel: <span id="comprobanteEmpleadoTelefono">—</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalle de la Remuneración -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="border-bottom: 1.5px solid #E5E7EB; background: #F3F4F6;">
+                        <th style="padding: 8px 12px; text-align: left; font-size: 0.8rem; color: #374151;">CONCEPTO / DESCRIPCIÓN</th>
+                        <th style="padding: 8px 12px; text-align: center; font-size: 0.8rem; color: #374151;">MÉTODO</th>
+                        <th style="padding: 8px 12px; text-align: right; font-size: 0.8rem; color: #374151;">NETO RECIBIDO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #E5E7EB;">
+                        <td style="padding: 12px 12px;">
+                            <div style="font-weight: 700; color: #111827; font-size: 0.95rem;">Pago de Salario / Remuneración Laboral</div>
+                            <small style="color: #6B7280; font-size: 0.8rem;">Desembolso salarial de nómina en gimnasio WORLD GYM</small>
+                        </td>
+                        <td style="padding: 12px 12px; text-align: center; font-size: 0.85rem; color: #374151;" id="comprobanteMetodoPago">Efectivo</td>
+                        <td style="padding: 12px 12px; text-align: right; font-size: 1.05rem; font-weight: 800; color: #10B981;" id="comprobanteMontoTabla">C$ 0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Resumen Total -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 10px; border-top: 2px dashed #E5E7EB; margin-bottom: 25px;">
+                <div>
+                    <div style="font-size: 0.8rem; color: #6B7280;">Emisor / Administración:</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #1F2937;">{{ usuario or 'Gerencia General' }}</div>
+                    <small style="color: #9CA3AF; font-size: 0.75rem;">Sistema de Control de Nómina WORLD GYM</small>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.8rem; color: #6B7280; text-transform: uppercase; font-weight: 600;">Total Cancelado</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #F28C28;" id="comprobanteTotalFinal">C$ 0.00</div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE FIRMAS DE CONFORMIDAD -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; padding-top: 15px;">
+                <div style="text-align: center;">
+                    <div style="border-top: 1.5px solid #4B5563; width: 85%; margin: 0 auto; padding-top: 6px;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #374151; display: block;">Firma Empleador / Administración</span>
+                        <small style="font-size: 0.72rem; color: #6B7280;">WORLD GYM Nicaragua</small>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="border-top: 1.5px solid #4B5563; width: 85%; margin: 0 auto; padding-top: 6px;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #374151; display: block;" id="comprobanteFirmaEmpleado">Empleado / Colaborador</span>
+                        <small style="font-size: 0.72rem; color: #6B7280;">Recibí Conforme a Entera Satisfacción</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de Comprobante -->
+            <div style="text-align: center; border-top: 1px solid #F3F4F6; padding-top: 14px; margin-top: 25px; color: #9CA3AF; font-size: 0.75rem;">
+                Este documento electrónico constituye constancia formal de liquidación y pago salarial.
+            </div>
+        </div>
+
+        <!-- Footer con Acciones -->
+        <div style="background: var(--bg-secondary, #FAF1E6); padding: 14px 22px; border-top: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" onclick="cerrarComprobanteEmpleado()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;">
+                Cerrar
+            </button>
+            <button type="button" onclick="imprimirComprobanteIndividual()" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-print"></i> Imprimir Comprobante
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- ESTILOS Y SCRIPTS                                              -->
+<!-- ============================================================== -->
+<style>
+    .fila-pago-emp:hover {
+        background: rgba(242, 140, 40, 0.04) !important;
+    }
+
+    /* ESTILOS DE IMPRESIÓN LIMPIA */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #areaComprobanteImpresion, #areaComprobanteImpresion * {
+            visibility: visible;
+        }
+        #areaComprobanteImpresion {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 20px !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .sidebar, .navbar, .page-header, .card, .btn, #modalComprobanteEmpleado > div > div:first-child, #modalComprobanteEmpleado > div > div:last-child {
+            display: none !important;
+        }
+    }
+</style>
+
+<script>
+    // Filtros dinámicos en tiempo real
+    function filtrarTablaPagosEmpleados() {
+        var texto = document.getElementById('buscarPagos').value.toLowerCase().trim();
+        var empFiltro = document.getElementById('filtroEmpleado').value.toLowerCase().trim();
+        var metodo = document.getElementById('filtroMetodo').value.toLowerCase().trim();
+        var fDesde = document.getElementById('fechaDesde').value;
+        var fHasta = document.getElementById('fechaHasta').value;
+
+        var filas = document.querySelectorAll('.fila-pago-emp');
+        var visibles = 0;
+
+        filas.forEach(function(fila) {
+            var empleado = fila.getAttribute('data-empleado') || '';
+            var cargo = fila.getAttribute('data-cargo') || '';
+            var metodoFila = fila.getAttribute('data-metodo') || '';
+            var fechaFila = fila.getAttribute('data-fecha') || '';
+
+            var coincideTexto = !texto || empleado.includes(texto) || cargo.includes(texto);
+            var coincideEmp = !empFiltro || empleado.includes(empFiltro);
+            var coincideMetodo = !metodo || metodoFila.includes(metodo);
+            var coincideDesde = !fDesde || fechaFila >= fDesde;
+            var coincideHasta = !fHasta || fechaFila <= fHasta;
+
+            if (coincideTexto && coincideEmp && coincideMetodo && coincideDesde && coincideHasta) {
+                fila.style.display = '';
+                visibles++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        var badge = document.getElementById('badgeConteoPagosEmp');
+        if (badge) {
+            badge.textContent = visibles + (visibles === 1 ? ' registro' : ' registros');
+        }
+    }
+
+    function limpiarFiltrosPagosEmpleados() {
+        document.getElementById('buscarPagos').value = '';
+        document.getElementById('filtroEmpleado').value = '';
+        document.getElementById('filtroMetodo').value = '';
+        document.getElementById('fechaDesde').value = '';
+        document.getElementById('fechaHasta').value = '';
+        filtrarTablaPagosEmpleados();
+    }
+
+    // Modal de Registro
+    function abrirModalNuevoPagoEmpleado() {
+        var m = document.getElementById('modalNuevoPagoEmpleado');
+        if (m) {
+            m.style.display = 'flex';
+            setTimeout(function() { m.classList.add('active'); }, 10);
+        }
+    }
+
+    function cerrarModalNuevoPagoEmpleado() {
+        var m = document.getElementById('modalNuevoPagoEmpleado');
+        if (m) {
+            m.classList.remove('active');
+            setTimeout(function() { m.style.display = 'none'; }, 200);
+        }
+    }
+
+    function autollenarSalarioEmpleado(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        var salario = opt ? opt.getAttribute('data-salario') : '';
+        var txtSal = document.getElementById('txtSalarioSugerido');
+        var inpMonto = document.getElementById('empMonto');
+
+        if (salario && parseFloat(salario) > 0) {
+            inpMonto.value = parseFloat(salario).toFixed(2);
+            if (txtSal) {
+                txtSal.innerHTML = 'Salario base registrado: <strong>C$ ' + parseFloat(salario).toFixed(2) + '</strong> (monto sugerido cargado).';
+                txtSal.style.color = '#10B981';
+            }
+        } else {
+            if (txtSal) {
+                txtSal.textContent = 'Seleccione un colaborador para cargar su salario base registrado.';
+                txtSal.style.color = 'var(--text-secondary, #8B6F5A)';
+            }
+        }
+    }
+
+    // Modal de Comprobante Oficial de Nómina
+    async function abrirComprobanteEmpleado(idPago) {
+        mostrarLoading(true);
+        try {
+            var response = await fetch('/api/empleados/pagos/detalle/' + idPago);
+            var data = await response.json();
+
+            if (response.ok && data.success && data.pago) {
+                var p = data.pago;
+                document.getElementById('comprobanteNumero').textContent = '#NOM-' + String(p.IdPagoEmpleado).padStart(5, '0');
+                document.getElementById('comprobanteFecha').textContent = p.FechaPagoStr || '—';
+                
+                var empNombre = p.NombreEmpleado || (p.PrimerNombre + ' ' + p.PrimerApellido);
+                document.getElementById('comprobanteEmpleadoNombre').textContent = empNombre;
+                document.getElementById('comprobanteFirmaEmpleado').textContent = empNombre;
+                document.getElementById('comprobanteEmpleadoCargo').textContent = p.NombreCargo || 'Colaborador';
+                document.getElementById('comprobanteEmpleadoCorreo').textContent = p.Correo || 'Sin correo registrado';
+                document.getElementById('comprobanteEmpleadoTelefono').textContent = p.Telefono || '—';
+                
+                var salBase = 'C$ ' + parseFloat(p.SalarioBase || 0).toFixed(2);
+                document.getElementById('comprobanteSalarioBase').textContent = salBase;
+
+                var montoFormatted = 'C$ ' + parseFloat(p.Monto || 0).toFixed(2);
+                document.getElementById('comprobanteMontoTabla').textContent = montoFormatted;
+                document.getElementById('comprobanteTotalFinal').textContent = montoFormatted;
+                document.getElementById('comprobanteMetodoPago').textContent = p.NombreMetodo || 'Efectivo';
+
+                var overlay = document.getElementById('modalComprobanteEmpleado');
+                overlay.style.display = 'flex';
+                setTimeout(function() {
+                    overlay.classList.add('active');
+                }, 10);
+            } else {
+                mostrarToast(data.error || 'No se pudo cargar el comprobante', 'error');
+            }
+        } catch (err) {
+            console.error('Error al cargar comprobante:', err);
+            mostrarToast('Error al conectar con el servidor', 'error');
+        } finally {
+            mostrarLoading(false);
+        }
+    }
+
+    function cerrarComprobanteEmpleado() {
+        var overlay = document.getElementById('modalComprobanteEmpleado');
+        overlay.classList.remove('active');
+        setTimeout(function() {
+            overlay.style.display = 'none';
+        }, 200);
+    }
+
+    function imprimirComprobanteIndividual() {
+        window.print();
+    }
+
+    function imprimirTablaPagos() {
+        window.print();
+    }
+
+    // Auto-abrir comprobante si viene de un pago recién registrado
+    {% if request.args.get('pago_exitoso') and pagos and pagos|length > 0 %}
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            abrirComprobanteEmpleado({{ pagos[0].IdPagoEmpleado }});
+        }, 300);
+    });
+    {% endif %}
+</script>
 {% endblock %}
