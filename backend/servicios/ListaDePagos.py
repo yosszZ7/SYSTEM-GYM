@@ -1,8 +1,9 @@
 from ConexionBD import ConectarBD
 
-def ListarPagos():
+def ListarPagos(IdCliente=None):
     """
     Retorna la lista de pagos de clientes (incluye método de pago y membresía).
+    Si se especifica IdCliente, filtra únicamente los pagos de ese cliente.
     En éxito: (True, lista_de_pagos)
     En error: (False, mensaje_error)
     """
@@ -13,7 +14,10 @@ def ListarPagos():
             return False, "No se pudo conectar con la base de datos."
 
         Cursor = Conexion.cursor()
-        Cursor.execute("EXEC SpListarPagos")
+        if IdCliente is not None:
+            Cursor.execute("EXEC SpListarPagos @IdCliente = ?", (IdCliente,))
+        else:
+            Cursor.execute("EXEC SpListarPagos")
 
         # Obtener nombres de las columnas
         Columnas = [desc[0] for desc in Cursor.description]

@@ -92,6 +92,8 @@ from ConexionBD import ConectarBD
 from backend.servicios.ActualizarGrupoMuscular import ActualizarGrupoMuscular
 from backend.servicios.ListarNotificaciones import ListarNotificaciones
 from backend.servicios.MarcarTodasLeidas import MarcarTodasLeidas
+from backend.servicios.ListaDePagos import ListarPagos
+from backend.servicios.ObtenerDetallePago import ObtenerDetallePago
 from backend.servicios.limpiar_error import limpiar_error_sql
 
 app = Flask(__name__)
@@ -359,6 +361,46 @@ def api_inventario_listar():
     if success:
         return jsonify(inventario or [])
     return jsonify([])
+
+@app.route('/api/pagos/listar')
+@login_required
+def api_pagos_listar():
+    id_cliente = request.args.get('IdCliente', type=int)
+    success, pagos = ListarPagos(IdCliente=id_cliente)
+    if success:
+        pagos_serializados = []
+        for p in (pagos or []):
+            pd = dict(p)
+            if pd.get('FechaPago'):
+                try:
+                    pd['FechaPagoStr'] = pd['FechaPago'].strftime('%d/%m/%Y %H:%M')
+                    pd['FechaPago'] = str(pd['FechaPago'])
+                except Exception:
+                    pd['FechaPagoStr'] = str(pd['FechaPago'])
+            if pd.get('Monto') is not None:
+                pd['Monto'] = float(pd['Monto'])
+            pagos_serializados.append(pd)
+        return jsonify({'success': True, 'pagos': pagos_serializados})
+    return jsonify({'success': False, 'error': str(pagos)}), 500
+
+@app.route('/api/pagos/detalle/<int:id>')
+@login_required
+def api_pagos_detalle(id):
+    success, pago = ObtenerDetallePago(id)
+    if not success or not pago:
+        return jsonify({'success': False, 'error': pago if isinstance(pago, str) else 'Pago no encontrado'}), 404
+    pago_dict = dict(pago)
+    if pago_dict.get('FechaPago'):
+        try:
+            pago_dict['FechaPagoStr'] = pago_dict['FechaPago'].strftime('%d/%m/%Y %H:%M')
+            pago_dict['FechaPago'] = str(pago_dict['FechaPago'])
+        except Exception:
+            pago_dict['FechaPagoStr'] = str(pago_dict['FechaPago'])
+    else:
+        pago_dict['FechaPagoStr'] = '—'
+    if pago_dict.get('Monto') is not None:
+        pago_dict['Monto'] = float(pago_dict['Monto'])
+    return jsonify({'success': True, 'pago': pago_dict})
 
 # ==================================================
 # API BUSQUEDAS (JSON)
@@ -909,6 +951,15 @@ def cliente_perfil(id):
         col_enf = [desc[0] for desc in cursor.description]
         enfoques = [dict(zip(col_enf, r)) for r in cursor.fetchall()]
         
+        # 7. Historial de Pagos del Cliente
+        pagos_cliente = []
+        try:
+            exito_pagos, lista_pagos = ListarPagos(IdCliente=id)
+            if exito_pagos and lista_pagos:
+                pagos_cliente = lista_pagos
+        except Exception:
+            pagos_cliente = []
+
         return render_template(
             'cliente_perfil.html',
             usuario=session.get('usuario_nombre'),
@@ -921,7 +972,8 @@ def cliente_perfil(id):
             membresias=membresias,
             metodos_pago=metodos_pago,
             ejercicios=ejercicios,
-            enfoques=enfoques
+            enfoques=enfoques,
+            pagos_cliente=pagos_cliente
         )
     except Exception as e:
         flash(f"Error al cargar perfil del cliente: {str(e)}", "error")
@@ -1045,6 +1097,53 @@ def cliente_membresia():
     _, membresias = ListarMembresias()
     _, metodos_pago = ListarMetodosPago()
     return render_template('cliente_membresia.html', usuario=session.get('usuario_nombre'), clientes=clientes or [], membresias=membresias or [], metodos_pago=metodos_pago or [])
+
+@app.route('/pago_historial')
+@app.route('/pagos_historial')
+@login_required
+def pago_historial():
+    _, pagos = ListarPagos()
+    pagos = pagos or []
+
+    # Calcular métricas y estadísticas clave (KPIs)
+    total_recaudado = sum(float(p.get('Monto') or 0) for p in pagos)
+    total_pagos = len(pagos)
+    ticket_promedio = (total_recaudado / total_pagos) if total_pagos > 0 else 0.0
+
+    # Recaudación del mes en curso
+    ahora = datetime.now()
+    pagos_mes = [
+        p for p in pagos
+        if p.get('FechaPago') and getattr(p['FechaPago'], 'year', None) == ahora.year and getattr(p['FechaPago'], 'month', None) == ahora.month
+    ]
+    total_mes = sum(float(p.get('Monto') or 0) for p in pagos_mes)
+    pagos_mes_count = len(pagos_mes)
+
+    # Método de pago más utilizado
+    conteo_metodos = {}
+    for p in pagos:
+        m = p.get('NombreMetodo') or 'Desconocido'
+        conteo_metodos[m] = conteo_metodos.get(m, 0) + 1
+    metodo_top = max(conteo_metodos.items(), key=lambda x: x[1])[0] if conteo_metodos else 'N/A'
+
+    stats = {
+        'total_recaudado': total_recaudado,
+        'total_mes': total_mes,
+        'pagos_mes_count': pagos_mes_count,
+        'total_pagos': total_pagos,
+        'ticket_promedio': ticket_promedio,
+        'metodo_top': metodo_top
+    }
+
+    _, metodos_pago = ListarMetodosPago()
+
+    return render_template(
+        'pago_historial.html',
+        usuario=session.get('usuario_nombre'),
+        pagos=pagos,
+        metodos_pago=metodos_pago or [],
+        stats=stats
+    )
 
 @app.route('/cliente_asistencia', methods=['GET', 'POST'])
 @login_required

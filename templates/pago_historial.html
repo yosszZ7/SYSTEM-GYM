@@ -1,0 +1,507 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Pagos - WORLD GYM{% endblock %}
+{% block breadcrumb %}Operaciones / Historial de Pagos{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- ENCABEZADO DE PÁGINA -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+        <div class="page-header-left">
+            <h1 style="margin: 0; font-size: 1.6rem; color: var(--text, #4A3728); display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-receipt" style="color: var(--primary, #F28C28);"></i> Historial de Pagos
+            </h1>
+            <p style="margin: 5px 0 0 0; color: var(--text-secondary, #8B6F5A); font-size: 0.95rem;">
+                Registro cronológico y auditoría de todas las membresías y transacciones de caja
+            </p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="imprimirTablaPagos()" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-print"></i> Imprimir Reporte
+            </button>
+            <a href="/cliente_membresia" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-plus-circle"></i> Registrar Pago
+            </a>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE ESTADÍSTICAS / KPI -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 22px;">
+        <!-- KPI 1: Total Recaudado -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Total Recaudado</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: #10B981; margin-top: 2px;">
+                    C$ {{ "%.2f"|format(stats.total_recaudado) }}
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 2: Recaudado este Mes -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(242, 140, 40, 0.12); color: var(--primary, #F28C28); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Mes Actual</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                    C$ {{ "%.2f"|format(stats.total_mes) }}
+                </div>
+                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">{{ stats.pagos_mes_count }} transacciones</small>
+            </div>
+        </div>
+
+        <!-- KPI 3: Total Transacciones -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(59, 130, 246, 0.12); color: #3B82F6; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Total Transacciones</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                    {{ stats.total_pagos }}
+                </div>
+                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">Recibos emitidos</small>
+            </div>
+        </div>
+
+        <!-- KPI 4: Ticket Promedio -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Ticket Promedio</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                    C$ {{ "%.2f"|format(stats.ticket_promedio) }}
+                </div>
+                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">Top: {{ stats.metodo_top }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETA DE BÚSQUEDA Y FILTROS -->
+    <div class="card" style="margin-bottom: 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 2px 8px rgba(74, 55, 40, 0.04);">
+        <div class="card-body" style="padding: 16px 20px;">
+            <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
+                <!-- Buscador de texto -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="buscarPagos" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-search"></i> Buscar Cliente o Membresía
+                    </label>
+                    <input type="text" id="buscarPagos" placeholder="Nombre, apellido o membresía..." onkeyup="filtrarTablaPagos()"
+                           style="width: 100%; height: 40px; padding: 8px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none; transition: all 0.2s;">
+                </div>
+
+                <!-- Filtro Método de Pago -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="filtroMetodo" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-credit-card"></i> Método de Pago
+                    </label>
+                    <select id="filtroMetodo" onchange="filtrarTablaPagos()"
+                            style="width: 100%; height: 40px; padding: 8px 12px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none;">
+                        <option value="">Todos los métodos</option>
+                        {% for mp in metodos_pago %}
+                            <option value="{{ mp.NombreMetodo|lower }}">{{ mp.NombreMetodo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Fecha Desde -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="fechaDesde" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-calendar-alt"></i> Desde
+                    </label>
+                    <input type="date" id="fechaDesde" onchange="filtrarTablaPagos()"
+                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13px; outline: none;">
+                </div>
+
+                <!-- Fecha Hasta -->
+                <div class="form-group" style="margin: 0;">
+                    <label for="fechaHasta" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                        <i class="fas fa-calendar-alt"></i> Hasta
+                    </label>
+                    <input type="date" id="fechaHasta" onchange="filtrarTablaPagos()"
+                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13px; outline: none;">
+                </div>
+
+                <!-- Botón Limpiar Filtros -->
+                <div style="margin: 0;">
+                    <button type="button" onclick="limpiarFiltrosPagos()" class="btn btn-secondary" title="Limpiar filtros"
+                            style="height: 40px; padding: 0 16px; border-radius: 8px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                        <i class="fas fa-undo"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETA PRINCIPAL: TABLA DE PAGOS -->
+    <div class="card" id="cardTablaPagos" style="border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); overflow: hidden; box-shadow: 0 4px 15px rgba(74, 55, 40, 0.04);">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-color, #EFE6DC); background: var(--bg-secondary, #FAF1E6);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.15rem; color: var(--text, #4A3728); font-weight: 700;">
+                    <i class="fas fa-list-check" style="color: var(--primary, #F28C28);"></i> Transacciones Registradas
+                </h2>
+                <span id="badgeConteoPagos" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                    {{ pagos|length }} registro{{ 's' if pagos|length != 1 else '' }}
+                </span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary, #8B6F5A);">
+                Moneda oficial: <strong>Córdobas (C$)</strong>
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%;">
+                <table class="data-table" id="tablaHistorialPagos" style="width: 100%; margin: 0; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg-secondary, #FAF1E6); border-bottom: 2px solid var(--border-color, #EFE6DC);">
+                            <th style="width: 80px; text-align: center; padding: 12px 10px; font-size: 12px;"># RECIBO</th>
+                            <th style="width: 140px; text-align: center; padding: 12px 10px; font-size: 12px;">FECHA Y HORA</th>
+                            <th style="padding: 12px 15px; font-size: 12px;">CLIENTE</th>
+                            <th style="padding: 12px 15px; font-size: 12px;">MEMBRESÍA / CONCEPTO</th>
+                            <th style="width: 130px; text-align: center; padding: 12px 10px; font-size: 12px;">MÉTODO</th>
+                            <th style="width: 120px; text-align: right; padding: 12px 15px; font-size: 12px;">MONTO</th>
+                            <th style="width: 90px; text-align: center; padding: 12px 10px; font-size: 12px;">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTablaPagos">
+                        {% for pago in pagos %}
+                        <tr class="fila-pago" 
+                            data-cliente="{{ (pago.NombreCliente or (pago.PrimerNombre ~ ' ' ~ pago.PrimerApellido))|lower }}"
+                            data-membresia="{{ (pago.NombreMembresia or '')|lower }}"
+                            data-metodo="{{ (pago.NombreMetodo or '')|lower }}"
+                            data-fecha="{{ pago.FechaPago.strftime('%Y-%m-%d') if pago.FechaPago else '' }}"
+                            style="border-bottom: 1px solid var(--border-color, #EFE6DC); transition: background 0.15s ease;">
+                            
+                            <!-- No Recibo -->
+                            <td style="text-align: center; padding: 10px 10px; font-size: 13px;">
+                                <span class="badge" style="background: rgba(242, 140, 40, 0.12); color: var(--primary, #F28C28); font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+                                    #REC-{{ "%05d"|format(pago.IdPagos) }}
+                                </span>
+                            </td>
+
+                            <!-- Fecha y Hora -->
+                            <td style="text-align: center; padding: 10px 10px; font-size: 12.5px; color: var(--text-secondary, #8B6F5A); white-space: nowrap;">
+                                {{ pago.FechaPago.strftime('%d/%m/%Y %H:%M') if pago.FechaPago else '—' }}
+                            </td>
+
+                            <!-- Cliente -->
+                            <td style="padding: 10px 15px; font-size: 13.5px;">
+                                <a href="/cliente_perfil/{{ pago.IdCliente }}" style="font-weight: 700; color: var(--text, #4A3728); text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(74, 55, 40, 0.08); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--primary, #F28C28);">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <span>{{ pago.NombreCliente or (pago.PrimerNombre ~ ' ' ~ pago.PrimerApellido) }}</span>
+                                </a>
+                            </td>
+
+                            <!-- Membresía -->
+                            <td style="padding: 10px 15px; font-size: 13px;">
+                                <div style="font-weight: 600; color: var(--text, #4A3728);">
+                                    {{ pago.NombreMembresia }}
+                                </div>
+                                {% if pago.TipoMembresia %}
+                                <small style="color: var(--text-secondary, #8B6F5A); font-size: 11.5px;">
+                                    Modalidad: {{ pago.TipoMembresia }} ({{ pago.DuracionDias or '30' }} días)
+                                </small>
+                                {% endif %}
+                            </td>
+
+                            <!-- Método de Pago -->
+                            <td style="text-align: center; padding: 10px 10px;">
+                                {% set met = (pago.NombreMetodo or '')|lower %}
+                                {% if 'efectivo' in met %}
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-money-bill-wave"></i> Efectivo
+                                    </span>
+                                {% elif 'tarjeta' in met %}
+                                    <span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-credit-card"></i> Tarjeta
+                                    </span>
+                                {% elif 'transf' in met %}
+                                    <span class="badge" style="background: rgba(139, 92, 246, 0.12); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-university"></i> Transferencia
+                                    </span>
+                                {% else %}
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                        <i class="fas fa-wallet"></i> {{ pago.NombreMetodo }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Monto -->
+                            <td style="text-align: right; padding: 10px 15px; font-size: 14.5px; font-weight: 800; color: #10B981; white-space: nowrap;">
+                                C$ {{ "%.2f"|format(pago.Monto) }}
+                            </td>
+
+                            <!-- Acciones -->
+                            <td style="text-align: center; padding: 10px 10px;">
+                                <button type="button" onclick="abrirReciboModal({{ pago.IdPagos }})" class="btn btn-secondary btn-sm" title="Ver e imprimir recibo digital"
+                                        style="padding: 6px 10px; font-size: 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <i class="fas fa-receipt" style="color: var(--primary, #F28C28);"></i>
+                                    <span>Recibo</span>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="filaSinPagos">
+                            <td colspan="7" style="text-align: center; padding: 50px 20px; color: var(--text-secondary, #8B6F5A);">
+                                <i class="fas fa-receipt" style="font-size: 48px; color: var(--border-color, #EFE6DC); margin-bottom: 15px; display: block;"></i>
+                                <h3 style="margin: 0 0 5px 0; color: var(--text, #4A3728); font-size: 1.15rem;">No hay pagos registrados</h3>
+                                <p style="margin: 0; font-size: 0.95rem;">Los cobros de membresías asignadas aparecerán automáticamente aquí.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL DE RECIBO DIGITAL OFICIAL WORLD GYM                     -->
+<!-- ============================================================== -->
+<div id="modalReciboOverlay" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99999;">
+    <div class="custom-modal-box" style="max-width: 580px; width: 95%; padding: 0; border-radius: 18px; overflow: hidden; text-align: left; background: #FFFFFF; border: 1px solid var(--border-color, #EFE6DC); box-shadow: 0 25px 50px -12px rgba(45, 31, 22, 0.35);">
+        
+        <!-- Header del Modal -->
+        <div style="background: var(--bg-secondary, #FAF1E6); padding: 15px 22px; border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-file-invoice" style="color: var(--primary, #F28C28); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text, #4A3728); font-weight: 700;">Comprobante Oficial de Pago</h3>
+            </div>
+            <button type="button" onclick="cerrarReciboModal()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #8B6F5A); cursor: pointer; padding: 4px;" title="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Cuerpo del Recibo Imprimible -->
+        <div id="areaReciboImpresion" style="padding: 24px 28px; background: #FFFFFF; font-family: 'Inter', sans-serif;">
+            
+            <!-- Encabezado de la Empresa -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px dashed #E5E7EB; padding-bottom: 18px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #F28C28;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #4A3728; letter-spacing: -0.5px;">WORLD <span style="color: #F28C28;">GYM</span></h2>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #8B6F5A;">Sistema de Gestión Fitness & Salud</p>
+                        <p style="margin: 1px 0 0 0; font-size: 0.75rem; color: #9CA3AF;">RUC: J0310000000001 | Tel: +505 8888-9999</p>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div id="reciboNumero" style="font-size: 1.1rem; font-weight: 800; color: #F28C28;">#REC-00000</div>
+                    <div style="margin-top: 4px;">
+                        <span class="badge" style="background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;">
+                            PAGADO
+                        </span>
+                    </div>
+                    <div id="reciboFecha" style="margin-top: 4px; font-size: 0.8rem; color: #6B7280;">00/00/0000 00:00</div>
+                </div>
+            </div>
+
+            <!-- Datos del Cliente -->
+            <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: #6B7280; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Información del Cliente</span>
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 8px;">
+                    <div>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: #1F2937;" id="reciboClienteNombre">Cliente Nombre</div>
+                        <div style="font-size: 0.8rem; color: #4B5563;" id="reciboClienteCorreo">correo@ejemplo.com</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.8rem; color: #6B7280;">Teléfono:</div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: #1F2937;" id="reciboClienteTelefono">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Concepto -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="border-bottom: 1.5px solid #E5E7EB; background: #F3F4F6;">
+                        <th style="padding: 8px 12px; text-align: left; font-size: 0.8rem; color: #374151;">DESCRIPCIÓN / SERVICIO</th>
+                        <th style="padding: 8px 12px; text-align: center; font-size: 0.8rem; color: #374151;">MODALIDAD</th>
+                        <th style="padding: 8px 12px; text-align: right; font-size: 0.8rem; color: #374151;">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #E5E7EB;">
+                        <td style="padding: 12px 12px;">
+                            <div style="font-weight: 700; color: #111827; font-size: 0.95rem;" id="reciboMembresia">Membresía</div>
+                            <small style="color: #6B7280; font-size: 0.8rem;" id="reciboDuracion">Acceso al gimnasio</small>
+                        </td>
+                        <td style="padding: 12px 12px; text-align: center; font-size: 0.85rem; color: #374151;" id="reciboTipo">Mensual</td>
+                        <td style="padding: 12px 12px; text-align: right; font-size: 1.05rem; font-weight: 800; color: #10B981;" id="reciboMontoTabla">C$ 0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Resumen Financiero -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 10px; border-top: 2px dashed #E5E7EB; margin-bottom: 20px;">
+                <div>
+                    <div style="font-size: 0.8rem; color: #6B7280;">Método de Pago:</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #1F2937;" id="reciboMetodoPago">Efectivo</div>
+                    <small style="color: #9CA3AF; font-size: 0.75rem;">Atendido por: {{ usuario or 'Administración' }}</small>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.8rem; color: #6B7280; text-transform: uppercase; font-weight: 600;">Total Cancelado</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #F28C28;" id="reciboTotalFinal">C$ 0.00</div>
+                </div>
+            </div>
+
+            <!-- Pie de Recibo -->
+            <div style="text-align: center; border-top: 1px solid #F3F4F6; padding-top: 14px; color: #6B7280; font-size: 0.78rem;">
+                <p style="margin: 0; font-weight: 600; color: #4B5563;">¡Gracias por entrenar en WORLD GYM!</p>
+                <p style="margin: 2px 0 0 0; color: #9CA3AF;">Este comprobante electrónico es válido como constancia de membresía activa.</p>
+            </div>
+        </div>
+
+        <!-- Footer con Acciones -->
+        <div style="background: var(--bg-secondary, #FAF1E6); padding: 14px 22px; border-top: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" onclick="cerrarReciboModal()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;">
+                Cerrar
+            </button>
+            <button type="button" onclick="imprimirReciboIndividual()" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-print"></i> Imprimir Recibo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- ESTILOS Y SCRIPTS                                              -->
+<!-- ============================================================== -->
+<style>
+    .fila-pago:hover {
+        background: rgba(242, 140, 40, 0.04) !important;
+    }
+
+    /* ESTILOS DE IMPRESIÓN LIMPIA */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #areaReciboImpresion, #areaReciboImpresion * {
+            visibility: visible;
+        }
+        #areaReciboImpresion {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 20px !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .sidebar, .navbar, .page-header, .card, .btn, #modalReciboOverlay > div > div:first-child, #modalReciboOverlay > div > div:last-child {
+            display: none !important;
+        }
+    }
+</style>
+
+<script>
+    // Filtros dinámicos en tiempo real
+    function filtrarTablaPagos() {
+        var texto = document.getElementById('buscarPagos').value.toLowerCase().trim();
+        var metodo = document.getElementById('filtroMetodo').value.toLowerCase().trim();
+        var fDesde = document.getElementById('fechaDesde').value;
+        var fHasta = document.getElementById('fechaHasta').value;
+
+        var filas = document.querySelectorAll('.fila-pago');
+        var visibles = 0;
+
+        filas.forEach(function(fila) {
+            var cliente = fila.getAttribute('data-cliente') || '';
+            var membresia = fila.getAttribute('data-membresia') || '';
+            var metodoFila = fila.getAttribute('data-metodo') || '';
+            var fechaFila = fila.getAttribute('data-fecha') || '';
+
+            var coincideTexto = !texto || cliente.includes(texto) || membresia.includes(texto);
+            var coincideMetodo = !metodo || metodoFila.includes(metodo);
+            var coincideDesde = !fDesde || fechaFila >= fDesde;
+            var coincideHasta = !fHasta || fechaFila <= fHasta;
+
+            if (coincideTexto && coincideMetodo && coincideDesde && coincideHasta) {
+                fila.style.display = '';
+                visibles++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+
+        var badge = document.getElementById('badgeConteoPagos');
+        if (badge) {
+            badge.textContent = visibles + (visibles === 1 ? ' registro' : ' registros');
+        }
+    }
+
+    function limpiarFiltrosPagos() {
+        document.getElementById('buscarPagos').value = '';
+        document.getElementById('filtroMetodo').value = '';
+        document.getElementById('fechaDesde').value = '';
+        document.getElementById('fechaHasta').value = '';
+        filtrarTablaPagos();
+    }
+
+    // Modal de Recibo Digital
+    async function abrirReciboModal(idPago) {
+        mostrarLoading(true);
+        try {
+            var response = await fetch('/api/pagos/detalle/' + idPago);
+            var data = await response.json();
+
+            if (response.ok && data.success && data.pago) {
+                var p = data.pago;
+                document.getElementById('reciboNumero').textContent = '#REC-' + String(p.IdPagos).padStart(5, '0');
+                document.getElementById('reciboFecha').textContent = p.FechaPagoStr || '—';
+                document.getElementById('reciboClienteNombre').textContent = p.NombreCliente || (p.PrimerNombre + ' ' + p.PrimerApellido);
+                document.getElementById('reciboClienteCorreo').textContent = p.Correo || 'Sin correo registrado';
+                document.getElementById('reciboClienteTelefono').textContent = p.Telefono || '—';
+                document.getElementById('reciboMembresia').textContent = p.NombreMembresia || 'Membresía';
+                document.getElementById('reciboDuracion').textContent = 'Vigencia de ' + (p.DuracionDias || 30) + ' días';
+                document.getElementById('reciboTipo').textContent = p.TipoMembresia || 'Regular';
+                
+                var montoFormatted = 'C$ ' + parseFloat(p.Monto || 0).toFixed(2);
+                document.getElementById('reciboMontoTabla').textContent = montoFormatted;
+                document.getElementById('reciboTotalFinal').textContent = montoFormatted;
+                document.getElementById('reciboMetodoPago').textContent = p.NombreMetodo || 'Efectivo';
+
+                var overlay = document.getElementById('modalReciboOverlay');
+                overlay.style.display = 'flex';
+                setTimeout(function() {
+                    overlay.classList.add('active');
+                }, 10);
+            } else {
+                mostrarToast(data.error || 'No se pudo cargar el recibo', 'error');
+            }
+        } catch (err) {
+            console.error('Error al cargar recibo:', err);
+            mostrarToast('Error al conectar con el servidor', 'error');
+        } finally {
+            mostrarLoading(false);
+        }
+    }
+
+    function cerrarReciboModal() {
+        var overlay = document.getElementById('modalReciboOverlay');
+        overlay.classList.remove('active');
+        setTimeout(function() {
+            overlay.style.display = 'none';
+        }, 200);
+    }
+
+    function imprimirReciboIndividual() {
+        window.print();
+    }
+
+    function imprimirTablaPagos() {
+        window.print();
+    }
+</script>
+{% endblock %}
