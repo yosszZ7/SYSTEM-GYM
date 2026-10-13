@@ -26,7 +26,7 @@
     </div>
 
     <!-- TARJETAS DE ESTADÍSTICAS / KPI DE NÓMINA -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 22px;">
+    <div class="kpis-pantalla" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 22px;">
         <!-- KPI 1: Total Pagado en Nómina -->
         <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
             <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
@@ -83,8 +83,8 @@
         </div>
     </div>
 
-    <!-- TARJETA DE BÚSQUEDA Y FILTROS -->
-    <div class="card" style="margin-bottom: 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 2px 8px rgba(74, 55, 40, 0.04);">
+    <!-- TARJETAS DE BÚSQUEDA Y FILTROS -->
+    <div class="card card-filtros-impresion" id="cardFiltrosPagosEmpleados" style="margin-bottom: 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 2px 8px rgba(74, 55, 40, 0.04);">
         <div class="card-body" style="padding: 16px 20px;">
             <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.2fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
                 <!-- Buscador de texto -->
@@ -153,9 +153,54 @@
         </div>
     </div>
 
+    <!-- ENCABEZADO EXCLUSIVO PARA IMPRESIÓN DE REPORTE -->
+    <div id="encabezadoReporteImpresion" class="encabezado-impresion-reporte" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #F28C28; padding-bottom: 12px; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid #F28C28;">
+                <div>
+                    <h1 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #4A3728; letter-spacing: -0.5px;">
+                        WORLD <span style="color: #F28C28;">GYM</span>
+                    </h1>
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #4A3728; margin-top: 2px;">
+                        REPORTE OFICIAL DE PAGOS A EMPLEADOS (NÓMINA)
+                    </div>
+                    <div style="font-size: 0.75rem; color: #6B7280; margin-top: 2px;">
+                        RUC: J0310000000001 &bull; Tel: +505 8888-9999 &bull; Managua, Nicaragua
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 0.78rem; color: #4B5563;">
+                <div><strong>Fecha de emisión:</strong> <span class="reporte-fecha-emision"></span></div>
+                <div><strong>Generado por:</strong> {{ usuario or 'Administración' }}</div>
+                <div><strong>Módulo:</strong> Gestión de Recursos Humanos / Nómina</div>
+            </div>
+        </div>
+
+        <!-- RESUMEN EJECUTIVO (KPIs) -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; background: #F9FAFB; padding: 10px 14px; border: 1px solid #E5E7EB; border-radius: 8px;">
+            <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: #6B7280; font-weight: 700; display: block;">Total Nómina Pagada</span>
+                <span style="font-size: 1.05rem; font-weight: 800; color: #10B981;">C$ {{ "%.2f"|format(stats.total_nomina) }}</span>
+            </div>
+            <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: #6B7280; font-weight: 700; display: block;">Nómina Mes Actual</span>
+                <span style="font-size: 1.05rem; font-weight: 800; color: #F28C28;">C$ {{ "%.2f"|format(stats.total_mes) }}</span>
+            </div>
+            <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: #6B7280; font-weight: 700; display: block;">Comprobantes Emitidos</span>
+                <span style="font-size: 1.05rem; font-weight: 800; color: #1F2937;">{{ stats.total_pagos }}</span>
+            </div>
+            <div>
+                <span style="font-size: 0.7rem; text-transform: uppercase; color: #6B7280; font-weight: 700; display: block;">Pago Promedio</span>
+                <span style="font-size: 1.05rem; font-weight: 800; color: #1F2937;">C$ {{ "%.2f"|format(stats.salario_promedio) }}</span>
+            </div>
+        </div>
+    </div>
+
     <!-- TARJETA PRINCIPAL: TABLA DE PAGOS DE EMPLEADOS -->
-    <div class="card" id="cardTablaPagosEmpleados" style="border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); overflow: hidden; box-shadow: 0 4px 15px rgba(74, 55, 40, 0.04);">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-color, #EFE6DC); background: var(--bg-secondary, #FAF1E6);">
+    <div class="card card-tabla-reporte" id="cardTablaPagosEmpleados" style="border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); overflow: hidden; box-shadow: 0 4px 15px rgba(74, 55, 40, 0.04);">
+        <div class="card-header card-header-reporte" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-color, #EFE6DC); background: var(--bg-secondary, #FAF1E6);">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <h2 style="margin: 0; font-size: 1.15rem; color: var(--text, #4A3728); font-weight: 700;">
                     <i class="fas fa-list-check" style="color: var(--primary, #F28C28);"></i> Desembolsos y Comprobantes de Nómina
@@ -181,7 +226,7 @@
                             <th style="width: 130px; text-align: right; padding: 12px 15px; font-size: 12px;">SALARIO BASE</th>
                             <th style="width: 130px; text-align: center; padding: 12px 10px; font-size: 12px;">MÉTODO</th>
                             <th style="width: 130px; text-align: right; padding: 12px 15px; font-size: 12px;">MONTO PAGADO</th>
-                            <th style="width: 100px; text-align: center; padding: 12px 10px; font-size: 12px;">ACCIONES</th>
+                            <th class="columna-acciones" style="width: 100px; text-align: center; padding: 12px 10px; font-size: 12px;">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaPagosEmpleados">
@@ -266,7 +311,7 @@
                             </td>
 
                             <!-- Acciones -->
-                            <td style="text-align: center; padding: 10px 10px;">
+                            <td class="columna-acciones" style="text-align: center; padding: 10px 10px;">
                                 <button type="button" onclick="abrirComprobanteEmpleado({{ p.IdPagoEmpleado }})" class="btn btn-secondary btn-sm" title="Ver e imprimir comprobante oficial de nómina"
                                         style="padding: 6px 10px; font-size: 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
                                     <i class="fas fa-file-invoice" style="color: var(--primary, #F28C28);"></i>
@@ -289,6 +334,18 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- PIE DE REPORTE EXCLUSIVO PARA IMPRESIÓN -->
+    <div id="pieReporteImpresion" class="pie-impresion-reporte" style="display: none;">
+        <div>
+            <span><strong>WORLD GYM</strong> &bull; Sistema de Control Operativo y Financiero</span><br>
+            <span style="font-size: 9px; color: #9CA3AF;">Documento emitido con fines administrativos y de auditoría interna de nómina.</span>
+        </div>
+        <div style="text-align: right;">
+            <span>Reporte generado por: <strong>{{ usuario or 'Administración' }}</strong></span><br>
+            <span style="font-size: 9px; color: #9CA3AF;">Fecha y hora: <span class="reporte-fecha-emision"></span></span>
         </div>
     </div>
 </div>
@@ -497,25 +554,169 @@
         background: rgba(242, 140, 40, 0.04) !important;
     }
 
-    /* ESTILOS DE IMPRESIÓN LIMPIA */
+    /* ============================================================== */
+    /* ESTILOS DE IMPRESIÓN PROFESIONAL (DOBLE MODO: REPORTE O RECIBO) */
+    /* ============================================================== */
     @media print {
-        body * {
+        @page {
+            size: auto;
+            margin: 10mm 12mm 12mm 12mm;
+        }
+
+        html, body {
+            background: #FFFFFF !important;
+            color: #111827 !important;
+            font-size: 11px !important;
+            line-height: 1.35 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* 1. Ocultar componentes web estándar */
+        .sidebar,
+        .header,
+        header.header,
+        .navbar,
+        .page-header,
+        .fab,
+        #fabBtn,
+        .fab-menu,
+        .toast-container,
+        #toastContainer,
+        .btn,
+        button,
+        .card-filtros-impresion,
+        .kpis-pantalla,
+        .no-print {
+            display: none !important;
+        }
+
+        /* ============================================================== */
+        /* MODO 1: IMPRESIÓN DE COMPROBANTE INDIVIDUAL                    */
+        /* ============================================================== */
+        body.modo-imprimir-recibo * {
             visibility: hidden;
         }
-        #areaComprobanteImpresion, #areaComprobanteImpresion * {
+        body.modo-imprimir-recibo #areaComprobanteImpresion,
+        body.modo-imprimir-recibo #areaComprobanteImpresion * {
             visibility: visible;
         }
-        #areaComprobanteImpresion {
+        body.modo-imprimir-recibo #areaComprobanteImpresion {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
             margin: 0;
-            padding: 20px !important;
+            padding: 15px !important;
             border: none !important;
             box-shadow: none !important;
+            background: #FFFFFF !important;
         }
-        .sidebar, .navbar, .page-header, .card, .btn, #modalComprobanteEmpleado > div > div:first-child, #modalComprobanteEmpleado > div > div:last-child {
+        body.modo-imprimir-recibo .page-container,
+        body.modo-imprimir-recibo .card,
+        body.modo-imprimir-recibo .encabezado-impresion-reporte,
+        body.modo-imprimir-recibo .pie-impresion-reporte,
+        body.modo-imprimir-recibo #modalComprobanteEmpleado > div > div:first-child,
+        body.modo-imprimir-recibo #modalComprobanteEmpleado > div > div:last-child {
+            display: none !important;
+        }
+
+        /* ============================================================== */
+        /* MODO 2: IMPRESIÓN DE REPORTE GENERAL TABULAR (POR DEFECTO)     */
+        /* ============================================================== */
+        body:not(.modo-imprimir-recibo) .custom-modal-overlay,
+        body:not(.modo-imprimir-recibo) #modalComprobanteEmpleado,
+        body:not(.modo-imprimir-recibo) #modalNuevoPagoEmpleado {
+            display: none !important;
+        }
+
+        body:not(.modo-imprimir-recibo) .encabezado-impresion-reporte {
+            display: block !important;
+            margin-bottom: 15px;
+        }
+
+        body:not(.modo-imprimir-recibo) .pie-impresion-reporte {
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 10px;
+            border-top: 1.5px solid #D1D5DB;
+            font-size: 10px;
+            color: #6B7280;
+        }
+
+        body:not(.modo-imprimir-recibo) .card-tabla-reporte {
+            display: block !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+        }
+
+        body:not(.modo-imprimir-recibo) .card-header-reporte {
+            display: none !important;
+        }
+
+        body:not(.modo-imprimir-recibo) .table-container {
+            overflow: visible !important;
+            width: 100% !important;
+        }
+
+        body:not(.modo-imprimir-recibo) table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 10.5px !important;
+            page-break-inside: auto;
+        }
+
+        body:not(.modo-imprimir-recibo) tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        body:not(.modo-imprimir-recibo) thead {
+            display: table-header-group;
+        }
+
+        body:not(.modo-imprimir-recibo) th,
+        body:not(.modo-imprimir-recibo) td {
+            padding: 6px 8px !important;
+            border: 1px solid #D1D5DB !important;
+            color: #111827 !important;
+            background: #FFFFFF !important;
+        }
+
+        body:not(.modo-imprimir-recibo) thead tr {
+            background-color: #F3F4F6 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body:not(.modo-imprimir-recibo) th {
+            font-weight: 700 !important;
+            color: #1F2937 !important;
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px;
+        }
+
+        body:not(.modo-imprimir-recibo) .columna-acciones {
+            display: none !important;
+        }
+
+        body:not(.modo-imprimir-recibo) .badge {
+            border: 1px solid #D1D5DB !important;
+            background: #F9FAFB !important;
+            color: #111827 !important;
+            box-shadow: none !important;
+            font-weight: 600 !important;
+        }
+
+        /* Ocultar filas que el usuario haya filtrado */
+        body:not(.modo-imprimir-recibo) tr[style*="display: none"] {
             display: none !important;
         }
     }
@@ -656,13 +857,58 @@
         }, 200);
     }
 
+    function actualizarFechaEmisionReporte() {
+        var ahora = new Date();
+        var opciones = { 
+            year: 'numeric', month: '2-digit', day: '2-digit', 
+            hour: '2-digit', minute: '2-digit', second: '2-digit', 
+            hour12: true 
+        };
+        var fechaStr = ahora.toLocaleDateString('es-NI', opciones);
+        document.querySelectorAll('.reporte-fecha-emision').forEach(function(el) {
+            el.textContent = fechaStr;
+        });
+    }
+
     function imprimirComprobanteIndividual() {
-        window.print();
+        document.body.classList.remove('modo-imprimir-reporte');
+        document.body.classList.add('modo-imprimir-recibo');
+        setTimeout(function() {
+            window.print();
+        }, 50);
     }
 
     function imprimirTablaPagos() {
-        window.print();
+        actualizarFechaEmisionReporte();
+        document.body.classList.remove('modo-imprimir-recibo');
+        document.body.classList.add('modo-imprimir-reporte');
+        setTimeout(function() {
+            window.print();
+        }, 50);
     }
+
+    // Manejo de atajo Ctrl+P y restauración de clases tras imprimir
+    window.addEventListener('beforeprint', function() {
+        actualizarFechaEmisionReporte();
+        var overlay = document.getElementById('modalComprobanteEmpleado');
+        var modalAbierto = overlay && overlay.style.display !== 'none' && overlay.classList.contains('active');
+        if (modalAbierto && !document.body.classList.contains('modo-imprimir-reporte')) {
+            document.body.classList.add('modo-imprimir-recibo');
+            document.body.classList.remove('modo-imprimir-reporte');
+        } else if (!document.body.classList.contains('modo-imprimir-recibo')) {
+            document.body.classList.add('modo-imprimir-reporte');
+            document.body.classList.remove('modo-imprimir-recibo');
+        }
+    });
+
+    window.addEventListener('afterprint', function() {
+        document.body.classList.remove('modo-imprimir-recibo');
+        document.body.classList.remove('modo-imprimir-reporte');
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        actualizarFechaEmisionReporte();
+    });
 
     // Auto-abrir comprobante si viene de un pago recién registrado
     {% if request.args.get('pago_exitoso') and pagos and pagos|length > 0 %}
