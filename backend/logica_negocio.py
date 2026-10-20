@@ -248,3 +248,39 @@ def calcular_asistencias_mes(fechas_asistencias, mes, anio):
         if f_date.month == mes and f_date.year == anio:
             total += 1
     return total
+
+
+# ==============================================================================
+# 6. LÓGICA DE NEGOCIO: RECUPERACIÓN DE CONTRASEÑA (HU-003)
+# ==============================================================================
+
+def validar_datos_recuperacion(dato):
+    """
+    Valida el campo ingresado para solicitar la recuperación de contraseña.
+    Puede ser correo electrónico o nombre de usuario registrado.
+    """
+    if not dato or not str(dato).strip():
+        return False, "Por favor, ingresa tu correo electrónico o nombre de usuario."
+    
+    dato_limpio = str(dato).strip()
+    if len(dato_limpio) < 3:
+        return False, "El identificador ingresado es demasiado corto."
+    
+    return True, dato_limpio
+
+
+def validar_nueva_contrasena(nueva, confirmacion):
+    """
+    Valida la nueva contraseña y su confirmación.
+    Requisitos:
+    - Mínimo 6 caracteres
+    - Ambas contraseñas deben coincidir exactamente
+    """
+    if not nueva or len(str(nueva)) < 6:
+        return False, "La nueva contraseña debe tener al menos 6 caracteres."
+    
+    if str(nueva) != str(confirmacion):
+        return False, "Las contraseñas no coinciden. Por favor, verifícalas."
+        
+    return True, "Contraseña válida y confirmada."
+

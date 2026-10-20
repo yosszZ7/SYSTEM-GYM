@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña - WORLD GYM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body.login-page {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #FFFDF9 0%, #FAF1E6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 460px;
+            margin: 20px;
+        }
+        .login-card {
+            background: #FFFFFF;
+            border: 1px solid #EFE6DC;
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(74, 55, 40, 0.08);
+        }
+        .login-logo img {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 12px;
+            border: 2px solid #F28C28;
+        }
+        .login-logo h1 {
+            font-size: 26px;
+            margin: 0;
+            color: #4A3728;
+        }
+        .login-logo h1 span {
+            color: #F28C28;
+        }
+        .login-card h2 {
+            font-size: 1.25rem;
+            color: #4A3728;
+            margin: 18px 0 6px 0;
+            font-weight: 700;
+        }
+        .login-card p.subtitle {
+            color: #8B6F5A;
+            margin: 0 0 22px 0;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .input-wrapper i.input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #8B6F5A;
+            font-size: 16px;
+        }
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 14px 14px 44px;
+            border: 1.5px solid #EFE6DC;
+            border-radius: 12px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background: #FFFFFF;
+            color: #4A3728;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        .input-wrapper input:focus {
+            border-color: #F28C28;
+            box-shadow: 0 0 0 3px rgba(242, 140, 40, 0.15);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #F28C28, #D77218);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(242, 140, 40, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(242, 140, 40, 0.4);
+            filter: brightness(1.05);
+        }
+        .message-box {
+            margin-top: 20px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            display: none;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            text-align: left;
+        }
+        .message-box.error {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid #FCA5A5;
+            display: block;
+        }
+        .message-box.success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #6EE7B7;
+            display: block;
+        }
+        .back-link-container {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #EFE6DC;
+        }
+        .back-link {
+            color: #8B6F5A;
+            text-decoration: none;
+            font-size: 0.92rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s ease;
+        }
+        .back-link:hover {
+            color: #F28C28;
+        }
+        .preview-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 8px 14px;
+            background: #10B981;
+            color: #FFFFFF !important;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .preview-btn:hover {
+            background: #059669;
+        }
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 253, 249, 0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(74, 55, 40, 0.1);
+            border-top: 4px solid #F28C28;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loader-text {
+            color: #4A3728;
+            margin-top: 15px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="/static/image/logo.jpeg" alt="World Gym Logo">
+                <h1>WORLD <span>GYM</span></h1>
+            </div>
+
+            <h2>¿Olvidaste tu contraseña?</h2>
+            <p class="subtitle">
+                Ingresa tu correo electrónico o nombre de usuario registrado. Te enviaremos un enlace seguro y un código de verificación para restablecerla.
+            </p>
+
+            <form id="formRecuperar">
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="text" id="datoUsuario" placeholder="Correo o nombre de usuario" required autocomplete="off" autofocus>
+                </div>
+                <button type="submit" id="btnEnviar" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Enviar Enlace de Recuperación
+                </button>
+            </form>
+
+            <div id="messageBox" class="message-box"></div>
+
+            <div class="back-link-container">
+                <a href="/login" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Volver a Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="loaderOverlay" class="loader-overlay">
+        <div class="loader"></div>
+        <div class="loader-text" id="loaderText">Verificando cuenta y enviando correo...</div>
+    </div>
+
+    <script>
+        const form = document.getElementById('formRecuperar');
+        const btn = document.getElementById('btnEnviar');
+        const loader = document.getElementById('loaderOverlay');
+        const messageBox = document.getElementById('messageBox');
+        const inputDato = document.getElementById('datoUsuario');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const valor = inputDato.value.trim();
+            if (!valor) {
+                mostrarMensaje('Por favor, ingresa tu correo o usuario.', 'error');
+                return;
+            }
+
+            loader.style.display = 'flex';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            try {
+                const response = await fetch('/api/recuperar-contrasena', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dato: valor })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let htmlContent = `<strong><i class="fas fa-check-circle"></i> ¡Instrucciones enviadas!</strong><br>${data.mensaje}`;
+                    if (data.preview_url) {
+                        htmlContent += `<br><div style="margin-top: 10px;"><a href="${data.preview_url}" target="_blank" class="preview-btn"><i class="fas fa-envelope-open-text"></i> Abrir Correo Generado</a></div>`;
+                    }
+                    messageBox.innerHTML = htmlContent;
+                    messageBox.className = 'message-box success';
+                    messageBox.style.display = 'block';
+                    inputDato.value = '';
+                } else {
+                    mostrarMensaje(data.error || 'No se pudo procesar la solicitud.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarMensaje('Error de conexión con el servidor. Intenta de nuevo.', 'error');
+            } finally {
+                loader.style.display = 'none';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        });
+
+        function mostrarMensaje(texto, tipo) {
+            messageBox.innerHTML = `<strong><i class="fas fa-exclamation-circle"></i></strong> ${texto}`;
+            messageBox.className = 'message-box ' + tipo;
+            messageBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

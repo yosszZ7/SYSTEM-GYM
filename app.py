@@ -97,6 +97,9 @@ from backend.servicios.MarcarTodasLeidas import MarcarTodasLeidas
 from backend.servicios.ListaDePagos import ListarPagos
 from backend.servicios.ObtenerDetallePago import ObtenerDetallePago
 from backend.servicios.limpiar_error import limpiar_error_sql
+from backend.servicios.SolicitarRecuperacionContrasena import SolicitarRecuperacionContrasena
+from backend.servicios.VerificarTokenRecuperacion import VerificarTokenRecuperacion
+from backend.servicios.RestablecerContrasena import RestablecerContrasenaConToken
 
 app = Flask(__name__)
 app.secret_key = 'gym_sistem_secret_key_2026_xyz'
@@ -154,6 +157,47 @@ def dashboard():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+# ==================================================
+# RECUPERACIÓN Y RESTABLECIMIENTO DE CONTRASEÑA (HU-003)
+# ==================================================
+@app.route('/recuperar_contrasena', methods=['GET'])
+def recuperar_contrasena():
+    if 'usuario_id' in session:
+        return redirect(url_for('dashboard'))
+    return render_template('recuperar_contrasena.html')
+
+@app.route('/api/recuperar-contrasena', methods=['POST'])
+def api_recuperar_contrasena():
+    data = request.json or {}
+    dato = data.get('dato')
+    base_url = request.host_url
+    success, mensaje, preview_url = SolicitarRecuperacionContrasena(dato, base_url=base_url)
+    if success:
+        return jsonify({'success': True, 'mensaje': mensaje, 'preview_url': preview_url})
+    return jsonify({'success': False, 'error': mensaje})
+
+@app.route('/restablecer_contrasena/<token>', methods=['GET'])
+def restablecer_contrasena(token):
+    if 'usuario_id' in session:
+        return redirect(url_for('dashboard'))
+    valido, info = VerificarTokenRecuperacion(token)
+    if valido:
+        return render_template('restablecer_contrasena.html', token_valido=True, token=token, usuario_info=info)
+    return render_template('restablecer_contrasena.html', token_valido=False, error_mensaje=info)
+
+@app.route('/api/restablecer-contrasena', methods=['POST'])
+def api_restablecer_contrasena():
+    data = request.json or {}
+    token = data.get('token')
+    nueva_contrasena = data.get('nueva_contrasena')
+    confirmar_contrasena = data.get('confirmar_contrasena')
+    
+    success, mensaje = RestablecerContrasenaConToken(token, nueva_contrasena, confirmar_contrasena)
+    if success:
+        flash("¡Tu contraseña ha sido actualizada con éxito! Ya puedes iniciar sesión.", "success")
+        return jsonify({'success': True, 'mensaje': mensaje})
+    return jsonify({'success': False, 'error': mensaje})
 
 # ==================================================
 # API LOGIN
