@@ -420,6 +420,7 @@ body.tienda-body {
     margin: 0 auto;
     padding: 28px 28px 72px 28px;
     flex: 1;
+    box-sizing: border-box;
 }
 
 .store-hero {
@@ -431,7 +432,7 @@ body.tienda-body {
     padding: 42px 48px;
     margin-bottom: 52px;
     display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     align-items: center;
     gap: 32px;
     box-shadow: 0 18px 40px rgba(17, 24, 39, 0.14);
@@ -558,7 +559,9 @@ body.tienda-body {
    4. SECCIÓN VISUAL DE CATEGORÍAS (MODELO IMAGEN 1 FITSHOP)
    ========================================================================== */
 .store-categories-showcase {
-    margin-bottom: 56px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto 56px auto;
     text-align: center;
 }
 
@@ -581,9 +584,12 @@ body.tienda-body {
 
 .store-cat-visual-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 20px;
     align-items: end;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
 .store-cat-visual-card {
@@ -597,6 +603,8 @@ body.tienda-body {
     align-items: center;
     transition: transform 0.22s ease;
     font-family: inherit;
+    min-width: 0;
+    width: 100%;
 }
 
 .store-cat-visual-card:hover {
@@ -645,7 +653,10 @@ body.tienda-body {
    5. PÍLDORAS DE FILTRO CENTRADAS ("POTENCIA TU RENDIMIENTO" — IMAGEN 2)
    ========================================================================== */
 .store-catalog-section {
-    margin-bottom: 48px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto 48px auto;
+    box-sizing: border-box;
 }
 
 .store-catalog-header-center {
@@ -697,7 +708,9 @@ body.tienda-body {
     background: #F8F9FB;
     border: 1px solid #ECEEF2;
     border-radius: 14px;
-    margin-bottom: 28px;
+    width: 100%;
+    margin: 0 auto 28px auto;
+    box-sizing: border-box;
 }
 
 .store-toolbar-left {
@@ -747,9 +760,15 @@ body.tienda-body {
    ========================================================================== */
 .store-products-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 26px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
     align-items: stretch;
+    justify-content: center;
+    justify-items: center;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 .store-card {
@@ -763,6 +782,11 @@ body.tienda-body {
     box-shadow: var(--store-shadow-card);
     transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     height: 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .store-card:hover {
@@ -826,7 +850,8 @@ body.tienda-body {
 /* Fotografía Grande y Proporcionada del Producto (Sin recortes ni estiramientos) */
 .store-card-image-wrap {
     width: 100%;
-    height: 265px;
+    min-width: 0;
+    height: 250px;
     background: #FFFFFF;
     border-radius: 12px;
     display: flex;
@@ -839,11 +864,14 @@ body.tienda-body {
 }
 
 .store-card-image-wrap img {
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
     object-position: center;
     transition: transform 0.28s ease;
+    display: block;
 }
 
 .store-card:hover .store-card-image-wrap img {
@@ -855,6 +883,8 @@ body.tienda-body {
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-width: 0;
+    width: 100%;
     text-align: left;
 }
 
@@ -905,15 +935,20 @@ body.tienda-body {
     margin-top: auto;
     padding-top: 8px;
     border-top: 1px solid #F3F4F6;
+    min-width: 0;
+    width: 100%;
 }
 
 .store-stock-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 6px;
     font-size: 11.5px;
     font-weight: 700;
     margin-bottom: 8px;
+    min-width: 0;
+    flex-wrap: wrap;
 }
 
 .store-stock-status {
@@ -1257,7 +1292,7 @@ body.tienda-body {
 
 .store-detail-grid {
     display: grid;
-    grid-template-columns: 1fr 1.15fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     gap: 28px;
     align-items: center;
 }
@@ -1334,10 +1369,10 @@ body.tienda-body {
    ========================================================================== */
 @media (max-width: 1180px) {
     .store-products-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .store-cat-visual-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 24px;
     }
 }
@@ -1364,7 +1399,7 @@ body.tienda-body {
         justify-content: center;
     }
     .store-products-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
     }
 }
@@ -1377,14 +1412,14 @@ body.tienda-body {
         padding: 12px 14px;
     }
     .store-cat-visual-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
     }
     .store-cat-visual-img-wrap {
         height: 120px;
     }
     .store-products-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
     }
     .store-card {

@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- Estilos de la Tienda del Cliente -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=2.0.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=2.1.0">
 </head>
 <body class="tienda-body">
 
@@ -435,6 +435,6 @@
     <script>
         window.CATALOGO_INICIAL = {{ catalogo | tojson | safe }};
     </script>
-    <script src="{{ url_for('static', filename='js/tienda.js') }}?v=2.0.0"></script>
+    <script src="{{ url_for('static', filename='js/tienda.js') }}?v=2.1.0"></script>
 </body>
 </html>
