@@ -14,18 +14,22 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 META_JSON_PATH = os.path.join(BASE_DIR, "static", "data", "tienda_meta.json")
 PEDIDOS_JSON_PATH = os.path.join(BASE_DIR, "static", "data", "tienda_pedidos.json")
 
-# Catálogo de imágenes integradas de suplementos y productos deportivos (sin imágenes de computadoras/tecnología)
+# Catálogo de imágenes reales de estudio de suplementos y productos deportivos (sin imágenes de computadoras/tecnología)
 IMAGENES_SUPLEMENTOS = [
-    {"id": "raptor_whey", "nombre": "Proteína Raptor Hydro Whey (5 lbs)", "url": "/static/image/productos/raptor_whey.svg"},
-    {"id": "power_creatina", "nombre": "Suplemento Power Creatine 100% (500g)", "url": "/static/image/productos/power_creatina.svg"},
-    {"id": "power_preworkout", "nombre": "Pre-Entreno Power Nitro Pump (30 serv)", "url": "/static/image/productos/power_preworkout.svg"},
-    {"id": "whey_gold", "nombre": "Proteína 100% Whey Gold Standard (5 lbs)", "url": "/static/image/productos/whey_gold.svg"},
-    {"id": "creatina_mono", "nombre": "Creatina Monohidratada Pura (300g)", "url": "/static/image/productos/creatina_mono.svg"},
-    {"id": "mass_gainer", "nombre": "Ganador de Masa Muscular Serious Mass (6 lbs)", "url": "/static/image/productos/mass_gainer.svg"},
-    {"id": "bebida_energetica", "nombre": "Bebida Energética & Isotónica Gym Fuel (500ml)", "url": "/static/image/productos/bebida_energetica.svg"},
-    {"id": "shaker_pro", "nombre": "Shaker Pro Antiderrames WORLDGYM (700ml)", "url": "/static/image/productos/shaker_pro.svg"},
-    {"id": "guantes_pro", "nombre": "Kit Guantes y Straps de Levantamiento Pro", "url": "/static/image/productos/guantes_pro.svg"},
-    {"id": "default_suplemento", "nombre": "Suplemento Deportivo Estándar WORLDGYM", "url": "/static/image/productos/default_suplemento.svg"},
+    {"id": "real_beef_xp", "nombre": "Proteína Raptor / Beef-XP Clear Isolate (3.96 lb)", "url": "/static/image/productos/real_beef_xp.avif"},
+    {"id": "real_beef_citrus", "nombre": "Proteína Raptor / Beef-XP Citrus Twist (3.96 lb)", "url": "/static/image/productos/real_beef_citrus.avif"},
+    {"id": "real_iso_whey", "nombre": "Hydrolyzed Whey Protein Isolate (2.11 lb)", "url": "/static/image/productos/real_iso_whey.webp"},
+    {"id": "real_whey_gold", "nombre": "Proteína 100% Whey Gold Standard (5 lbs)", "url": "/static/image/productos/real_whey_gold.webp"},
+    {"id": "real_raptor_whey", "nombre": "Proteína Critical Whey Advanced (4.4 lbs)", "url": "/static/image/productos/real_raptor_whey.webp"},
+    {"id": "real_rule1_whey", "nombre": "Proteína Rule 1 Whey Isolate (5 lbs)", "url": "/static/image/productos/real_rule1_whey.webp"},
+    {"id": "real_power_creatina", "nombre": "Suplemento Power / Applied Creatine Monohydrate (500g)", "url": "/static/image/productos/real_power_creatina.webp"},
+    {"id": "real_creatina_mono", "nombre": "Creatina Monohidratada Platinum 100% (450g)", "url": "/static/image/productos/real_creatina_mono.png"},
+    {"id": "real_power_preworkout", "nombre": "Pre-Entreno Power Roar Fruit Punch (30 serv)", "url": "/static/image/productos/real_power_preworkout.webp"},
+    {"id": "real_nitraflex_pre", "nombre": "Pre-Entreno Nitraflex Ultra High Intensity (30 serv)", "url": "/static/image/productos/real_nitraflex_pre.webp"},
+    {"id": "real_mass_gainer", "nombre": "Ganador de Masa Muscular Mass Gainer (5.73 lbs)", "url": "/static/image/productos/real_mass_gainer.webp"},
+    {"id": "real_bebida_energetica", "nombre": "Bebida Energética Sparkling Citrus (355 ml)", "url": "/static/image/productos/real_bebida_energetica.webp"},
+    {"id": "real_protein_water", "nombre": "Bebida Proteica Sparkling Protein Water (330 ml)", "url": "/static/image/productos/real_protein_water.webp"},
+    {"id": "real_accesorio_gym", "nombre": "Accesorio Deportivo / Magnesio y Agarre Gym", "url": "/static/image/productos/real_accesorio_gym.webp"},
 ]
 
 CATEGORIAS_TIENDA = [
@@ -38,20 +42,20 @@ CATEGORIAS_TIENDA = [
     "Suplementos"
 ]
 
-# Productos de demostración (claramente diferenciados con EsDemo=True y etiqueta DEMOSTRACIÓN)
+# Productos de demostración con fotografías reales de estudio de suplementos deportivos
 PRODUCTOS_DEMOSTRACION = [
     {
         "IdProducto": -101,
-        "NombreProducto": "Proteína Raptor Hydro Whey Isolate",
-        "Marca": "RAPTOR PERFORMANCE",
+        "NombreProducto": "Proteína Raptor Beef-XP Clear Isolate Cherry & Apple",
+        "Marca": "RAPTOR • APPLIED NUTRITION",
         "Categoria": "Proteínas",
-        "Presentacion": "Bote 5 lbs (2.27 kg) • 71 servicios • Sabor Chocolate Supremo",
-        "Descripcion": "Proteína hidrolizada y aislada de alta pureza con 30g de proteína y 6.8g de BCAA por servicio para máxima recuperación muscular.",
+        "Presentacion": "Bote 3.96 lbs (1.8 kg) • 60 servicios • 27g Proteína",
+        "Descripcion": "Proteína aislada hidrolizada libre de lactosa y azúcar con 27g de proteína pura por servicio para máxima definición y fuerza muscular.",
         "Precio": 2650.00,
         "Descuento": 15,
         "PrecioAnterior": 3118.00,
         "Stock": 14,
-        "ImagenUrl": "/static/image/productos/raptor_whey.svg",
+        "ImagenUrl": "/static/image/productos/real_beef_xp.avif",
         "Destacado": True,
         "VisibleTienda": True,
         "EsDemo": True,
@@ -59,16 +63,16 @@ PRODUCTOS_DEMOSTRACION = [
     },
     {
         "IdProducto": -102,
-        "NombreProducto": "Suplemento Power Creatine 100% Micronized",
-        "Marca": "POWER LABS",
-        "Categoria": "Creatina",
-        "Presentacion": "Envase 500g • 100 servicios (5g por toma)",
-        "Descripcion": "Creatina monohidratada micronizada de rápida absorción que incrementa la fuerza explosiva, potencia y síntesis de ATP.",
-        "Precio": 1150.00,
-        "Descuento": 20,
-        "PrecioAnterior": 1438.00,
-        "Stock": 18,
-        "ImagenUrl": "/static/image/productos/power_creatina.svg",
+        "NombreProducto": "Proteína Raptor Beef-XP Clear Isolate Citrus Twist",
+        "Marca": "RAPTOR • APPLIED NUTRITION",
+        "Categoria": "Proteínas",
+        "Presentacion": "Bote 3.96 lbs (1.8 kg) • 60 servicios • Sabor Citrus Twist",
+        "Descripcion": "Aislado de proteína de absorción ultrarrápida con aminoácidos esenciales para recuperación muscular post-entrenamiento.",
+        "Precio": 2650.00,
+        "Descuento": 12,
+        "PrecioAnterior": 3011.00,
+        "Stock": 9,
+        "ImagenUrl": "/static/image/productos/real_beef_citrus.avif",
         "Destacado": True,
         "VisibleTienda": True,
         "EsDemo": True,
@@ -76,16 +80,16 @@ PRODUCTOS_DEMOSTRACION = [
     },
     {
         "IdProducto": -103,
-        "NombreProducto": "Pre-Entreno Power Nitro Pump Extreme",
-        "Marca": "POWER SERIES",
-        "Categoria": "Preentrenos",
-        "Presentacion": "Envase 300g • 30 servicios • Sabor Fruit Punch",
-        "Descripcion": "Fórmula pre-entrenamiento con 350mg de cafeína anhidra, 6g de L-Citrulina y Beta-Alanina para bombeo muscular y enfoque extremo.",
-        "Precio": 1280.00,
-        "Descuento": 12,
-        "PrecioAnterior": 1455.00,
-        "Stock": 9,
-        "ImagenUrl": "/static/image/productos/power_preworkout.svg",
+        "NombreProducto": "Hydrolyzed Whey Protein Isolate Caramel",
+        "Marca": "SASCHA FITNESS",
+        "Categoria": "Proteínas",
+        "Presentacion": "Bote 2.11 lbs • 29 servicios • 25g Proteína • 0g Azúcar",
+        "Descripcion": "Proteína de suero hidrolizada y aislada con enzimas digestivas, cero grasa y cero carbohidratos.",
+        "Precio": 2950.00,
+        "Descuento": 10,
+        "PrecioAnterior": 3278.00,
+        "Stock": 11,
+        "ImagenUrl": "/static/image/productos/real_iso_whey.webp",
         "Destacado": True,
         "VisibleTienda": True,
         "EsDemo": True,
@@ -93,16 +97,16 @@ PRODUCTOS_DEMOSTRACION = [
     },
     {
         "IdProducto": -104,
-        "NombreProducto": "Proteína 100% Whey Gold Standard",
+        "NombreProducto": "Proteína Gold Standard 100% Whey Double Rich Chocolate",
         "Marca": "OPTIMUM NUTRITION",
         "Categoria": "Proteínas",
-        "Presentacion": "Bote 5 lbs (2.27 kg) • 24g Proteína • Vainilla Ice Cream",
-        "Descripcion": "Mezcla premium de aislado y concentrado de suero de leche con 5.5g de BCAAs naturales y 4g de glutamina por porción.",
-        "Precio": 2890.00,
+        "Presentacion": "Bote 5 lbs (2.27 kg) • 71 servicios • 24g Proteína + 5.5g BCAA",
+        "Descripcion": "Mezcla premium de aislado y concentrado de proteína de suero de leche para desarrollo y mantenimiento de masa muscular magra.",
+        "Precio": 3180.00,
         "Descuento": 10,
-        "PrecioAnterior": 3211.00,
-        "Stock": 11,
-        "ImagenUrl": "/static/image/productos/whey_gold.svg",
+        "PrecioAnterior": 3533.00,
+        "Stock": 15,
+        "ImagenUrl": "/static/image/productos/real_whey_gold.webp",
         "Destacado": True,
         "VisibleTienda": True,
         "EsDemo": True,
@@ -110,33 +114,33 @@ PRODUCTOS_DEMOSTRACION = [
     },
     {
         "IdProducto": -105,
-        "NombreProducto": "Creatina Monohidratada Grado Farmacéutico",
-        "Marca": "PLATINUM SERIES",
+        "NombreProducto": "Suplemento Power Creatine Monohydrate Micronized",
+        "Marca": "POWER • APPLIED NUTRITION",
         "Categoria": "Creatina",
-        "Presentacion": "Envase 300g • 60 servicios • Sin sabor",
-        "Descripcion": "Creatina monohidratada 100% pura sin rellenos ni azúcares añadidos, ideal para combinar con tu batido post-entreno.",
-        "Precio": 890.00,
-        "Descuento": 0,
-        "PrecioAnterior": 890.00,
-        "Stock": 22,
-        "ImagenUrl": "/static/image/productos/creatina_mono.svg",
-        "Destacado": False,
+        "Presentacion": "Envase 250g • 50 servicios (5g por toma) • Micronizada",
+        "Descripcion": "Creatina monohidratada pura micronizada que incrementa la fuerza explosiva, la potencia en series pesadas y la regeneración de ATP.",
+        "Precio": 1150.00,
+        "Descuento": 20,
+        "PrecioAnterior": 1438.00,
+        "Stock": 18,
+        "ImagenUrl": "/static/image/productos/real_power_creatina.webp",
+        "Destacado": True,
         "VisibleTienda": True,
         "EsDemo": True,
         "OrigenDatos": "DEMOSTRACIÓN"
     },
     {
         "IdProducto": -106,
-        "NombreProducto": "Ganador de Masa Muscular Serious Mass Gainer",
-        "Marca": "ANABOLIC LABS",
-        "Categoria": "Ganadores de masa",
-        "Presentacion": "Bolsa 6 lbs (2.72 kg) • 1,250 kcal • 50g Proteína",
-        "Descripcion": "Fórmula hipercalórica enriquecida con carbohidratos complejos, vitaminas, minerales y creatina para etapas de volumen muscular.",
-        "Precio": 2150.00,
-        "Descuento": 15,
-        "PrecioAnterior": 2529.00,
-        "Stock": 8,
-        "ImagenUrl": "/static/image/productos/mass_gainer.svg",
+        "NombreProducto": "Platinum 100% Creatine Monohidratada Ultra Pura",
+        "Marca": "MUSCLETECH",
+        "Categoria": "Creatina",
+        "Presentacion": "Envase 450g • 90 servicios • 5g Creatina HPLC Certificada",
+        "Descripcion": "Creatina monohidratada de grado clínico probada por HPLC para aumentar el volumen celular y la fuerza muscular.",
+        "Precio": 1390.00,
+        "Descuento": 0,
+        "PrecioAnterior": 1390.00,
+        "Stock": 22,
+        "ImagenUrl": "/static/image/productos/real_creatina_mono.png",
         "Destacado": False,
         "VisibleTienda": True,
         "EsDemo": True,
@@ -144,33 +148,33 @@ PRODUCTOS_DEMOSTRACION = [
     },
     {
         "IdProducto": -107,
-        "NombreProducto": "Bebida Energética & Electrolitos Gym Fuel",
-        "Marca": "WORLDGYM NUTRITION",
-        "Categoria": "Bebidas energéticas",
-        "Presentacion": "Lata 500 ml • Zero Azúcar • Sabor Citrus Blast",
-        "Descripcion": "Bebida isotónica y energética con vitaminas del complejo B, taurina y electrolitos para hidratación intensa durante el entrenamiento.",
-        "Precio": 95.00,
-        "Descuento": 0,
-        "PrecioAnterior": 95.00,
-        "Stock": 45,
-        "ImagenUrl": "/static/image/productos/bebida_energetica.svg",
-        "Destacado": False,
+        "NombreProducto": "Pre-Entreno Power Roar High Intensity Fruit Punch",
+        "Marca": "POWER • RULE 1",
+        "Categoria": "Preentrenos",
+        "Presentacion": "Envase 315g • 30 servicios • Energía y Bombeo Extremo",
+        "Descripcion": "Fórmula pre-entrenamiento con L-Citrulina, Beta-Alanina y cafeína para máxima energía, enfoque mental y vascularidad.",
+        "Precio": 1450.00,
+        "Descuento": 15,
+        "PrecioAnterior": 1705.00,
+        "Stock": 10,
+        "ImagenUrl": "/static/image/productos/real_power_preworkout.webp",
+        "Destacado": True,
         "VisibleTienda": True,
         "EsDemo": True,
         "OrigenDatos": "DEMOSTRACIÓN"
     },
     {
         "IdProducto": -108,
-        "NombreProducto": "Shaker Pro Antiderrames WORLDGYM",
-        "Marca": "WORLDGYM GEAR",
-        "Categoria": "Accesorios",
-        "Presentacion": "700 ml (24 oz) • Incluye esfera mezcladora de acero inoxidable",
-        "Descripcion": "Vaso mezclador ergonómico libre de BPA con tapa de rosca hermética y escala medidora en mililitros y onzas.",
-        "Precio": 350.00,
-        "Descuento": 10,
-        "PrecioAnterior": 389.00,
-        "Stock": 25,
-        "ImagenUrl": "/static/image/productos/shaker_pro.svg",
+        "NombreProducto": "Pre-Entreno Nitraflex Ultra Strawberry Watermelon",
+        "Marca": "GAT SPORT",
+        "Categoria": "Preentrenos",
+        "Presentacion": "Envase 609g • 30 servicios • Fórmula Hiperémica",
+        "Descripcion": "Pre-entreno de alta intensidad diseñado para entrenamientos de fuerza pesada y congestión muscular prolongada.",
+        "Precio": 1580.00,
+        "Descuento": 0,
+        "PrecioAnterior": 1580.00,
+        "Stock": 8,
+        "ImagenUrl": "/static/image/productos/real_nitraflex_pre.webp",
         "Destacado": False,
         "VisibleTienda": True,
         "EsDemo": True,
@@ -178,16 +182,67 @@ PRODUCTOS_DEMOSTRACION = [
     },
     {
         "IdProducto": -109,
-        "NombreProducto": "Kit Pro Guantes y Straps de Levantamiento",
+        "NombreProducto": "Ganador de Masa Muscular Mass Gainer Chocolate Fudge",
+        "Marca": "RULE 1 PROTEINS",
+        "Categoria": "Ganadores de masa",
+        "Presentacion": "Bote 5.73 lbs (2.6 kg) • 1,000+ kcal • 40g Proteína",
+        "Descripcion": "Ganador de peso hipercalórico con carbohidratos complejos, creatina y triglicéridos de cadena media para etapas de volumen.",
+        "Precio": 2350.00,
+        "Descuento": 12,
+        "PrecioAnterior": 2670.00,
+        "Stock": 7,
+        "ImagenUrl": "/static/image/productos/real_mass_gainer.webp",
+        "Destacado": False,
+        "VisibleTienda": True,
+        "EsDemo": True,
+        "OrigenDatos": "DEMOSTRACIÓN"
+    },
+    {
+        "IdProducto": -110,
+        "NombreProducto": "Bebida Energética Sparkling Energy Juicy Orange",
+        "Marca": "BLOOM NUTRITION",
+        "Categoria": "Bebidas energéticas",
+        "Presentacion": "Lata 355 ml • 180mg Cafeína Natural • Zero Azúcar",
+        "Descripcion": "Bebida energética refrescante sin azúcar para activar tu metabolismo y concentración antes de entrenar.",
+        "Precio": 120.00,
+        "Descuento": 0,
+        "PrecioAnterior": 120.00,
+        "Stock": 36,
+        "ImagenUrl": "/static/image/productos/real_bebida_energetica.webp",
+        "Destacado": False,
+        "VisibleTienda": True,
+        "EsDemo": True,
+        "OrigenDatos": "DEMOSTRACIÓN"
+    },
+    {
+        "IdProducto": -111,
+        "NombreProducto": "Sparkling Protein Water Tropical Burst",
+        "Marca": "APPLIED NUTRITION",
+        "Categoria": "Bebidas energéticas",
+        "Presentacion": "Lata 330 ml • 10g Proteína + Electrolitos • Sin Azúcar",
+        "Descripcion": "Agua gasificada proteica enriquecida con vitamina C y electrolitos para hidratación y recuperación inmediata.",
+        "Precio": 145.00,
+        "Descuento": 10,
+        "PrecioAnterior": 161.00,
+        "Stock": 28,
+        "ImagenUrl": "/static/image/productos/real_protein_water.webp",
+        "Destacado": False,
+        "VisibleTienda": True,
+        "EsDemo": True,
+        "OrigenDatos": "DEMOSTRACIÓN"
+    },
+    {
+        "IdProducto": -112,
+        "NombreProducto": "Bloque de Magnesio Deportivo Gym Chalk Pro Grip",
         "Marca": "WORLDGYM GEAR",
         "Categoria": "Accesorios",
-        "Presentacion": "Par de Guantes con Muñequera + Correas de Agarre Reforzadas",
-        "Descripcion": "Protección palmar antideslizante y soporte de muñeca para peso muerto, dominadas y press pesado.",
-        "Precio": 680.00,
+        "Presentacion": "Bloque 2 oz (56g) Carbonato de Magnesio para Levantamiento",
+        "Descripcion": "Magnesio deportivo de alta adherencia que absorbe el sudor y mejora el agarre en peso muerto, dominadas y halterofilia.",
+        "Precio": 220.00,
         "Descuento": 0,
-        "PrecioAnterior": 680.00,
-        "Stock": 12,
-        "ImagenUrl": "/static/image/productos/guantes_pro.svg",
+        "PrecioAnterior": 220.00,
+        "Stock": 20,
+        "ImagenUrl": "/static/image/productos/real_accesorio_gym.webp",
         "Destacado": False,
         "VisibleTienda": True,
         "EsDemo": True,
@@ -391,30 +446,30 @@ def GuardarMetaProducto(id_producto, presentacion="", descripcion="", imagen_url
 
 def InferirImagenSuplemento(nombre="", marca="", categoria=""):
     """
-    Asigna automáticamente una imagen representativa de suplemento deportivo
+    Asigna automáticamente una fotografía real de estudio de suplemento deportivo
     o accesorio de gimnasio según el nombre, marca o categoría del producto.
     Nunca devuelve imágenes de computadoras ni tecnología.
     """
     texto = f"{nombre or ''} {marca or ''} {categoria or ''}".lower()
     if "raptor" in texto or "carnivor" in texto or "beef" in texto:
-        return "/static/image/productos/raptor_whey.svg"
+        return "/static/image/productos/real_beef_xp.avif"
     if "power" in texto and ("creatin" in texto or "mono" in texto):
-        return "/static/image/productos/power_creatina.svg"
-    if "power" in texto or "pre" in texto or "pump" in texto or "nitro" in texto or "óxido" in texto or "oxido" in texto:
-        return "/static/image/productos/power_preworkout.svg"
+        return "/static/image/productos/real_power_creatina.webp"
+    if "power" in texto or "pre" in texto or "pump" in texto or "nitro" in texto or "roar" in texto:
+        return "/static/image/productos/real_power_preworkout.webp"
     if "mass" in texto or "ganador" in texto or "gainer" in texto or "volumen" in texto:
-        return "/static/image/productos/mass_gainer.svg"
+        return "/static/image/productos/real_mass_gainer.webp"
     if "creatin" in texto:
-        return "/static/image/productos/creatina_mono.svg"
-    if "whey" in texto or "prote" in texto or "iso" in texto:
-        return "/static/image/productos/whey_gold.svg"
+        return "/static/image/productos/real_creatina_mono.png"
+    if "iso" in texto or "sascha" in texto:
+        return "/static/image/productos/real_iso_whey.webp"
+    if "whey" in texto or "prote" in texto:
+        return "/static/image/productos/real_whey_gold.webp"
     if "bebida" in texto or "energ" in texto or "isot" in texto or "agua" in texto or "hidrat" in texto:
-        return "/static/image/productos/bebida_energetica.svg"
-    if "shaker" in texto or "botella" in texto or "termo" in texto or "vaso" in texto:
-        return "/static/image/productos/shaker_pro.svg"
-    if "guante" in texto or "strap" in texto or "cintur" in texto or "accesorio" in texto or "faja" in texto:
-        return "/static/image/productos/guantes_pro.svg"
-    return "/static/image/productos/default_suplemento.svg"
+        return "/static/image/productos/real_bebida_energetica.webp"
+    if "shaker" in texto or "botella" in texto or "guante" in texto or "strap" in texto or "accesorio" in texto or "magnesio" in texto:
+        return "/static/image/productos/real_accesorio_gym.webp"
+    return "/static/image/productos/real_whey_gold.webp"
 
 
 def InferirCategoriaTienda(nombre="", marca="", categoria_original=""):
@@ -476,6 +531,20 @@ def EnriquecerProducto(prod, mapa_meta=None):
 
     stock = int(prod.get("Stock") if prod.get("Stock") is not None else 0)
     imagen_url = meta.get("ImagenUrl") or prod.get("ImagenUrl") or InferirImagenSuplemento(nombre, marca, categoria_bd)
+    mapa_upgrade_svg = {
+        "/static/image/productos/raptor_whey.svg": "/static/image/productos/real_beef_xp.avif",
+        "/static/image/productos/power_creatina.svg": "/static/image/productos/real_power_creatina.webp",
+        "/static/image/productos/power_preworkout.svg": "/static/image/productos/real_power_preworkout.webp",
+        "/static/image/productos/whey_gold.svg": "/static/image/productos/real_whey_gold.webp",
+        "/static/image/productos/creatina_mono.svg": "/static/image/productos/real_creatina_mono.png",
+        "/static/image/productos/mass_gainer.svg": "/static/image/productos/real_mass_gainer.webp",
+        "/static/image/productos/bebida_energetica.svg": "/static/image/productos/real_bebida_energetica.webp",
+        "/static/image/productos/shaker_pro.svg": "/static/image/productos/real_protein_water.webp",
+        "/static/image/productos/guantes_pro.svg": "/static/image/productos/real_accesorio_gym.webp",
+        "/static/image/productos/default_suplemento.svg": "/static/image/productos/real_whey_gold.webp",
+    }
+    if imagen_url in mapa_upgrade_svg:
+        imagen_url = mapa_upgrade_svg[imagen_url]
     presentacion = meta.get("Presentacion") or prod.get("Presentacion") or "Presentación estándar de gimnasio"
     descripcion = meta.get("Descripcion") or prod.get("Descripcion") or f"{nombre} de la marca {marca}. Suplementación y equipamiento deportivo disponible en WORLDGYM."
     destacado = bool(meta.get("Destacado") if "Destacado" in meta else prod.get("Destacado", descuento > 0))

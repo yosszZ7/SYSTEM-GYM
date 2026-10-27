@@ -1,5 +1,6 @@
 /**
  * WORLDGYM STORE — Controlador Frontend de Tienda Virtual y Carrito de Compras
+ * Diseño y experiencia visual alineados con el modelo de FitShop (fitshop.com.ni)
  */
 
 (function () {
@@ -9,6 +10,7 @@
     let estadoFiltros = {
         busqueda: '',
         categoria: 'Todos',
+        marca: '',
         orden: 'destacados',
         disponibilidad: 'todos',
         origen: 'todos'
@@ -65,18 +67,44 @@
         const toast = document.createElement('div');
         toast.className = 'store-toast';
         if (tipo === 'error') {
-            toast.style.borderLeftColor = '#F04438';
+            toast.style.borderLeftColor = '#EF4444';
         } else if (tipo === 'warning') {
-            toast.style.borderLeftColor = '#F79009';
+            toast.style.borderLeftColor = '#F59E0B';
         }
         const icon = tipo === 'error' ? 'fa-circle-exclamation' : (tipo === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-check');
-        toast.innerHTML = `<i class="fas ${icon}" style="color: ${tipo === 'error' ? '#F04438' : '#F58220'};"></i> <span>${mensaje}</span>`;
+        toast.innerHTML = `<i class="fas ${icon}" style="color: ${tipo === 'error' ? '#EF4444' : '#F58220'};"></i> <span>${mensaje}</span>`;
         container.appendChild(toast);
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.25s ease';
             setTimeout(() => toast.remove(), 260);
         }, 3200);
+    };
+
+    window.irACatalogo = function () {
+        document.getElementById('catalogoSection')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.enfocarBuscador = function () {
+        const input = document.getElementById('storeSearchInput');
+        if (input) {
+            input.focus();
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+
+    window.filtrarPorMarca = function (marcaTexto) {
+        estadoFiltros.marca = marcaTexto || '';
+        const inputSearch = document.getElementById('storeSearchInput');
+        const btnClear = document.getElementById('storeSearchClear');
+        if (inputSearch) {
+            inputSearch.value = marcaTexto || '';
+            estadoFiltros.busqueda = marcaTexto || '';
+        }
+        if (btnClear) {
+            btnClear.style.display = marcaTexto ? 'block' : 'none';
+        }
+        aplicarFiltrosYRenderizar();
     };
 
     window.agregarAlCarrito = function (idProducto, cantidadAgregar) {
@@ -181,9 +209,9 @@
 
         if (carrito.length === 0) {
             lista.innerHTML = `
-                <div style="text-align: center; padding: 48px 16px; color: #6E7785;">
-                    <i class="fas fa-cart-shopping" style="font-size: 40px; color: #CBD5E1; margin-bottom: 12px; display: block;"></i>
-                    <strong style="display: block; color: #1E2430; font-size: 15px; margin-bottom: 4px;">Tu carrito está vacío</strong>
+                <div style="text-align: center; padding: 48px 16px; color: #6B7280;">
+                    <i class="fas fa-cart-shopping" style="font-size: 40px; color: #D1D5DB; margin-bottom: 12px; display: block;"></i>
+                    <strong style="display: block; color: #111827; font-size: 15px; margin-bottom: 4px;">Tu carrito está vacío</strong>
                     <span style="font-size: 13px;">Explora el catálogo de suplementos y agrega tus productos favoritos.</span>
                 </div>
             `;
@@ -207,10 +235,10 @@
 
             return `
                 <div class="store-cart-item">
-                    <img src="${item.ImagenUrl}" alt="${item.NombreProducto}" class="store-cart-item-img" onerror="this.src='/static/image/productos/default_suplemento.svg'">
+                    <img src="${item.ImagenUrl}" alt="${item.NombreProducto}" class="store-cart-item-img" onerror="this.src='/static/image/productos/real_whey_gold.webp'">
                     <div class="store-cart-item-info">
                         <h4 class="store-cart-item-title" title="${item.NombreProducto}">${item.NombreProducto}</h4>
-                        <span class="store-cart-item-brand">${item.Marca} ${item.EsDemo ? '• [DEMO]' : ''}</span>
+                        <span class="store-cart-item-brand">${item.Marca} ${item.EsDemo ? '• [Demo]' : ''}</span>
                         <div class="store-cart-item-bottom">
                             <div class="store-cart-qty-controls">
                                 <button type="button" class="store-qty-btn" onclick="cambiarCantidadCarrito(${item.IdProducto}, -1)" title="Disminuir">-</button>
@@ -242,50 +270,54 @@
         const enOferta = Boolean(p.EnOferta) && Number(p.Descuento) > 0;
         const mostrarPrecioAnterior = enOferta && Number(p.PrecioAnterior) > Number(p.Precio);
 
+        let badgeIzquierdo = '<span></span>';
+        if (agotado) {
+            badgeIzquierdo = `<span class="store-pill-agotado">Agotado</span>`;
+        } else if (enOferta) {
+            badgeIzquierdo = `<span class="store-pill-oferta">OFERTA -${p.Descuento}%</span>`;
+        }
+
+        const badgeDerecho = p.EsDemo
+            ? `<span class="store-pill-origin demo" title="Producto de demostración">Demo</span>`
+            : `<span class="store-pill-origin oficial" title="Producto oficial del gimnasio">Oficial</span>`;
+
         return `
             <article class="store-card" data-id="${p.IdProducto}">
                 <div class="store-card-badges">
-                    <div class="store-badge-left">
-                        ${enOferta ? `<span class="store-offer-badge">OFERTA</span>` : ''}
-                        ${enOferta ? `<span class="store-discount-pill">-${p.Descuento}%</span>` : ''}
-                    </div>
-                    <div>
-                        ${p.EsDemo
-                            ? `<span class="store-demo-badge" title="Datos de demostración">DEMOSTRACIÓN</span>`
-                            : `<span class="store-official-badge" title="Producto oficial en inventario del gimnasio">OFICIAL</span>`
-                        }
-                    </div>
+                    ${badgeIzquierdo}
+                    ${badgeDerecho}
                 </div>
 
                 <div class="store-card-image-wrap" onclick="abrirDetalleProducto(${p.IdProducto})">
-                    <img src="${p.ImagenUrl}" alt="${p.NombreProducto}" loading="lazy" onerror="this.src='/static/image/productos/default_suplemento.svg'">
+                    <img src="${p.ImagenUrl}" alt="${p.NombreProducto}" loading="lazy" onerror="this.src='/static/image/productos/real_whey_gold.webp'">
                 </div>
 
                 <div class="store-card-body">
-                    <div class="store-card-meta-row">
-                        <span class="store-card-brand">${p.Marca || 'WORLDGYM'}</span>
-                        <span class="store-card-category">${p.CategoriaTienda || p.Categoria}</span>
-                    </div>
+                    <span class="store-card-brand">${p.Marca || 'WORLDGYM'}</span>
+                    <h3 class="store-card-title" onclick="abrirDetalleProducto(${p.IdProducto})" title="${p.NombreProducto}">
+                        ${p.NombreProducto}
+                    </h3>
+                    <p class="store-card-presentation" title="${p.Presentacion || ''}">${p.Presentacion || 'Presentación estándar'}</p>
 
-                    <h3 class="store-card-title" onclick="abrirDetalleProducto(${p.IdProducto})">${p.NombreProducto}</h3>
-                    <p class="store-card-presentation">${p.Presentacion || 'Presentación estándar'}</p>
+                    <div class="store-card-footer-block">
+                        <div class="store-stock-row">
+                            <span class="store-stock-status ${p.ClaseStock || 'disponible'}">
+                                <span class="store-stock-dot"></span>
+                                <span>${p.EstadoStock}</span>
+                            </span>
+                            <span style="color: #6B7280; font-size: 11px;">${p.CategoriaTienda || p.Categoria}</span>
+                        </div>
 
-                    <div class="store-stock-indicator ${p.ClaseStock || 'disponible'}">
-                        <span class="store-stock-dot"></span>
-                        <span>${p.EstadoStock}</span>
-                    </div>
+                        <div class="store-card-prices">
+                            <span class="store-price-current">${formatearCordobas(p.Precio)}</span>
+                            ${mostrarPrecioAnterior ? `<span class="store-price-old">${formatearCordobas(p.PrecioAnterior)}</span>` : ''}
+                        </div>
 
-                    <div class="store-card-prices">
-                        <span class="store-price-current">${formatearCordobas(p.Precio)}</span>
-                        ${mostrarPrecioAnterior ? `<span class="store-price-old">${formatearCordobas(p.PrecioAnterior)}</span>` : ''}
-                    </div>
-
-                    <div class="store-card-actions">
                         <button type="button" class="store-add-btn"
                                 onclick="agregarAlCarrito(${p.IdProducto}, 1)"
                                 ${agotado ? 'disabled' : ''}>
-                            <i class="fas ${agotado ? 'fa-ban' : 'fa-plus'}"></i>
-                            <span>${agotado ? 'Agotado' : 'Agregar al Carrito'}</span>
+                            <i class="fas ${agotado ? 'fa-ban' : 'fa-cart-plus'}"></i>
+                            <span>${agotado ? 'Agotado' : 'Agregar al carrito'}</span>
                         </button>
                     </div>
                 </div>
@@ -294,25 +326,9 @@
     }
 
     function aplicarFiltrosYRenderizar() {
-        const gridDestacados = document.getElementById('storeFeaturedGrid');
-        const seccionDestacados = document.getElementById('storeFeaturedSection');
         const gridCatalogo = document.getElementById('storeCatalogGrid');
         const contadorEl = document.getElementById('storeResultsCounter');
 
-        // 1. Renderizar sección de Destacados y Ofertas Especiales
-        if (gridDestacados && seccionDestacados) {
-            const destacados = catalogoProductos.filter(p => p.Destacado || p.EnOferta).slice(0, 4);
-            if (estadoFiltros.busqueda.trim() !== '' || estadoFiltros.categoria !== 'Todos') {
-                seccionDestacados.style.display = 'none';
-            } else if (destacados.length > 0) {
-                seccionDestacados.style.display = 'block';
-                gridDestacados.innerHTML = destacados.map(crearHtmlTarjeta).join('');
-            } else {
-                seccionDestacados.style.display = 'none';
-            }
-        }
-
-        // 2. Filtrar catálogo principal
         const q = estadoFiltros.busqueda.trim().toLowerCase();
         let filtrados = catalogoProductos.filter(p => {
             if (q) {
@@ -341,7 +357,6 @@
             return true;
         });
 
-        // 3. Ordenamiento
         filtrados.sort((a, b) => {
             if (estadoFiltros.orden === 'precio_asc') {
                 return Number(a.Precio) - Number(b.Precio);
@@ -355,26 +370,26 @@
             if (estadoFiltros.orden === 'nombre_asc') {
                 return String(a.NombreProducto).localeCompare(String(b.NombreProducto));
             }
-            // Por defecto: Oficiales primero, luego Destacados/Ofertas
             if (a.EsDemo !== b.EsDemo) return a.EsDemo ? 1 : -1;
             if (a.Destacado !== b.Destacado) return a.Destacado ? -1 : 1;
             return Number(b.Descuento || 0) - Number(a.Descuento || 0);
         });
 
         if (contadorEl) {
-            contadorEl.innerHTML = `Mostrando <strong>${filtrados.length}</strong> producto${filtrados.length === 1 ? '' : 's'}`;
+            const catLabel = estadoFiltros.categoria === 'Todos' ? 'Todas las categorías' : estadoFiltros.categoria;
+            contadorEl.innerHTML = `Mostrando <strong>${filtrados.length}</strong> producto${filtrados.length === 1 ? '' : 's'} en <strong>${catLabel}</strong>`;
         }
 
         if (!gridCatalogo) return;
 
         if (filtrados.length === 0) {
             gridCatalogo.innerHTML = `
-                <div style="grid-column: 1 / -1; background: #FFFFFF; border: 1px solid #E6E9EF; border-radius: 16px; padding: 48px 20px; text-align: center;">
-                    <i class="fas fa-magnifying-glass" style="font-size: 36px; color: #CBD5E1; margin-bottom: 12px; display: block;"></i>
-                    <h3 style="margin: 0 0 6px 0; font-size: 17px; color: #181D26;">No encontramos productos con esos filtros</h3>
-                    <p style="margin: 0 0 16px 0; font-size: 13.5px; color: #6E7785;">Intenta con otro término de búsqueda o restablece las categorías.</p>
-                    <button type="button" class="store-btn-cta" onclick="restablecerFiltrosTienda()" style="padding: 9px 20px; font-size: 13px;">
-                        Ver todo el catálogo
+                <div style="grid-column: 1 / -1; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 18px; padding: 52px 24px; text-align: center;">
+                    <i class="fas fa-magnifying-glass" style="font-size: 36px; color: #D1D5DB; margin-bottom: 12px; display: block;"></i>
+                    <h3 style="margin: 0 0 6px 0; font-size: 18px; color: #111827;">No encontramos productos con esos criterios</h3>
+                    <p style="margin: 0 0 18px 0; font-size: 14px; color: #6B7280;">Prueba con otra categoría o restablece todos los filtros del catálogo.</p>
+                    <button type="button" class="store-btn-cta" onclick="restablecerFiltrosTienda()" style="padding: 11px 24px; font-size: 13.5px;">
+                        Ver todos los productos
                     </button>
                 </div>
             `;
@@ -394,16 +409,21 @@
 
     window.filtrarSoloOfertas = function () {
         estadoFiltros.disponibilidad = 'ofertas';
+        estadoFiltros.categoria = 'Todos';
+        document.querySelectorAll('.store-cat-pill').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-cat') === 'Todos');
+        });
         const selDisp = document.getElementById('storeFilterAvailability');
         if (selDisp) selDisp.value = 'ofertas';
         aplicarFiltrosYRenderizar();
-        document.getElementById('catalogoSection')?.scrollIntoView({ behavior: 'smooth' });
+        irACatalogo();
     };
 
     window.restablecerFiltrosTienda = function () {
         estadoFiltros = {
             busqueda: '',
             categoria: 'Todos',
+            marca: '',
             orden: 'destacados',
             disponibilidad: 'todos',
             origen: 'todos'
@@ -440,43 +460,39 @@
         content.innerHTML = `
             <div class="store-detail-grid">
                 <div class="store-detail-img-box">
-                    <img src="${prod.ImagenUrl}" alt="${prod.NombreProducto}" onerror="this.src='/static/image/productos/default_suplemento.svg'">
+                    <img src="${prod.ImagenUrl}" alt="${prod.NombreProducto}" onerror="this.src='/static/image/productos/real_whey_gold.webp'">
                 </div>
                 <div>
-                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px;">
-                        <span class="store-card-category">${prod.CategoriaTienda || prod.Categoria}</span>
-                        ${enOferta ? `<span class="store-offer-badge">OFERTA -${prod.Descuento}%</span>` : ''}
-                        ${prod.EsDemo
-                            ? `<span class="store-demo-badge">DEMOSTRACIÓN</span>`
-                            : `<span class="store-official-badge">CATÁLOGO OFICIAL</span>`
-                        }
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+                        <span class="store-pill-origin ${prod.EsDemo ? 'demo' : 'oficial'}">${prod.EsDemo ? 'DEMOSTRACIÓN' : 'CATÁLOGO OFICIAL'}</span>
+                        ${enOferta ? `<span class="store-pill-oferta">OFERTA -${prod.Descuento}%</span>` : ''}
                     </div>
                     <span class="store-card-brand" style="display: block; margin-bottom: 4px;">${prod.Marca}</span>
-                    <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 900; color: #181D26;">${prod.NombreProducto}</h2>
-                    <p style="margin: 0 0 12px 0; font-size: 13.5px; font-weight: 600; color: #F58220;">${prod.Presentacion}</p>
-                    <p style="margin: 0 0 16px 0; font-size: 13.5px; color: #6E7785; line-height: 1.55;">${prod.Descripcion}</p>
+                    <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 800; color: #111827; line-height: 1.25;">${prod.NombreProducto}</h2>
+                    <p style="margin: 0 0 12px 0; font-size: 13.5px; font-weight: 700; color: #F58220;">${prod.Presentacion}</p>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #4B5563; line-height: 1.6;">${prod.Descripcion}</p>
 
-                    <div class="store-stock-indicator ${prod.ClaseStock}" style="margin-bottom: 14px;">
-                        <span class="store-stock-dot"></span>
-                        <span>${prod.EstadoStock}</span>
+                    <div class="store-stock-row" style="margin-bottom: 14px;">
+                        <span class="store-stock-status ${prod.ClaseStock}">
+                            <span class="store-stock-dot"></span>
+                            <span>${prod.EstadoStock}</span>
+                        </span>
                     </div>
 
-                    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px;">
                         <span style="font-size: 26px; font-weight: 900; color: #F58220;">${formatearCordobas(prod.Precio)}</span>
                         ${enOferta && Number(prod.PrecioAnterior) > Number(prod.Precio)
-                            ? `<span style="font-size: 15px; color: #94A3B8; text-decoration: line-through; font-weight: 600;">${formatearCordobas(prod.PrecioAnterior)}</span>`
+                            ? `<span style="font-size: 15px; color: #9CA3AF; text-decoration: line-through; font-weight: 600;">${formatearCordobas(prod.PrecioAnterior)}</span>`
                             : ''
                         }
                     </div>
 
-                    <div style="display: flex; gap: 10px;">
-                        <button type="button" class="store-add-btn" style="height: 44px; font-size: 14px;"
-                                onclick="agregarAlCarrito(${prod.IdProducto}, 1); cerrarModalProducto();"
-                                ${agotado ? 'disabled' : ''}>
-                            <i class="fas fa-cart-plus"></i>
-                            <span>${agotado ? 'Producto Agotado' : 'Agregar al Carrito'}</span>
-                        </button>
-                    </div>
+                    <button type="button" class="store-add-btn" style="height: 46px; font-size: 14px;"
+                            onclick="agregarAlCarrito(${prod.IdProducto}, 1); cerrarModalProducto();"
+                            ${agotado ? 'disabled' : ''}>
+                        <i class="fas fa-cart-plus"></i>
+                        <span>${agotado ? 'Producto Agotado' : 'Agregar al carrito'}</span>
+                    </button>
                 </div>
             </div>
         `;
@@ -523,7 +539,6 @@
                 return;
             }
 
-            // Actualizar catálogo en memoria con el nuevo stock devuelto por el servidor
             if (Array.isArray(data.catalogo)) {
                 catalogoProductos = data.catalogo;
             }
@@ -533,7 +548,6 @@
             aplicarFiltrosYRenderizar();
             cerrarCarrito();
 
-            // Mostrar comprobante de pedido
             mostrarComprobantePedido(data.comprobante, data.mensaje);
         } catch (err) {
             console.error(err);
@@ -553,14 +567,14 @@
 
         const filasHtml = (comp.Items || []).map(item => `
             <tr>
-                <td style="padding: 8px 0; border-bottom: 1px solid #E6E9EF; font-size: 13px;">
+                <td style="padding: 8px 0; border-bottom: 1px solid #E5E7EB; font-size: 13px;">
                     <strong>${item.NombreProducto}</strong>
-                    <small style="display: block; color: #6E7785;">${item.Marca} ${item.EsDemo ? '(DEMO)' : ''}</small>
+                    <small style="display: block; color: #6B7280;">${item.Marca} ${item.EsDemo ? '(Demo)' : ''}</small>
                 </td>
-                <td style="padding: 8px 8px; border-bottom: 1px solid #E6E9EF; text-align: center; font-weight: 700; font-size: 13px;">
+                <td style="padding: 8px 8px; border-bottom: 1px solid #E5E7EB; text-align: center; font-weight: 700; font-size: 13px;">
                     x${item.Cantidad}
                 </td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #E6E9EF; text-align: right; font-weight: 800; font-size: 13px;">
+                <td style="padding: 8px 0; border-bottom: 1px solid #E5E7EB; text-align: right; font-weight: 800; font-size: 13px;">
                     ${formatearCordobas(item.Subtotal)}
                 </td>
             </tr>
@@ -568,31 +582,31 @@
 
         body.innerHTML = `
             <div style="text-align: center; margin-bottom: 18px;">
-                <div style="width: 54px; height: 54px; border-radius: 50%; background: #ECFDF3; color: #12B76A; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 10px;">
+                <div style="width: 54px; height: 54px; border-radius: 50%; background: #ECFDF5; color: #10B981; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 10px;">
                     <i class="fas fa-check"></i>
                 </div>
-                <h2 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900;">¡Pedido Confirmado!</h2>
-                <p style="margin: 0; font-size: 13px; color: #6E7785;">${mensaje}</p>
+                <h2 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 800;">¡Pedido Confirmado!</h2>
+                <p style="margin: 0; font-size: 13px; color: #6B7280;">${mensaje}</p>
             </div>
 
-            <div style="background: #F8FAFC; border: 1px solid #E6E9EF; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; font-size: 13px;">
+            <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; font-size: 13px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                    <span style="color: #6E7785;">Folio de Pedido:</span>
-                    <strong style="color: #181D26;">${comp.Folio}</strong>
+                    <span style="color: #6B7280;">Folio de Pedido:</span>
+                    <strong style="color: #111827;">${comp.Folio}</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                    <span style="color: #6E7785;">Fecha y Hora:</span>
+                    <span style="color: #6B7280;">Fecha y Hora:</span>
                     <strong>${comp.Fecha}</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #6E7785;">Cliente:</span>
+                    <span style="color: #6B7280;">Cliente:</span>
                     <strong>${comp.Cliente}</strong>
                 </div>
             </div>
 
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
                 <thead>
-                    <tr style="border-bottom: 2px solid #E6E9EF; font-size: 11px; color: #6E7785; text-transform: uppercase;">
+                    <tr style="border-bottom: 2px solid #E5E7EB; font-size: 11px; color: #6B7280; text-transform: uppercase;">
                         <th style="text-align: left; padding-bottom: 6px;">Producto</th>
                         <th style="text-align: center; padding-bottom: 6px;">Cant.</th>
                         <th style="text-align: right; padding-bottom: 6px;">Subtotal</th>
