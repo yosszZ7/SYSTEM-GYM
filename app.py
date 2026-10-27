@@ -124,6 +124,39 @@ def jsonify(*args, **kwargs):
 def filter_limpiar_error(s):
     return limpiar_error_sql(s)
 
+@app.context_processor
+def inject_user_context():
+    return {
+        'usuario': session.get('usuario_nombre', 'Usuario'),
+        'usuario_rol': session.get('rol', 'Administrador')
+    }
+
+def _safe_float(val):
+    try:
+        return float(val or 0)
+    except (ValueError, TypeError):
+        return 0.0
+
+def _parse_fecha(fecha_val):
+    if not fecha_val:
+        return None
+    if hasattr(fecha_val, 'year') and hasattr(fecha_val, 'month'):
+        return fecha_val
+    texto = str(fecha_val).strip()
+    for fmt in ('%d/%m/%Y', '%Y-%m-%d', '%d/%m/%Y %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M:%S'):
+        try:
+            return datetime.strptime(texto[:19], fmt)
+        except ValueError:
+            continue
+    try:
+        return datetime.strptime(texto[:10], '%d/%m/%Y')
+    except ValueError:
+        pass
+    try:
+        return datetime.strptime(texto[:10], '%Y-%m-%d')
+    except ValueError:
+        return None
+
 # ==================================================
 # DECORADORES
 # ==================================================
@@ -267,55 +300,188 @@ def api_notificaciones_marcar_todas():
 @login_required
 def api_dashboard_stats():
     # Obtener totales de la base de datos
-    _, clientes = ListarClientes()
-    _, empleados = ListarEmpleados()
-    _, productos = ListarProductos()
-    _, maquinas = ListarMaquinaria()
-    _, ejercicios = ListarEjercicios()
-    _, compras = ListarCompras()
-    _, ventas = ListarVentas()
-    _, membresias_activas = ReporteMembresiasActivas()
-    
-    cant_membresias_activas = sum(m.get('TotalClientesActivos', 0) for m in (membresias_activas or []))
-    ventas_totales = sum(v.get('Total', 0) for v in (ventas or []))
-    
-    mes_actual = datetime.now().strftime('%Y-%m')
-    clientes_nuevos = [c for c in (clientes or []) if c.get('FechaRegistro') and str(c.get('FechaRegistro')).startswith(mes_actual)]
-    
+    ok_cli, clientes = ListarClientes()
+    ok_emp, empleados = ListarEmpleados()
+    ok_prod, productos = ListarProductos()
+    ok_maq, maquinas = ListarMaquinaria()
+    ok_eje, ejercicios = ListarEjercicios()
+    ok_com, compras = ListarCompras()
+    ok_ven, ventas = ListarVentas()
+    ok_mem, membresias_activas = ReporteMembresiasActivas()
+
+    clientes_list = clientes if (ok_cli and isinstance(clientes, list)) else []
+    empleados_list = empleados if (ok_emp and isinstance(empleados, list)) else []
+    productos_list = productos if (ok_prod and isinstance(productos, list)) else []
+    maquinas_list = maquinas if (ok_maq and isinstance(maquinas, list)) else []
+    ejercicios_list = ejercicios if (ok_eje and isinstance(ejercicios, list)) else []
+    compras_list = compras if (ok_com and isinstance(compras, list)) else []
+    ventas_list = ventas if (ok_ven and isinstance(ventas, list)) else []
+    membresias_list = membresias_activas if (ok_mem and isinstance(membresias_activas, list)) else []
+
+    cant_membresias_activas = sum(int(m.get('TotalClientesActivos') or 0) for m in membresias_list)
+    ventas_totales = sum(_safe_float(v.get('Total')) for v in ventas_list)
+
+    ahora = datetime.now()
+    anio_actual, mes_actual = ahora.year, ahora.month
+    if mes_actual == 1:
+        anio_ant, mes_ant = anio_actual - 1, 12
+    else:
+        anio_ant, mes_ant = anio_actual, mes_actual - 1
+
+    ventas_mes_actual = []
+    ventas_mes_anterior = []
+    ventas_hoy_list = []
+
+    for v in ventas_list:
+        dt = _parse_fecha(v.get('FechaVenta'))
+        if dt:
+            if dt.year == anio_actual and dt.month == mes_actual:
+                ventas_mes_actual.append(v)
+            elif dt.year == anio_ant and dt.month == mes_ant:
+                ventas_mes_anterior.append(v)
+            if dt.year == ahora.year and dt.month == ahora.month and dt.day == ahora.day:
+                ventas_hoy_list.append(v)
+
+    monto_ventas_mes = sum(_safe_float(v.get('Total')) for v in ventas_mes_actual)
+    monto_ventas_mes_ant = sum(_safe_float(v.get('Total')) for v in ventas_mes_anterior)
+
+    # Variación porcentual de ventas del mes únicamente si existe período anterior comparable (> 0)
+    variacion_ventas_mes = None
+    if monto_ventas_mes_ant > 0:
+        variacion_ventas_mes = round(((monto_ventas_mes - monto_ventas_mes_ant) / monto_ventas_mes_ant) * 100, 1)
+
+    clientes_nuevos_mes = []
+    clientes_nuevos_mes_ant = []
+    for c in clientes_list:
+        dt_c = _parse_fecha(c.get('FechaRegistro'))
+        if dt_c:
+            if dt_c.year == anio_actual and dt_c.month == mes_actual:
+                clientes_nuevos_mes.append(c)
+            elif dt_c.year == anio_ant and dt_c.month == mes_ant:
+                clientes_nuevos_mes_ant.append(c)
+
+    variacion_clientes = None
+    if len(clientes_nuevos_mes_ant) > 0:
+        variacion_clientes = round(((len(clientes_nuevos_mes) - len(clientes_nuevos_mes_ant)) / len(clientes_nuevos_mes_ant)) * 100, 1)
+
     return jsonify({
-        'total_clientes': len(clientes or []),
-        'total_empleados': len(empleados or []),
-        'total_productos': len(productos or []),
-        'ventas_mes': len(ventas or []),
+        'total_clientes': len(clientes_list),
+        'total_empleados': len(empleados_list),
+        'total_productos': len(productos_list),
+        'ventas_mes': round(monto_ventas_mes, 2),
+        'ventas_mes_monto': round(monto_ventas_mes, 2),
+        'ventas_mes_cantidad': len(ventas_mes_actual),
         'membresias_activas': cant_membresias_activas,
-        'total_ejercicios': len(ejercicios or []),
-        'total_maquinaria': len(maquinas or []),
-        'total_compras': len(compras or []),
-        'ventas_hoy': len([v for v in (ventas or []) if str(v.get('FechaVenta')).startswith(datetime.now().strftime('%Y-%m-%d'))]),
-        'clientes_nuevos': len(clientes_nuevos),
-        'ingresos_totales': ventas_totales
+        'total_ejercicios': len(ejercicios_list),
+        'total_maquinaria': len(maquinas_list),
+        'total_compras': len(compras_list),
+        'ventas_hoy': len(ventas_hoy_list),
+        'clientes_nuevos': len(clientes_nuevos_mes),
+        'ingresos_totales': round(ventas_totales, 2),
+        'variacion_ventas_mes': variacion_ventas_mes,
+        'variacion_clientes': variacion_clientes
     })
 
 @app.route('/api/estadisticas-rapidas')
 @login_required
 def api_estadisticas_rapidas():
-    # Devolver valores rápidos
-    _, ventas = ListarVentas()
-    ventas_hoy = sum(v.get('Total', 0) for v in (ventas or []) if str(v.get('FechaVenta')).startswith(datetime.now().strftime('%Y-%m-%d')))
+    ok_ven, ventas = ListarVentas()
+    ventas_list = ventas if (ok_ven and isinstance(ventas, list)) else []
+    ahora = datetime.now()
+    ventas_hoy_list = []
+    for v in ventas_list:
+        dt = _parse_fecha(v.get('FechaVenta'))
+        if dt and dt.year == ahora.year and dt.month == ahora.month and dt.day == ahora.day:
+            ventas_hoy_list.append(v)
+    ingresos_hoy = sum(_safe_float(v.get('Total')) for v in ventas_hoy_list)
     return jsonify({
         'clientes_hoy': 0,
-        'ventas_hoy': len([v for v in (ventas or []) if str(v.get('FechaVenta')).startswith(datetime.now().strftime('%Y-%m-%d'))]),
-        'ingresos_hoy': ventas_hoy,
+        'ventas_hoy': len(ventas_hoy_list),
+        'ingresos_hoy': round(ingresos_hoy, 2),
         'asistencias_hoy': 0
     })
 
 @app.route('/api/actividad-reciente')
 @login_required
 def api_actividad_reciente():
-    # Actividades estáticas de demostración para evitar dejar vacío
-    return jsonify([
-        {'icono': 'fa-user-plus', 'descripcion': 'Actividad reciente de base de datos activa', 'hace': 'Ahora', 'monto': ''}
-    ])
+    actividades = []
+
+    # 1. Últimas ventas registradas
+    ok_ven, ventas = ListarVentas()
+    if ok_ven and isinstance(ventas, list):
+        for v in ventas[:6]:
+            prod = v.get('NombreProducto') or 'Producto'
+            cli = f"{v.get('PrimerNombre') or ''} {v.get('PrimerApellido') or ''}".strip()
+            desc = f"Venta: {prod}" + (f" ({cli})" if cli else "")
+            dt = _parse_fecha(v.get('FechaVenta'))
+            actividades.append({
+                'tipo': 'venta',
+                'icono': 'fa-shopping-cart',
+                'descripcion': desc,
+                'hace': str(v.get('FechaVenta') or 'Reciente'),
+                'monto': _safe_float(v.get('Total')),
+                '_sort': dt.timestamp() if dt else 0
+            })
+
+    # 2. Últimos pagos de membresías registrados
+    ok_pag, pagos = ListarPagos()
+    if ok_pag and isinstance(pagos, list):
+        for p in pagos[:5]:
+            nom_cli = p.get('NombreCliente') or f"{p.get('PrimerNombre') or ''} {p.get('PrimerApellido') or ''}".strip() or 'Cliente'
+            mem = p.get('NombreMembresia') or p.get('TipoMembresia') or 'Membresía'
+            fecha_p = p.get('FechaPago')
+            dt = _parse_fecha(fecha_p)
+            fecha_str = fecha_p.strftime('%d/%m/%Y') if hasattr(fecha_p, 'strftime') else str(fecha_p or 'Reciente')
+            actividades.append({
+                'tipo': 'membresia',
+                'icono': 'fa-id-card',
+                'descripcion': f"Membresía {mem} - {nom_cli}",
+                'hace': fecha_str,
+                'monto': _safe_float(p.get('Monto') or p.get('Total')),
+                '_sort': dt.timestamp() if dt else 0
+            })
+
+    # 3. Últimos clientes registrados
+    ok_cli, clientes = ListarClientes()
+    if ok_cli and isinstance(clientes, list):
+        ultimos_clientes = sorted(clientes, key=lambda x: int(x.get('IdCliente') or 0), reverse=True)[:4]
+        for c in ultimos_clientes:
+            nombre = f"{c.get('PrimerNombre') or ''} {c.get('PrimerApellido') or ''}".strip()
+            if nombre:
+                dt = _parse_fecha(c.get('FechaRegistro'))
+                actividades.append({
+                    'tipo': 'cliente',
+                    'icono': 'fa-user-plus',
+                    'descripcion': f"Cliente registrado: {nombre}",
+                    'hace': str(c.get('FechaRegistro') or 'Registrado'),
+                    'monto': '',
+                    '_sort': dt.timestamp() if dt else 0
+                })
+
+    # 4. Últimos productos registrados
+    ok_prod, productos = ListarProductos()
+    if ok_prod and isinstance(productos, list):
+        ultimos_prod = sorted(productos, key=lambda x: int(x.get('IdProducto') or 0), reverse=True)[:3]
+        for pr in ultimos_prod:
+            nom_pr = pr.get('NombreProducto')
+            if nom_pr:
+                dt = _parse_fecha(pr.get('FechaRegistro'))
+                actividades.append({
+                    'tipo': 'producto',
+                    'icono': 'fa-box',
+                    'descripcion': f"Producto en catálogo: {nom_pr}",
+                    'hace': str(pr.get('FechaRegistro') or 'Registrado'),
+                    'monto': '',
+                    '_sort': dt.timestamp() if dt else 0
+                })
+
+    actividades.sort(key=lambda x: x.get('_sort', 0), reverse=True)
+    resultado = []
+    for item in actividades[:8]:
+        item.pop('_sort', None)
+        resultado.append(item)
+
+    return jsonify(resultado)
 
 # ==================================================
 # API LISTADOS Y REPORTES GENERALES

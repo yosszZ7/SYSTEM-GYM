@@ -3,150 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - WORLD GYM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>Iniciar Sesión | WORLDGYM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=2.0.0">
     <style>
-        /* Asegurar que el login se vea bien con los colores corporativos */
         body.login-page {
             margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #FFFDF9 0%, #FAF1E6 100%);
+            padding: 24px;
+            background: #F7F8FA;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #252B36;
         }
         .login-container {
             width: 100%;
-            max-width: 440px;
-            margin: 20px;
+            max-width: 420px;
         }
         .login-card {
-            background: #FFFFFF; /* Pure white card for better contrast on cream background */
-            border: 1px solid #EFE6DC;
-            border-radius: 24px;
-            padding: 40px;
+            background: #FFFFFF;
+            border: 1px solid #E8EBEF;
+            border-radius: 12px;
+            padding: 36px 32px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(74, 55, 40, 0.08);
+            box-shadow: 0 4px 12px rgba(16, 24, 40, 0.05);
+        }
+        .login-logo {
+            margin-bottom: 24px;
         }
         .login-logo img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
             object-fit: cover;
-            margin-bottom: 15px;
-            border: 2px solid #F28C28;
+            margin-bottom: 12px;
+            border: 1px solid #E8EBEF;
         }
         .login-logo h1 {
-            font-size: 28px;
+            font-size: 22px;
+            font-weight: 800;
             margin: 0;
-            color: #4A3728; /* Café oscuro */
+            color: #252B36;
+            letter-spacing: -0.02em;
         }
         .login-logo h1 span {
-            color: #F28C28; /* Naranja corporativo */
+            color: #F58220;
         }
         .login-logo p {
-            color: #8B6F5A; /* Café secundario */
-            margin-top: 5px;
-            font-size: 0.95rem;
+            color: #7B8491;
+            margin-top: 4px;
+            font-size: 13.5px;
+        }
+        .login-form {
+            text-align: left;
+        }
+        .login-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #252B36;
+            margin-bottom: 6px;
         }
         .login-form input {
             width: 100%;
-            padding: 14px;
-            margin: 10px 0;
-            border: 1px solid #EFE6DC;
-            border-radius: 12px;
-            font-size: 16px;
+            height: 42px;
+            padding: 0 14px;
+            margin-bottom: 16px;
+            border: 1px solid #E8EBEF;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
             box-sizing: border-box;
             background: #FFFFFF;
-            color: #4A3728;
-            transition: all 0.2s ease;
+            color: #252B36;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .login-form input::placeholder {
+            color: #98A2B3;
         }
         .login-form input:focus {
             outline: none;
-            border-color: #F28C28;
-            box-shadow: 0 0 0 3px rgba(242, 140, 40, 0.15);
+            border-color: #F58220;
+            box-shadow: 0 0 0 3px rgba(245, 130, 32, 0.14);
         }
         .login-form button[type="submit"] {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #F28C28, #D77218); /* Degradado Naranja */
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            height: 42px;
+            padding: 0 16px;
+            background: #F58220;
+            color: #FFFFFF;
+            border: 1px solid #F58220;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: 600;
+            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(242, 140, 40, 0.1);
+            margin-top: 4px;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
         }
         .login-form button[type="submit"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -10px rgba(242, 140, 40, 0.4);
-            filter: brightness(1.05);
+            background: #DC6E12;
+            border-color: #DC6E12;
         }
         .password-wrapper {
             position: relative;
             width: 100%;
-            margin: 10px 0;
+            margin-bottom: 12px;
         }
         .password-wrapper input {
             margin: 0 !important;
-            padding-right: 48px !important;
+            padding-right: 44px !important;
         }
         .toggle-password {
             position: absolute;
-            right: 14px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: #8B6F5A;
+            color: #7B8491;
             cursor: pointer;
             padding: 4px;
-            font-size: 18px;
+            font-size: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: color 0.2s ease, transform 0.2s ease;
+            transition: color 0.15s ease;
             z-index: 2;
         }
         .toggle-password:hover {
-            color: #F28C28;
-            transform: translateY(-50%) scale(1.1);
+            color: #F58220;
         }
         .message {
-            margin-top: 15px;
-            padding: 10px;
+            margin-top: 16px;
+            padding: 10px 12px;
             border-radius: 8px;
             display: none;
-            font-size: 0.9rem;
+            font-size: 13px;
             font-weight: 500;
+            text-align: left;
         }
         .message.error {
-            background: #FEE2E2;
-            color: #DC2626;
+            background: #FEF3F2;
+            color: #F04438;
             display: block;
-            border: 1px solid #FCA5A5;
+            border: 1px solid rgba(240, 68, 56, 0.25);
         }
         .message.success {
-            background: #D1FAE5;
-            color: #065F46;
+            background: #ECFDF3;
+            color: #12B76A;
             display: block;
-            border: 1px solid #6EE7B7;
+            border: 1px solid rgba(18, 183, 106, 0.25);
         }
         .loader-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 253, 249, 0.85);
-            backdrop-filter: blur(5px);
+            inset: 0;
+            background: rgba(247, 248, 250, 0.85);
+            backdrop-filter: blur(3px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -154,20 +172,21 @@
             z-index: 9999;
         }
         .loader {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(74, 55, 40, 0.1);
-            border-top: 4px solid #F28C28;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #E8EBEF;
+            border-top: 3px solid #F58220;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         .loader-text {
-            color: #4A3728;
-            margin-top: 15px;
+            color: #252B36;
+            margin-top: 12px;
+            font-size: 13.5px;
             font-weight: 500;
         }
     </style>
@@ -176,21 +195,24 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-logo">
-                <img src="/static/image/logo.jpeg" alt="World Gym Logo">
-                <h1>WORLD <span>GYM</span></h1>
-                <p>Sistema de Gestión Fitness</p>
+                <img src="/static/image/logo.jpeg" alt="WORLDGYM Logo">
+                <h1>WORLD<span>GYM</span></h1>
+                <p>Sistema de Gestión para Gimnasio</p>
             </div>
             <form id="loginForm" class="login-form">
-                <input type="text" id="NombreUsuario" placeholder="Usuario" required autocomplete="off">
+                <label class="login-label" for="NombreUsuario">Usuario</label>
+                <input type="text" id="NombreUsuario" placeholder="Ingresa tu usuario" required autocomplete="off">
+
+                <label class="login-label" for="Contrasena">Contraseña</label>
                 <div class="password-wrapper">
-                    <input type="password" id="Contrasena" placeholder="Contraseña" required>
+                    <input type="password" id="Contrasena" placeholder="Ingresa tu contraseña" required>
                     <button type="button" id="togglePasswordBtn" class="toggle-password" title="Mostrar contraseña" aria-label="Mostrar contraseña">
                         <i class="fas fa-eye" id="togglePasswordIcon"></i>
                     </button>
                 </div>
-                <div style="display: flex; justify-content: flex-end; margin: 4px 0 14px 0;">
-                    <a href="/recuperar_contrasena" style="color: #F28C28; font-size: 0.88rem; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease;">
-                        <i class="fas fa-key" style="font-size: 0.8rem;"></i> ¿Olvidaste tu contraseña?
+                <div style="display: flex; justify-content: flex-end; margin: 4px 0 16px 0;">
+                    <a href="/recuperar_contrasena" style="color: #F58220; font-size: 12.5px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                        ¿Olvidaste tu contraseña?
                     </a>
                 </div>
                 <button type="submit" id="loginBtn">Iniciar Sesión</button>
@@ -198,7 +220,7 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="message {{ 'success' if category == 'success' else 'error' }}" style="display: block; margin-top: 15px;">
+                        <div class="message {{ 'success' if category == 'success' else 'error' }}" style="display: block; margin-top: 16px;">
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -214,7 +236,6 @@
     </div>
 
     <script>
-        // Login JavaScript
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         const loaderOverlay = document.getElementById('loaderOverlay');
@@ -231,7 +252,6 @@
                 return;
             }
             
-            // Mostrar loader
             loaderOverlay.style.display = 'flex';
             loginBtn.disabled = true;
             loginBtn.style.opacity = '0.7';
@@ -246,13 +266,12 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Guardar usuario en localStorage
                     localStorage.setItem('user', JSON.stringify(data.usuario));
                     mostrarMensaje('Inicio exitoso, redirigiendo...', 'success');
                     
                     setTimeout(function() {
                         window.location.href = '/dashboard';
-                    }, 1000);
+                    }, 800);
                 } else {
                     mostrarMensaje(data.error || 'Credenciales incorrectas', 'error');
                     loaderOverlay.style.display = 'none';
@@ -279,14 +298,12 @@
             }, 4000);
         }
         
-        // Enter key submit
         document.getElementById('Contrasena').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 loginForm.dispatchEvent(new Event('submit'));
             }
         });
 
-        // Alternar ver / ocultar contraseña
         const togglePasswordBtn = document.getElementById('togglePasswordBtn');
         const contrasenaInput = document.getElementById('Contrasena');
         const togglePasswordIcon = document.getElementById('togglePasswordIcon');

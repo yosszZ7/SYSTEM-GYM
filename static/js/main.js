@@ -152,18 +152,18 @@ const CONFIG = {
     MAX_NOTIFICATIONS: 50,
     MAX_RECENT_ACTIVITY: 10,
     PAGINATION_LIMIT: 15,
-    CHART_COLORS: ['#F28C28', '#FA9E4E', '#FCB87A', '#FCD0A6', '#FCE3CC', '#FFF0DF', '#FFF7ED', '#FFE8D6'],
+    CHART_COLORS: ['#F58220', '#F79340', '#FAAB6B', '#FCC396', '#FDDAC0', '#FEECE0', '#FFF3E8', '#FFE4CC'],
     MONTHS: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
     DAYS: ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
     STATUS_COLORS: {
-        success: '#10b981',
-        error: '#ef4444',
-        warning: '#f59e0b',
-        info: '#4a8cf7',
-        primary: '#F28C28',
-        secondary: '#6b7280',
-        dark: '#1f2937',
-        light: '#f3f4f6'
+        success: '#12B76A',
+        error: '#F04438',
+        warning: '#F79009',
+        info: '#F58220',
+        primary: '#F58220',
+        secondary: '#7B8491',
+        dark: '#252B36',
+        light: '#F7F8FA'
     },
     STATUS_ICONS: {
         success: 'fa-check-circle',
@@ -491,7 +491,7 @@ function initLoadingOverlay() {
         overlay.id = 'loadingOverlay';
         overlay.className = 'loading-overlay';
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,22,40,0.7);z-index:99998;display:none;justify-content:center;align-items:center;backdrop-filter:blur(4px);';
-        overlay.innerHTML = '<div style="text-align:center;"><div class="spinner" style="width:40px;height:40px;border:4px solid #1a2a4a;border-top-color:#4a8cf7;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div><p style="color:white;margin-top:15px;font-weight:500;">Cargando...</p><small style="color:rgba(255,255,255,0.5);">Por favor espera</small></div>';
+        overlay.innerHTML = '<div style="text-align:center;"><div class="spinner" style="width:40px;height:40px;border:4px solid #1a2a4a;border-top-color:#F58220;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div><p style="color:white;margin-top:15px;font-weight:500;">Cargando...</p><small style="color:rgba(255,255,255,0.5);">Por favor espera</small></div>';
         document.body.appendChild(overlay);
     }
 }
@@ -1896,7 +1896,7 @@ function actualizarElementosUsuario() {
                 var initial = nombre.charAt(0).toUpperCase();
                 if (!el.querySelector('i')) {
                     el.textContent = initial;
-                    el.style.backgroundColor = '#F28C28';
+                    el.style.backgroundColor = '#F58220';
                     el.style.color = 'white';
                     el.style.display = 'flex';
                     el.style.alignItems = 'center';
@@ -1923,6 +1923,7 @@ function initSidebar() {
     var sidebar = document.querySelector('.sidebar');
     var sidebarToggle = document.getElementById('sidebarToggle');
     var mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    var sidebarBackdrop = document.getElementById('sidebarBackdrop');
     
     if (!sidebar) return;
     
@@ -1938,10 +1939,23 @@ function initSidebar() {
         });
     }
     
+    function closeMobileSidebar() {
+        sidebar.classList.remove('mobile-open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+    }
+
     if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('mobile-open');
+        mobileMenuToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = sidebar.classList.toggle('mobile-open');
+            if (sidebarBackdrop) {
+                sidebarBackdrop.classList.toggle('active', isOpen);
+            }
         });
+    }
+
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', closeMobileSidebar);
     }
     
     if (localStorage.getItem('sidebarCollapsed') === 'true') {
@@ -1985,18 +1999,18 @@ function initSidebar() {
         }
     });
     
-    document.querySelectorAll('.nav-link, .submenu a').forEach(function(link) {
+    document.querySelectorAll('.nav-link:not(.dropdown-trigger), .submenu a').forEach(function(link) {
         link.addEventListener('click', function() {
             if (window.innerWidth <= 768) {
-                sidebar.classList.remove('mobile-open');
+                closeMobileSidebar();
             }
         });
     });
     
     document.addEventListener('click', function(e) {
         if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
-            if (!sidebar.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
-                sidebar.classList.remove('mobile-open');
+            if (!sidebar.contains(e.target) && (!mobileMenuToggle || !mobileMenuToggle.contains(e.target))) {
+                closeMobileSidebar();
             }
         }
     });
@@ -2004,7 +2018,7 @@ function initSidebar() {
     var currentPath = window.location.pathname;
     document.querySelectorAll('.nav-link').forEach(function(link) {
         var href = link.getAttribute('href');
-        if (href && (currentPath === href || currentPath.startsWith(href + '/'))) {
+        if (href && href !== '#' && (currentPath === href || currentPath.startsWith(href + '/'))) {
             link.classList.add('active');
         }
     });
@@ -2016,8 +2030,6 @@ function initDarkMode() {
     if (!themeToggle) return;
     
     var savedTheme = localStorage.getItem('theme') || 'light';
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
     var initialTheme = savedTheme === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', initialTheme);
     
@@ -2032,16 +2044,23 @@ function initDarkMode() {
         html.setAttribute('data-theme', newTheme);
         
         var icon = themeToggle.querySelector('i');
-        icon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        if (icon) {
+            icon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        }
         
         localStorage.setItem('theme', newTheme);
         mostrarToast('Modo ' + (newTheme === 'dark' ? 'oscuro' : 'claro') + ' activado', 'info');
         
         aplicarColoresIconos(newTheme);
         
-        Object.values(charts).forEach(function(chart) {
-            if (chart && chart.update) chart.update();
-        });
+        if (document.getElementById('ingresosChart')) {
+            graficosCargados = false;
+            cargarGraficos();
+        } else {
+            Object.values(charts).forEach(function(chart) {
+                if (chart && chart.update) chart.update();
+            });
+        }
         
         themeChangeListeners.forEach(function(listener) {
             listener(newTheme);
@@ -2050,31 +2069,9 @@ function initDarkMode() {
 }
 
 function aplicarColoresIconos(theme) {
-    var isDark = theme === 'dark';
-    var iconColor = isDark ? '#e0e7f0' : '#8B6F5A';
-    var primaryColor = isDark ? '#FFA048' : '#F28C28';
-    
-    document.querySelectorAll('.fas, .far, .fal, .fab').forEach(function(icon) {
-        if (!icon.closest('.btn') && !icon.closest('.stat-icon') && !icon.closest('.input-group-text')) {
-            icon.style.color = iconColor;
-            icon.style.transition = 'color 0.3s ease';
-        }
-    });
-    
-    document.querySelectorAll('.btn .fas, .btn .far, .btn .fal, .btn .fab').forEach(function(icon) {
-        icon.style.color = 'inherit';
-    });
-    
-    document.querySelectorAll('.stat-icon i').forEach(function(icon) {
-        icon.style.color = primaryColor;
-    });
-    
-    document.querySelectorAll('.page-header h1 i, .card-header h2 i, .table-title i').forEach(function(icon) {
-        icon.style.color = primaryColor;
-    });
-    
-    document.querySelectorAll('.badge i').forEach(function(icon) {
-        icon.style.color = 'inherit';
+    // Permitir que el sistema de diseño CSS controle la jerarquía visual de iconos (#F58220 y #7B8491)
+    document.querySelectorAll('.stat-icon i, .page-header h1 i, .card-header h2 i, .card-header h3 i, .table-title i').forEach(function(icon) {
+        icon.style.color = '#F58220';
     });
 }
 
@@ -2108,7 +2105,7 @@ function initNotifications() {
             e.stopPropagation();
             marcarTodasLeidas();
             panel.classList.remove('open');
-            mostrarToast('Todas las notificaciones marcadas como leidas', 'success');
+            mostrarToast('Notificaciones marcadas como leídas', 'success');
         });
     }
     
@@ -2126,7 +2123,7 @@ async function cargarNotificaciones() {
         
         if (!list) return;
         
-        var unread = data.filter(function(n) { return !n.leido; }).length;
+        var unread = (data || []).filter(function(n) { return !n.leido; }).length;
         notificationCount = unread;
         
         if (badge) {
@@ -2134,14 +2131,20 @@ async function cargarNotificaciones() {
             badge.style.display = unread > 0 ? 'flex' : 'none';
         }
         
-        if (data.length === 0) {
-            list.innerHTML = '<div style="padding:30px 20px;text-align:center;color:#94a3b8;"><i class="fas fa-bell-slash" style="font-size:24px;"></i><p style="margin-top:8px;">No hay notificaciones</p></div>';
+        if (!data || data.length === 0) {
+            list.innerHTML = '<div class="empty-state" style="padding:24px 16px;"><i class="fas fa-bell-slash" style="font-size:1.5rem;margin-bottom:6px;"></i><p style="font-size:12.5px;">No hay notificaciones nuevas</p></div>';
             return;
         }
         
         var recent = data.slice(0, CONFIG.MAX_NOTIFICATIONS);
         list.innerHTML = recent.map(function(n) {
-            return '<div class="notification-item ' + (n.leido ? '' : 'unread') + '" style="padding:12px 15px;border-bottom:1px solid var(--border-color);display:flex;gap:12px;align-items:flex-start;cursor:pointer;"><i class="fas ' + (n.icono || 'fa-bell') + '" style="margin-top:3px;color:#4a8cf7;"></i><div style="flex:1;"><p style="margin:0;font-size:0.9rem;">' + (n.mensaje || 'Notificacion') + '</p><small style="color:var(--text-muted);font-size:0.75rem;">' + (n.hace || 'Reciente') + '</small></div></div>';
+            return '<div class="notification-item ' + (n.leido ? '' : 'unread') + '">' +
+                '<i class="fas ' + (n.icono || 'fa-bell') + '"></i>' +
+                '<div style="flex:1;min-width:0;">' +
+                    '<p style="margin:0;font-size:13px;font-weight:500;color:var(--text);">' + (n.mensaje || 'Notificación') + '</p>' +
+                    '<small style="color:var(--text-secondary);font-size:11.5px;">' + (n.hace || 'Reciente') + '</small>' +
+                '</div>' +
+            '</div>';
         }).join('');
         
     } catch (error) {
@@ -2415,6 +2418,32 @@ async function cargarDatosPagina() {
 }
 
 // ========== DASHBOARD ==========
+function actualizarTendenciaTarjeta(elementId, variacion, textoAlternativo) {
+    var el = document.getElementById(elementId);
+    if (!el) return;
+    if (variacion !== null && variacion !== undefined && !isNaN(variacion)) {
+        var num = Number(variacion);
+        el.style.display = 'inline-flex';
+        if (num > 0) {
+            el.className = 'stat-trend positive';
+            el.innerHTML = '<i class="fas fa-arrow-up"></i> +' + num + '% vs mes anterior';
+        } else if (num < 0) {
+            el.className = 'stat-trend negative';
+            el.innerHTML = '<i class="fas fa-arrow-down"></i> ' + num + '% vs mes anterior';
+        } else {
+            el.className = 'stat-trend neutral';
+            el.innerHTML = '<i class="fas fa-minus"></i> 0% vs mes anterior';
+        }
+    } else if (textoAlternativo) {
+        el.style.display = 'inline-flex';
+        el.className = 'stat-trend neutral';
+        el.textContent = textoAlternativo;
+    } else {
+        el.style.display = 'none';
+        el.innerHTML = '';
+    }
+}
+
 async function cargarDashboard() {
     mostrarLoading(true);
     
@@ -2423,11 +2452,12 @@ async function cargarDashboard() {
         if (!response.ok) throw new Error('Error en la respuesta');
         var stats = await response.json();
         
+        var montoVentasMes = (stats.ventas_mes_monto !== undefined) ? stats.ventas_mes_monto : (stats.ventas_mes || 0);
         var statElements = {
             'totalClientes': stats.total_clientes || 0,
             'totalEmpleados': stats.total_empleados || 0,
             'totalProductos': stats.total_productos || 0,
-            'ventasMes': stats.ventas_mes || 0,
+            'ventasMes': montoVentasMes,
             'membresiasActivas': stats.membresias_activas || 0,
             'totalEjercicios': stats.total_ejercicios || 0,
             'totalCompras': stats.total_compras || 0,
@@ -2439,26 +2469,38 @@ async function cargarDashboard() {
         Object.entries(statElements).forEach(function([id, value]) {
             var el = document.getElementById(id);
             if (el) {
-                if (id === 'ventasMes' || id === 'ventasHoy' || id === 'ingresosTotales') {
-                    el.innerHTML = 'C$' + Number(value).toLocaleString();
+                if (id === 'ventasMes' || id === 'ingresosTotales') {
+                    el.innerHTML = 'C$' + Number(value).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 } else {
-                    el.innerText = Number(value).toLocaleString();
+                    el.innerText = Number(value).toLocaleString('es-NI');
                 }
             }
         });
+
+        // Mostrar variaciones porcentuales únicamente cuando existen datos reales de comparación
+        actualizarTendenciaTarjeta(
+            'trendClientes',
+            stats.variacion_clientes,
+            stats.clientes_nuevos > 0 ? (stats.clientes_nuevos + ' nuevos este mes') : null
+        );
+        actualizarTendenciaTarjeta(
+            'trendVentas',
+            stats.variacion_ventas_mes,
+            stats.ventas_mes_cantidad > 0 ? (stats.ventas_mes_cantidad + ' ventas este mes') : null
+        );
         
         document.querySelectorAll('.stat-number').forEach(function(el) {
             el.classList.add('fade-in-up');
             setTimeout(function() {
                 el.classList.remove('fade-in-up');
-            }, 500);
+            }, 350);
         });
         
     } catch (error) {
         console.error('Error cargando dashboard:', error);
         document.querySelectorAll('.stat-number').forEach(function(el) {
-            if (el.id === 'ventasMes' || el.id === 'ventasHoy' || el.id === 'ingresosTotales') {
-                el.innerHTML = '$0';
+            if (el.id === 'ventasMes' || el.id === 'ingresosTotales') {
+                el.innerHTML = 'C$0.00';
             } else {
                 el.innerText = '0';
             }
@@ -2468,129 +2510,203 @@ async function cargarDashboard() {
     }
 }
 
-// ========== GRAFICOS ==========
+// ========== GRAFICOS CON DATOS REALES ==========
+function parseFechaVentaJS(fechaStr) {
+    if (!fechaStr) return null;
+    var s = String(fechaStr).trim();
+    var partesSlash = s.split(' ')[0].split('/');
+    if (partesSlash.length === 3) {
+        var d = parseInt(partesSlash[0], 10);
+        var m = parseInt(partesSlash[1], 10) - 1;
+        var y = parseInt(partesSlash[2], 10);
+        var dt = new Date(y, m, d);
+        if (!isNaN(dt.getTime())) return dt;
+    }
+    var dtIso = new Date(s);
+    if (!isNaN(dtIso.getTime())) return dtIso;
+    return null;
+}
+
 async function cargarGraficos() {
-    console.log('Cargando graficos...');
-    
-    if (graficosCargados && Object.keys(charts).length > 0) {
-        console.log('Los graficos ya estan cargados, omitiendo...');
+    var ingresosCanvas = document.getElementById('ingresosChart');
+    var periodoSelect = document.getElementById('ventasPeriodoSelect');
+
+    if (periodoSelect && !periodoSelect._listenerAttached) {
+        periodoSelect._listenerAttached = true;
+        periodoSelect.addEventListener('change', function() {
+            graficosCargados = false;
+            cargarGraficos();
+        });
+    }
+
+    if (!ingresosCanvas || typeof Chart === 'undefined') {
         return;
     }
-    
-    var ingresosCanvas = document.getElementById('ingresosChart');
-    var ventasCanvas = document.getElementById('ventasChart');
-    
-    if (ingresosCanvas && typeof Chart !== 'undefined') {
-        if (charts.ingresos) {
-            charts.ingresos.destroy();
-            charts.ingresos = null;
-        }
-        
-        try {
-            var ctx = ingresosCanvas.getContext('2d');
-            var gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(242, 140, 40, 0.3)');
-            gradient.addColorStop(1, 'rgba(242, 140, 40, 0.02)');
-            
-            charts.ingresos = new Chart(ingresosCanvas, {
-                type: 'line',
-                data: {
-                    labels: CONFIG.MONTHS,
-                    datasets: [{
-                        label: 'Ingresos',
-                        data: [12000, 15000, 18000, 22000, 25000, 28000, 30000, 32000, 29000, 35000, 38000, 42000],
-                        borderColor: '#F28C28',
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#F28C28',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    return 'C$' + ctx.raw.toLocaleString();
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: { callback: function(value) {
-                                return 'C$' + value.toLocaleString();
-                            } }
-                        },
-                        x: { grid: { display: false } }
+
+    if (charts.ingresos) {
+        charts.ingresos.destroy();
+        charts.ingresos = null;
+    }
+
+    var periodo = periodoSelect ? periodoSelect.value : 'meses';
+    var labels = [];
+    var valores = [];
+
+    try {
+        var resVentas = await fetch('/api/ventas/listar');
+        var ventas = resVentas.ok ? await resVentas.json() : [];
+        if (!Array.isArray(ventas)) ventas = [];
+
+        var ahora = new Date();
+
+        if (periodo === '7dias') {
+            var diasNombres = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            var mapaDias = {};
+            for (var i = 6; i >= 0; i--) {
+                var fechaDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - i);
+                var clave = fechaDia.getFullYear() + '-' + (fechaDia.getMonth() + 1) + '-' + fechaDia.getDate();
+                var etiqueta = diasNombres[fechaDia.getDay()] + ' ' + fechaDia.getDate();
+                labels.push(etiqueta);
+                mapaDias[clave] = 0;
+            }
+            ventas.forEach(function(v) {
+                var dt = parseFechaVentaJS(v.FechaVenta || v.fechaVenta);
+                if (dt) {
+                    var c = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+                    if (Object.prototype.hasOwnProperty.call(mapaDias, c)) {
+                        mapaDias[c] += parseFloat(v.Total || v.total || 0) || 0;
                     }
                 }
             });
-            console.log('Grafico de ingresos creado');
-        } catch (error) {
-            console.error('Error en grafico de ingresos:', error);
-        }
-    }
-    
-    if (ventasCanvas && typeof Chart !== 'undefined') {
-        if (charts.ventas) {
-            charts.ventas.destroy();
-            charts.ventas = null;
-        }
-        
-        try {
-            charts.ventas = new Chart(ventasCanvas, {
-                type: 'bar',
-                data: {
-                    labels: ['Proteina', 'Creatina', 'BCAA', 'Pre-entreno', 'Vitaminas', 'Otros'],
-                    datasets: [{
-                        label: 'Unidades Vendidas',
-                        data: [120, 85, 60, 45, 30, 25],
-                        backgroundColor: CONFIG.CHART_COLORS,
-                        borderRadius: 8,
-                        barPercentage: 0.7
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ctx.raw + ' unidades';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: { stepSize: 1 }
-                        },
-                        x: { grid: { display: false } }
+            valores = Object.values(mapaDias);
+        } else {
+            // Últimos 6 meses a partir de ventas reales y/o reporte de ingresos mensuales
+            var mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            var mapaMeses = {};
+            var ordenClaves = [];
+
+            for (var mIdx = 5; mIdx >= 0; mIdx--) {
+                var dMes = new Date(ahora.getFullYear(), ahora.getMonth() - mIdx, 1);
+                var kMes = dMes.getFullYear() + '-' + (dMes.getMonth() + 1);
+                ordenClaves.push(kMes);
+                labels.push(mesesCortos[dMes.getMonth()] + ' ' + String(dMes.getFullYear()).slice(-2));
+                mapaMeses[kMes] = 0;
+            }
+
+            ventas.forEach(function(v) {
+                var dt = parseFechaVentaJS(v.FechaVenta || v.fechaVenta);
+                if (dt) {
+                    var k = dt.getFullYear() + '-' + (dt.getMonth() + 1);
+                    if (Object.prototype.hasOwnProperty.call(mapaMeses, k)) {
+                        mapaMeses[k] += parseFloat(v.Total || v.total || 0) || 0;
                     }
                 }
             });
-            console.log('Grafico de ventas creado');
-        } catch (error) {
-            console.error('Error en grafico de ventas:', error);
+
+            // Si no hubo ventas en esos meses pero el reporte de ingresos mensuales tiene registros, respaldar con datos reales
+            var sumaVentas = Object.values(mapaMeses).reduce(function(a, b) { return a + b; }, 0);
+            if (sumaVentas === 0) {
+                var resIngresos = await fetch('/api/reportes/ingresos');
+                var repIngresos = resIngresos.ok ? await resIngresos.json() : [];
+                if (Array.isArray(repIngresos) && repIngresos.length > 0) {
+                    repIngresos.forEach(function(item) {
+                        var anio = item.Anio || item.anio;
+                        var mes = item.Mes || item.mes;
+                        var k = anio + '-' + mes;
+                        if (Object.prototype.hasOwnProperty.call(mapaMeses, k)) {
+                            mapaMeses[k] = parseFloat(item.TotalIngresos || item.total || 0) || 0;
+                        }
+                    });
+                }
+            }
+
+            valores = ordenClaves.map(function(k) {
+                return Math.round((mapaMeses[k] || 0) * 100) / 100;
+            });
         }
+    } catch (err) {
+        console.error('Error obteniendo datos reales para el gráfico de ventas:', err);
+        labels = ['Sin datos'];
+        valores = [0];
     }
-    
+
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var textColor = isDark ? '#94A3B8' : '#7B8491';
+    var gridColor = isDark ? 'rgba(148, 163, 184, 0.1)' : '#F0F2F5';
+
+    try {
+        var ctx = ingresosCanvas.getContext('2d');
+        var gradient = ctx.createLinearGradient(0, 0, 0, 250);
+        gradient.addColorStop(0, 'rgba(245, 130, 32, 0.22)');
+        gradient.addColorStop(1, 'rgba(245, 130, 32, 0.01)');
+
+        charts.ingresos = new Chart(ingresosCanvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ventas',
+                    data: valores,
+                    borderColor: '#F58220',
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#F58220',
+                    pointBorderColor: isDark ? '#171E29' : '#FFFFFF',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: isDark ? '#1F2837' : '#252B36',
+                        titleColor: '#FFFFFF',
+                        bodyColor: '#FFFFFF',
+                        padding: 10,
+                        cornerRadius: 6,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(ctx) {
+                                return 'C$' + Number(ctx.raw || 0).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        border: { display: false },
+                        grid: { color: gridColor, drawBorder: false },
+                        ticks: {
+                            color: textColor,
+                            font: { family: "'Inter', sans-serif", size: 11 },
+                            callback: function(value) {
+                                return 'C$' + Number(value).toLocaleString('es-NI');
+                            }
+                        }
+                    },
+                    x: {
+                        border: { display: false },
+                        grid: { display: false },
+                        ticks: {
+                            color: textColor,
+                            font: { family: "'Inter', sans-serif", size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creando gráfico de resumen de ventas:', error);
+    }
+
     graficosCargados = true;
-    console.log('Graficos cargados correctamente');
 }
 
 // ========== ACTIVIDAD RECIENTE ==========
@@ -2603,18 +2719,36 @@ async function cargarActividadReciente() {
         var data = await response.json();
         
         if (!data || data.length === 0) {
-            container.innerHTML = '<div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-clock" style="font-size:32px;"></i><p style="margin-top:8px;">No hay actividad reciente</p><small>Las actividades apareceran aqui</small></div>';
+            container.innerHTML = '<div class="empty-state" style="padding:32px 16px;">' +
+                '<i class="fas fa-inbox" style="font-size:1.75rem;margin-bottom:8px;"></i>' +
+                '<h3>Sin movimientos recientes</h3>' +
+                '<p>Los registros de clientes, ventas y membresías aparecerán aquí.</p>' +
+            '</div>';
             return;
         }
         
-        var recent = data.slice(0, CONFIG.MAX_RECENT_ACTIVITY);
+        var recent = data.slice(0, 6);
         container.innerHTML = recent.map(function(item) {
-            return '<div style="display:flex;align-items:center;gap:12px;padding:10px 15px;border-bottom:1px solid var(--border-color);"><div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#4a8cf720;color:#4a8cf7;"><i class="fas ' + (item.icono || 'fa-circle') + '"></i></div><div style="flex:1;"><p style="margin:0;font-size:0.9rem;">' + (item.descripcion || 'Actividad registrada') + '</p><span style="color:var(--text-muted);font-size:0.75rem;"><i class="far fa-clock"></i> ' + (item.hace || 'Reciente') + '</span></div>' + (item.monto ? '<strong style="color:#10b981;">+$' + Number(item.monto).toLocaleString() + '</strong>' : '') + '</div>';
+            var montoHtml = '';
+            if (item.monto !== '' && item.monto !== null && item.monto !== undefined && Number(item.monto) > 0) {
+                montoHtml = '<div class="activity-amount">C$' + Number(item.monto).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div>';
+            }
+            return '<div class="activity-item">' +
+                '<div class="activity-icon"><i class="fas ' + (item.icono || 'fa-circle-check') + '"></i></div>' +
+                '<div class="activity-details">' +
+                    '<p>' + (item.descripcion || 'Movimiento registrado') + '</p>' +
+                    '<span><i class="far fa-clock"></i> ' + (item.hace || 'Reciente') + '</span>' +
+                '</div>' +
+                montoHtml +
+            '</div>';
         }).join('');
         
     } catch (error) {
         console.error('Error cargando actividad:', error);
-        container.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:10px 15px;border-bottom:1px solid var(--border-color);"><div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#ef444420;color:#ef4444;"><i class="fas fa-exclamation-circle"></i></div><div style="flex:1;"><p style="margin:0;font-size:0.9rem;">Error al cargar actividad</p><span style="color:var(--text-muted);font-size:0.75rem;">Intente nuevamente</span></div></div>';
+        container.innerHTML = '<div class="empty-state" style="padding:32px 16px;">' +
+            '<i class="fas fa-clock" style="font-size:1.5rem;margin-bottom:8px;"></i>' +
+            '<p>No se pudo cargar la actividad reciente en este momento.</p>' +
+        '</div>';
     }
 }
 
@@ -2636,9 +2770,9 @@ async function cargarEstadisticasRapidas() {
                 var el = document.getElementById(id);
                 if (el) {
                     if (id === 'ingresosHoy') {
-                        el.innerHTML = 'C$' + Number(value).toLocaleString();
+                        el.innerHTML = 'C$' + Number(value).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     } else {
-                        el.innerText = Number(value).toLocaleString();
+                        el.innerText = Number(value).toLocaleString('es-NI');
                     }
                 }
             });
@@ -2654,14 +2788,20 @@ function cargarQuickActions() {
     if (!container) return;
     
     var acciones = [
-        { url: '/cliente_registrar', icono: 'fa-user-plus', texto: 'Registrar Cliente', desc: 'Nuevo cliente en el sistema', color: '#F28C28' },
-        { url: '/venta_registrar', icono: 'fa-cart-plus', texto: 'Nueva Venta', desc: 'Registrar una venta', color: '#10b981' },
-        { url: '/ejercicio_registrar', icono: 'fa-dumbbell', texto: 'Nuevo Ejercicio', desc: 'Agregar ejercicio', color: '#f59e0b' },
-        { url: '/empleado_registrar', icono: 'fa-user-tie', texto: 'Nuevo Empleado', desc: 'Registrar empleado', color: '#8b5cf6' }
+        { url: '/cliente_registrar', icono: 'fa-user-plus', texto: 'Registrar Cliente', desc: 'Nuevo cliente en el sistema' },
+        { url: '/venta_registrar', icono: 'fa-cart-plus', texto: 'Nueva Venta', desc: 'Registrar una venta' },
+        { url: '/ejercicio_registrar', icono: 'fa-dumbbell', texto: 'Nuevo Ejercicio', desc: 'Agregar ejercicio' },
+        { url: '/empleado_registrar', icono: 'fa-user-tie', texto: 'Nuevo Empleado', desc: 'Registrar empleado' }
     ];
     
     container.innerHTML = acciones.map(function(a) {
-        return '<a href="' + a.url + '" style="display:flex;align-items:center;gap:12px;padding:12px 15px;background:var(--bg-secondary);border-radius:8px;text-decoration:none;color:var(--text);border-top:3px solid ' + a.color + ';transition:all 0.2s;"><div style="width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:' + a.color + '20;color:' + a.color + ';"><i class="fas ' + a.icono + '"></i></div><div><strong>' + a.texto + '</strong><p style="margin:0;font-size:0.8rem;color:var(--text-muted);">' + a.desc + '</p></div></a>';
+        return '<a href="' + a.url + '" class="action-card">' +
+            '<div class="action-icon"><i class="fas ' + a.icono + '"></i></div>' +
+            '<div class="action-info">' +
+                '<h4>' + a.texto + '</h4>' +
+                '<p>' + a.desc + '</p>' +
+            '</div>' +
+        '</a>';
     }).join('');
 }
 
@@ -2680,7 +2820,7 @@ async function cargarClientes() {
         var clientes = await response.json();
         
         if (!clientes || clientes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-users" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay clientes registrados</p><a href="/cliente_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-user-plus"></i> Registrar Cliente</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-users" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay clientes registrados</p><a href="/cliente_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-user-plus"></i> Registrar Cliente</a></div></td></tr>';
         } else {
             tbody.innerHTML = clientes.map(function(c) {
                 return '<tr>' +
@@ -2721,7 +2861,7 @@ async function cargarEmpleados() {
         var empleados = await response.json();
         
         if (!empleados || empleados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-user-tie" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay empleados registrados</p><a href="/empleado_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-user-plus"></i> Registrar Empleado</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-user-tie" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay empleados registrados</p><a href="/empleado_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-user-plus"></i> Registrar Empleado</a></div></td></tr>';
         } else {
             tbody.innerHTML = empleados.map(function(e) {
                 return '<tr>' +
@@ -2764,7 +2904,7 @@ async function cargarProductos() {
         var productos = await response.json();
         
         if (!productos || productos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-box" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay productos registrados</p><a href="/producto_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Producto</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-box" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay productos registrados</p><a href="/producto_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Producto</a></div></td></tr>';
         } else {
             tbody.innerHTML = productos.map(function(p) {
                 var stock = p.Stock || p.stock || 0;
@@ -2793,7 +2933,7 @@ async function cargarEjercicios() {
         var ejercicios = await response.json();
         
         if (!ejercicios || ejercicios.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-dumbbell" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay ejercicios registrados</p><a href="/ejercicio_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Ejercicio</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-dumbbell" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay ejercicios registrados</p><a href="/ejercicio_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Ejercicio</a></div></td></tr>';
         } else {
             tbody.innerHTML = ejercicios.map(function(e) {
                 var videoHtml = e.VideoUrl ? '<a href="' + e.VideoUrl + '" target="_blank" class="btn-view"><i class="fas fa-play"></i> Ver</a>' : '-';
@@ -2821,7 +2961,7 @@ async function cargarVentas() {
         var ventas = await response.json();
         
         if (!ventas || ventas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-shopping-cart" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay ventas registradas</p><a href="/venta_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-cart-plus"></i> Registrar Venta</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-shopping-cart" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay ventas registradas</p><a href="/venta_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-cart-plus"></i> Registrar Venta</a></div></td></tr>';
         } else {
             tbody.innerHTML = ventas.map(function(v) {
                 // Como no hay columna Estado en la tabla Ventas, consideramos todas las registradas como 'Completada'
@@ -2854,7 +2994,7 @@ async function cargarCompras() {
         var compras = await response.json();
         
         if (!compras || compras.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-truck" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay compras registradas</p><a href="/compra_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Compra</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-truck" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay compras registradas</p><a href="/compra_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Compra</a></div></td></tr>';
         } else {
             tbody.innerHTML = compras.map(function(c) {
                 // Determine style and text dynamically based on DB values
@@ -2940,7 +3080,7 @@ async function cargarUsuarios() {
             }
             
             if (!filtered || filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-users-cog" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay usuarios ' + (showInactive ? '' : 'activos ') + 'registrados</p><a href="/usuario_crear" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-user-plus"></i> Crear Usuario</a></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-users-cog" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay usuarios ' + (showInactive ? '' : 'activos ') + 'registrados</p><a href="/usuario_crear" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-user-plus"></i> Crear Usuario</a></div></td></tr>';
             } else {
                 tbody.innerHTML = filtered.map(function(u) {
                     var estaActivo = u.Estado === true || u.Estado === 1 || u.estado === 1;
@@ -3020,9 +3160,9 @@ async function cargarMembresias() {
             container.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-id-card" style="font-size:48px;display:block;margin-bottom:16px;"></i><p style="margin-top:16px;">No hay membresias disponibles</p><small>Comunicate con el administrador</small></div>';
         } else {
             container.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;">' + membresias.map(function(m, index) {
-                var popularHtml = m.popular ? '<div style="position:absolute;top:-10px;right:20px;background:#4a8cf7;color:white;padding:4px 12px;border-radius:20px;font-size:0.7rem;font-weight:600;"><i class="fas fa-star"></i> POPULAR</div>' : '';
-                var borderStyle = m.popular ? 'border-color:#4a8cf7;position:relative;' : '';
-                return '<div style="background:var(--card-bg);border-radius:12px;padding:1.5rem;border:1px solid var(--border-color);text-align:center;transition:all 0.3s ease;' + borderStyle + '">' + popularHtml + '<div style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#4a8cf720;color:#4a8cf7;margin:0 auto 12px;font-size:1.5rem;"><i class="fas fa-id-card"></i></div><h4 style="margin:0;font-size:1.1rem;font-weight:600;color:var(--text);">' + (m.NombreMembresia || m.nombre || 'Membresia') + '</h4><div style="font-size:2rem;font-weight:700;color:var(--text);margin:8px 0;">$' + (m.Precio || m.precio || 0).toLocaleString() + '<span style="font-size:0.9rem;font-weight:400;color:var(--text-muted);">/mes</span></div><ul style="list-style:none;padding:0;margin:12px 0;text-align:left;"><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> Acceso 24/7</li><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> Area de pesas</li><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> Clases grupales</li><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> ' + (m.duracion || 'Mensual') + '</li></ul><button onclick="seleccionarMembresia(' + (m.IdMembresia || m.id) + ')" style="width:100%;padding:10px;background:#4a8cf7;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.2s;"><i class="fas fa-check"></i> Seleccionar</button></div>';
+                var popularHtml = m.popular ? '<div style="position:absolute;top:-10px;right:20px;background:#F58220;color:white;padding:4px 12px;border-radius:20px;font-size:0.7rem;font-weight:600;"><i class="fas fa-star"></i> POPULAR</div>' : '';
+                var borderStyle = m.popular ? 'border-color:#F58220;position:relative;' : '';
+                return '<div style="background:var(--card-bg);border-radius:12px;padding:1.5rem;border:1px solid var(--border-color);text-align:center;transition:all 0.3s ease;' + borderStyle + '">' + popularHtml + '<div style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#F5822020;color:#F58220;margin:0 auto 12px;font-size:1.5rem;"><i class="fas fa-id-card"></i></div><h4 style="margin:0;font-size:1.1rem;font-weight:600;color:var(--text);">' + (m.NombreMembresia || m.nombre || 'Membresia') + '</h4><div style="font-size:2rem;font-weight:700;color:var(--text);margin:8px 0;">$' + (m.Precio || m.precio || 0).toLocaleString() + '<span style="font-size:0.9rem;font-weight:400;color:var(--text-muted);">/mes</span></div><ul style="list-style:none;padding:0;margin:12px 0;text-align:left;"><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> Acceso 24/7</li><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> Area de pesas</li><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> Clases grupales</li><li style="padding:4px 0;color:var(--text);"><i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i> ' + (m.duracion || 'Mensual') + '</li></ul><button onclick="seleccionarMembresia(' + (m.IdMembresia || m.id) + ')" style="width:100%;padding:10px;background:#F58220;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:all 0.2s;"><i class="fas fa-check"></i> Seleccionar</button></div>';
             }).join('') + '</div>';
         }
     } catch (error) {
@@ -3073,7 +3213,7 @@ async function cargarInventario() {
         var inventario = await response.json();
         
         if (!inventario || inventario.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-warehouse" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay productos en inventario</p><a href="/producto_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#4a8cf7;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Producto</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-warehouse" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay productos en inventario</p><a href="/producto_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Producto</a></div></td></tr>';
         } else {
             tbody.innerHTML = inventario.map(function(i) {
                 var stock = i.Stock || i.stock || 0;
@@ -3121,7 +3261,7 @@ async function cargarReporteIngresos() {
                     tfoot = document.createElement('tfoot');
                     table.appendChild(tfoot);
                 }
-                tfoot.innerHTML = '<tr style="font-weight:bold;background:var(--bg-tertiary);"><td colspan="2" style="text-align:right;padding:12px 20px;">TOTAL GENERAL</td><td style="padding:12px 20px;color:#4a8cf7;">$' + totalGeneral.toLocaleString() + '</td></tr>';
+                tfoot.innerHTML = '<tr style="font-weight:bold;background:var(--bg-tertiary);"><td colspan="2" style="text-align:right;padding:12px 20px;">TOTAL GENERAL</td><td style="padding:12px 20px;color:#F58220;">$' + totalGeneral.toLocaleString() + '</td></tr>';
             }
         }
     } catch (error) {
@@ -3164,7 +3304,7 @@ async function cargarReporteVentasProducto() {
                     tfoot = document.createElement('tfoot');
                     table.appendChild(tfoot);
                 }
-                tfoot.innerHTML = '<tr style="font-weight:bold;background:var(--bg-tertiary);"><td colspan="2" style="padding:12px 20px;">TOTALES</td><td style="padding:12px 20px;">' + totalVendido + ' unidades</td><td style="padding:12px 20px;color:#4a8cf7;">$' + totalIngresos.toLocaleString() + '</td></tr>';
+                tfoot.innerHTML = '<tr style="font-weight:bold;background:var(--bg-tertiary);"><td colspan="2" style="padding:12px 20px;">TOTALES</td><td style="padding:12px 20px;">' + totalVendido + ' unidades</td><td style="padding:12px 20px;color:#F58220;">$' + totalIngresos.toLocaleString() + '</td></tr>';
             }
         }
     } catch (error) {
@@ -3685,10 +3825,10 @@ function mostrarToast(mensaje, tipo) {
         success: '#10b981',
         error: '#ef4444',
         warning: '#f59e0b',
-        info: '#4a8cf7'
+        info: '#F58220'
     };
-    toast.style.cssText = 'background:var(--bg-secondary);color:var(--text);padding:12px 16px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-left:4px solid ' + (colores[tipo] || '#4a8cf7') + ';display:flex;align-items:center;gap:12px;pointer-events:auto;animation:slideIn 0.3s ease;border:1px solid var(--border-color);min-width:250px;max-width:350px;';
-    toast.innerHTML = '<i class="fas ' + (iconos[tipo] || iconos.info) + '" style="color:' + (colores[tipo] || '#4a8cf7') + ';font-size:18px;"></i><span style="flex:1;font-size:0.9rem;">' + mensaje + '</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;">&times;</button>';
+    toast.style.cssText = 'background:var(--bg-secondary);color:var(--text);padding:12px 16px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-left:4px solid ' + (colores[tipo] || '#F58220') + ';display:flex;align-items:center;gap:12px;pointer-events:auto;animation:slideIn 0.3s ease;border:1px solid var(--border-color);min-width:250px;max-width:350px;';
+    toast.innerHTML = '<i class="fas ' + (iconos[tipo] || iconos.info) + '" style="color:' + (colores[tipo] || '#F58220') + ';font-size:18px;"></i><span style="flex:1;font-size:0.9rem;">' + mensaje + '</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;">&times;</button>';
     container.appendChild(toast);
     
     if (toastTimeout) clearTimeout(toastTimeout);

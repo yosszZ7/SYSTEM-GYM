@@ -33,7 +33,7 @@
         <button class="tab-btn" id="btn-tab-pagos" onclick="switchProfileTab(this, 'tab-pagos')" style="padding: 10px 20px; border: none; background: none; color: var(--text-secondary); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1rem; transition: all 0.3s ease;">
             <i class="fas fa-receipt"></i> Historial de Pagos
             {% if pagos_cliente and pagos_cliente|length > 0 %}
-            <span class="badge" style="margin-left: 6px; background: rgba(242, 140, 40, 0.15); color: var(--primary); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">{{ pagos_cliente|length }}</span>
+            <span class="badge" style="margin-left: 6px; background: rgba(245, 130, 32, 0.15); color: var(--primary); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">{{ pagos_cliente|length }}</span>
             {% endif %}
         </button>
     </div>
@@ -90,7 +90,7 @@
                 </div>
                 <div class="card-body">
                     {% if membresia %}
-                        <div style="background: var(--bg-primary); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(74, 55, 40, 0.03);">
+                        <div style="background: var(--bg-primary); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(16, 24, 40, 0.03);">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                                 <div>
                                     <h4 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text);">{{ membresia.NombreMembresia }}</h4>
@@ -291,7 +291,7 @@
 
     <!-- PESTAÑA 4: HISTORIAL DE PAGOS DEL CLIENTE -->
     <div id="tab-pagos" class="tab-content" style="display: none;">
-        <div class="card" style="border-radius: 14px; border: 1px solid var(--border-color); overflow: hidden; background: var(--bg-primary); box-shadow: 0 4px 15px rgba(74, 55, 40, 0.04);">
+        <div class="card" style="border-radius: 14px; border: 1px solid var(--border-color); overflow: hidden; background: var(--bg-primary); box-shadow: 0 4px 15px rgba(16, 24, 40, 0.04);">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <h3 style="margin: 0; font-size: 1.2rem; color: var(--text); font-weight: 700; display: flex; align-items: center; gap: 8px;">
@@ -329,7 +329,7 @@
                         </div>
                     </div>
 
-                    <div style="padding: 14px 18px; border-radius: 10px; background: rgba(242, 140, 40, 0.08); border: 1px solid rgba(242, 140, 40, 0.25); display: flex; align-items: center; gap: 12px;">
+                    <div style="padding: 14px 18px; border-radius: 10px; background: rgba(245, 130, 32, 0.08); border: 1px solid rgba(245, 130, 32, 0.25); display: flex; align-items: center; gap: 12px;">
                         <div style="width: 42px; height: 42px; border-radius: 10px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px;">
                             <i class="fas fa-file-invoice"></i>
                         </div>
@@ -374,7 +374,7 @@
                             {% for p in pagos_cliente %}
                             <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s ease;">
                                 <td style="text-align: center; padding: 10px 10px; font-size: 13px;">
-                                    <span class="badge" style="background: rgba(242, 140, 40, 0.12); color: var(--primary); font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+                                    <span class="badge" style="background: rgba(245, 130, 32, 0.12); color: var(--primary); font-weight: 700; padding: 3px 8px; border-radius: 6px;">
                                         #REC-{{ "%05d"|format(p.IdPagos) }}
                                     </span>
                                 </td>
@@ -1107,15 +1107,15 @@
 
 <!-- MODAL DE RECIBO DIGITAL OFICIAL WORLD GYM -->
 <div id="modalReciboOverlay" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99999;">
-    <div class="custom-modal-box" style="max-width: 580px; width: 95%; padding: 0; border-radius: 18px; overflow: hidden; text-align: left; background: #FFFFFF; border: 1px solid var(--border-color, #EFE6DC); box-shadow: 0 25px 50px -12px rgba(45, 31, 22, 0.35);">
+    <div class="custom-modal-box" style="max-width: 580px; width: 95%; padding: 0; border-radius: 18px; overflow: hidden; text-align: left; background: #FFFFFF; border: 1px solid var(--border-color, #E8EBEF); box-shadow: 0 25px 50px -12px rgba(45, 31, 22, 0.35);">
         
         <!-- Header del Modal -->
-        <div style="background: var(--bg-secondary, #FAF1E6); padding: 15px 22px; border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: var(--bg-secondary, #F7F8FA); padding: 15px 22px; border-bottom: 1px solid var(--border-color, #E8EBEF); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-file-invoice" style="color: var(--primary, #F28C28); font-size: 1.2rem;"></i>
-                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text, #4A3728); font-weight: 700;">Comprobante Oficial de Pago</h3>
+                <i class="fas fa-file-invoice" style="color: var(--primary, #F58220); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text, #252B36); font-weight: 700;">Comprobante Oficial de Pago</h3>
             </div>
-            <button type="button" onclick="cerrarReciboModal()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #8B6F5A); cursor: pointer; padding: 4px;" title="Cerrar">
+            <button type="button" onclick="cerrarReciboModal()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #7B8491); cursor: pointer; padding: 4px;" title="Cerrar">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -1126,15 +1126,15 @@
             <!-- Encabezado de la Empresa -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px dashed #E5E7EB; padding-bottom: 18px; margin-bottom: 18px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #F28C28;">
+                    <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #F58220;">
                     <div>
-                        <h2 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #4A3728; letter-spacing: -0.5px;">WORLD <span style="color: #F28C28;">GYM</span></h2>
-                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #8B6F5A;">Sistema de Gestión Fitness & Salud</p>
+                        <h2 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #252B36; letter-spacing: -0.5px;">WORLD <span style="color: #F58220;">GYM</span></h2>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #7B8491;">Sistema de Gestión Fitness & Salud</p>
                         <p style="margin: 1px 0 0 0; font-size: 0.75rem; color: #9CA3AF;">RUC: J0310000000001 | Tel: +505 8888-9999</p>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div id="reciboNumero" style="font-size: 1.1rem; font-weight: 800; color: #F28C28;">#REC-00000</div>
+                    <div id="reciboNumero" style="font-size: 1.1rem; font-weight: 800; color: #F58220;">#REC-00000</div>
                     <div style="margin-top: 4px;">
                         <span class="badge" style="background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;">
                             PAGADO
@@ -1189,7 +1189,7 @@
                 </div>
                 <div style="text-align: right;">
                     <div style="font-size: 0.8rem; color: #6B7280; text-transform: uppercase; font-weight: 600;">Total Cancelado</div>
-                    <div style="font-size: 1.6rem; font-weight: 900; color: #F28C28;" id="reciboTotalFinal">C$ 0.00</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #F58220;" id="reciboTotalFinal">C$ 0.00</div>
                 </div>
             </div>
 
@@ -1201,7 +1201,7 @@
         </div>
 
         <!-- Footer con Acciones -->
-        <div style="background: var(--bg-secondary, #FAF1E6); padding: 14px 22px; border-top: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: flex-end; gap: 10px;">
+        <div style="background: var(--bg-secondary, #F7F8FA); padding: 14px 22px; border-top: 1px solid var(--border-color, #E8EBEF); display: flex; justify-content: flex-end; gap: 10px;">
             <button type="button" onclick="cerrarReciboModal()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;">
                 Cerrar
             </button>
@@ -1214,7 +1214,7 @@
 
 <!-- MODAL PARA REGISTRAR COBRO Y ASIGNAR MEMBRESÍA -->
 <div id="modalAsignarMembresia" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99998;">
-    <div class="custom-modal-box" style="max-width: 520px; width: 95%; padding: 0; border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(74, 55, 40, 0.25);">
+    <div class="custom-modal-box" style="max-width: 520px; width: 95%; padding: 0; border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(16, 24, 40, 0.25);">
         <div style="background: var(--bg-secondary); padding: 16px 22px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-id-card" style="color: var(--primary); font-size: 1.2rem;"></i>

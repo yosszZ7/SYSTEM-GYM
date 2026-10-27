@@ -8,10 +8,10 @@
     <!-- ENCABEZADO DE PÁGINA -->
     <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
         <div class="page-header-left">
-            <h1 style="margin: 0; font-size: 1.6rem; color: var(--text, #4A3728); display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-file-invoice-dollar" style="color: var(--primary, #F28C28);"></i> Pagos a Empleados (Nómina)
+            <h1 style="margin: 0; font-size: 1.6rem; color: var(--text, #252B36); display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-file-invoice-dollar" style="color: var(--primary, #F58220);"></i> Pagos a Empleados (Nómina)
             </h1>
-            <p style="margin: 5px 0 0 0; color: var(--text-secondary, #8B6F5A); font-size: 0.95rem;">
+            <p style="margin: 5px 0 0 0; color: var(--text-secondary, #7B8491); font-size: 0.95rem;">
                 Auditoría salarial, registro de remuneraciones y emisión de comprobantes de pago de colaboradores
             </p>
         </div>
@@ -28,12 +28,12 @@
     <!-- TARJETAS DE ESTADÍSTICAS / KPI DE NÓMINA -->
     <div class="kpis-pantalla" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 22px;">
         <!-- KPI 1: Total Pagado en Nómina -->
-        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); background: var(--bg-primary, #FFFFFF); box-shadow: 0 4px 12px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 16px;">
             <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
                 <i class="fas fa-hand-holding-usd"></i>
             </div>
             <div>
-                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Total Nómina Pagada</span>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #7B8491); letter-spacing: 0.5px;">Total Nómina Pagada</span>
                 <div style="font-size: 1.55rem; font-weight: 800; color: #10B981; margin-top: 2px;">
                     C$ {{ "%.2f"|format(stats.total_nomina) }}
                 </div>
@@ -41,68 +41,68 @@
         </div>
 
         <!-- KPI 2: Nómina del Mes Actual -->
-        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
-            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(242, 140, 40, 0.12); color: var(--primary, #F28C28); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); background: var(--bg-primary, #FFFFFF); box-shadow: 0 4px 12px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(245, 130, 32, 0.12); color: var(--primary, #F58220); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
                 <i class="fas fa-calendar-check"></i>
             </div>
             <div>
-                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Nómina Mes Actual</span>
-                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #7B8491); letter-spacing: 0.5px;">Nómina Mes Actual</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #252B36); margin-top: 2px;">
                     C$ {{ "%.2f"|format(stats.total_mes) }}
                 </div>
-                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">{{ stats.pagos_mes_count }} desembolso{{ 's' if stats.pagos_mes_count != 1 else '' }}</small>
+                <small style="color: var(--text-secondary, #7B8491); font-size: 0.8rem;">{{ stats.pagos_mes_count }} desembolso{{ 's' if stats.pagos_mes_count != 1 else '' }}</small>
             </div>
         </div>
 
         <!-- KPI 3: Total Transacciones -->
-        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); background: var(--bg-primary, #FFFFFF); box-shadow: 0 4px 12px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 16px;">
             <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(59, 130, 246, 0.12); color: #3B82F6; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
                 <i class="fas fa-file-signature"></i>
             </div>
             <div>
-                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Comprobantes Emitidos</span>
-                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #7B8491); letter-spacing: 0.5px;">Comprobantes Emitidos</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #252B36); margin-top: 2px;">
                     {{ stats.total_pagos }}
                 </div>
-                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">Liquidaciones registradas</small>
+                <small style="color: var(--text-secondary, #7B8491); font-size: 0.8rem;">Liquidaciones registradas</small>
             </div>
         </div>
 
         <!-- KPI 4: Pago Promedio -->
-        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 4px 12px rgba(74, 55, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); background: var(--bg-primary, #FFFFFF); box-shadow: 0 4px 12px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 16px;">
             <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
                 <i class="fas fa-chart-pie"></i>
             </div>
             <div>
-                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #8B6F5A); letter-spacing: 0.5px;">Pago Promedio</span>
-                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #4A3728); margin-top: 2px;">
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #7B8491); letter-spacing: 0.5px;">Pago Promedio</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: var(--text, #252B36); margin-top: 2px;">
                     C$ {{ "%.2f"|format(stats.salario_promedio) }}
                 </div>
-                <small style="color: var(--text-secondary, #8B6F5A); font-size: 0.8rem;">Top método: {{ stats.metodo_top }}</small>
+                <small style="color: var(--text-secondary, #7B8491); font-size: 0.8rem;">Top método: {{ stats.metodo_top }}</small>
             </div>
         </div>
     </div>
 
     <!-- TARJETAS DE BÚSQUEDA Y FILTROS -->
-    <div class="card card-filtros-impresion" id="cardFiltrosPagosEmpleados" style="margin-bottom: 20px; border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); background: var(--bg-primary, #FFFDF9); box-shadow: 0 2px 8px rgba(74, 55, 40, 0.04);">
+    <div class="card card-filtros-impresion" id="cardFiltrosPagosEmpleados" style="margin-bottom: 20px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); background: var(--bg-primary, #FFFFFF); box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);">
         <div class="card-body" style="padding: 16px 20px;">
             <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.2fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
                 <!-- Buscador de texto -->
                 <div class="form-group" style="margin: 0;">
-                    <label for="buscarPagos" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                    <label for="buscarPagos" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #7B8491); display: block; margin-bottom: 5px;">
                         <i class="fas fa-search"></i> Buscar Empleado o Cargo
                     </label>
                     <input type="text" id="buscarPagos" placeholder="Nombre, apellido o cargo..." onkeyup="filtrarTablaPagosEmpleados()"
-                           style="width: 100%; height: 40px; padding: 8px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none;">
+                           style="width: 100%; height: 40px; padding: 8px 14px; border: 1.5px solid var(--border-color, #E8EBEF); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #252B36); font-size: 13.5px; outline: none;">
                 </div>
 
                 <!-- Filtro por Empleado -->
                 <div class="form-group" style="margin: 0;">
-                    <label for="filtroEmpleado" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                    <label for="filtroEmpleado" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #7B8491); display: block; margin-bottom: 5px;">
                         <i class="fas fa-user-tie"></i> Empleado
                     </label>
                     <select id="filtroEmpleado" onchange="filtrarTablaPagosEmpleados()"
-                            style="width: 100%; height: 40px; padding: 8px 12px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none;">
+                            style="width: 100%; height: 40px; padding: 8px 12px; border: 1.5px solid var(--border-color, #E8EBEF); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #252B36); font-size: 13.5px; outline: none;">
                         <option value="">Todos los empleados</option>
                         {% for emp in empleados %}
                             <option value="{{ emp.PrimerNombre|lower }} {{ emp.PrimerApellido|lower }}">{{ emp.PrimerNombre }} {{ emp.PrimerApellido }} ({{ emp.NombreCargo }})</option>
@@ -112,11 +112,11 @@
 
                 <!-- Filtro Método de Pago -->
                 <div class="form-group" style="margin: 0;">
-                    <label for="filtroMetodo" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                    <label for="filtroMetodo" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #7B8491); display: block; margin-bottom: 5px;">
                         <i class="fas fa-credit-card"></i> Método
                     </label>
                     <select id="filtroMetodo" onchange="filtrarTablaPagosEmpleados()"
-                            style="width: 100%; height: 40px; padding: 8px 12px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13.5px; outline: none;">
+                            style="width: 100%; height: 40px; padding: 8px 12px; border: 1.5px solid var(--border-color, #E8EBEF); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #252B36); font-size: 13.5px; outline: none;">
                         <option value="">Todos los métodos</option>
                         {% for mp in metodos_pago %}
                             <option value="{{ mp.NombreMetodo|lower }}">{{ mp.NombreMetodo }}</option>
@@ -126,20 +126,20 @@
 
                 <!-- Fecha Desde -->
                 <div class="form-group" style="margin: 0;">
-                    <label for="fechaDesde" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                    <label for="fechaDesde" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #7B8491); display: block; margin-bottom: 5px;">
                         <i class="fas fa-calendar-alt"></i> Desde
                     </label>
                     <input type="date" id="fechaDesde" onchange="filtrarTablaPagosEmpleados()"
-                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13px; outline: none;">
+                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #E8EBEF); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #252B36); font-size: 13px; outline: none;">
                 </div>
 
                 <!-- Fecha Hasta -->
                 <div class="form-group" style="margin: 0;">
-                    <label for="fechaHasta" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #8B6F5A); display: block; margin-bottom: 5px;">
+                    <label for="fechaHasta" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #7B8491); display: block; margin-bottom: 5px;">
                         <i class="fas fa-calendar-alt"></i> Hasta
                     </label>
                     <input type="date" id="fechaHasta" onchange="filtrarTablaPagosEmpleados()"
-                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #4A3728); font-size: 13px; outline: none;">
+                           style="width: 100%; height: 40px; padding: 8px 10px; border: 1.5px solid var(--border-color, #E8EBEF); border-radius: 8px; background: var(--bg-secondary, #FFFFFF); color: var(--text, #252B36); font-size: 13px; outline: none;">
                 </div>
 
                 <!-- Botón Limpiar -->
@@ -155,14 +155,14 @@
 
     <!-- ENCABEZADO EXCLUSIVO PARA IMPRESIÓN DE REPORTE -->
     <div id="encabezadoReporteImpresion" class="encabezado-impresion-reporte" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #F28C28; padding-bottom: 12px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #F58220; padding-bottom: 12px; margin-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 14px;">
-                <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid #F28C28;">
+                <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 2px solid #F58220;">
                 <div>
-                    <h1 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #4A3728; letter-spacing: -0.5px;">
-                        WORLD <span style="color: #F28C28;">GYM</span>
+                    <h1 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #252B36; letter-spacing: -0.5px;">
+                        WORLD <span style="color: #F58220;">GYM</span>
                     </h1>
-                    <div style="font-size: 0.88rem; font-weight: 700; color: #4A3728; margin-top: 2px;">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #252B36; margin-top: 2px;">
                         REPORTE OFICIAL DE PAGOS A EMPLEADOS (NÓMINA)
                     </div>
                     <div style="font-size: 0.75rem; color: #6B7280; margin-top: 2px;">
@@ -185,7 +185,7 @@
             </div>
             <div>
                 <span style="font-size: 0.7rem; text-transform: uppercase; color: #6B7280; font-weight: 700; display: block;">Nómina Mes Actual</span>
-                <span style="font-size: 1.05rem; font-weight: 800; color: #F28C28;">C$ {{ "%.2f"|format(stats.total_mes) }}</span>
+                <span style="font-size: 1.05rem; font-weight: 800; color: #F58220;">C$ {{ "%.2f"|format(stats.total_mes) }}</span>
             </div>
             <div>
                 <span style="font-size: 0.7rem; text-transform: uppercase; color: #6B7280; font-weight: 700; display: block;">Comprobantes Emitidos</span>
@@ -199,17 +199,17 @@
     </div>
 
     <!-- TARJETA PRINCIPAL: TABLA DE PAGOS DE EMPLEADOS -->
-    <div class="card card-tabla-reporte" id="cardTablaPagosEmpleados" style="border-radius: 14px; border: 1px solid var(--border-color, #EFE6DC); overflow: hidden; box-shadow: 0 4px 15px rgba(74, 55, 40, 0.04);">
-        <div class="card-header card-header-reporte" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-color, #EFE6DC); background: var(--bg-secondary, #FAF1E6);">
+    <div class="card card-tabla-reporte" id="cardTablaPagosEmpleados" style="border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); overflow: hidden; box-shadow: 0 4px 15px rgba(16, 24, 40, 0.04);">
+        <div class="card-header card-header-reporte" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-color, #E8EBEF); background: var(--bg-secondary, #F7F8FA);">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <h2 style="margin: 0; font-size: 1.15rem; color: var(--text, #4A3728); font-weight: 700;">
-                    <i class="fas fa-list-check" style="color: var(--primary, #F28C28);"></i> Desembolsos y Comprobantes de Nómina
+                <h2 style="margin: 0; font-size: 1.15rem; color: var(--text, #252B36); font-weight: 700;">
+                    <i class="fas fa-list-check" style="color: var(--primary, #F58220);"></i> Desembolsos y Comprobantes de Nómina
                 </h2>
                 <span id="badgeConteoPagosEmp" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
                     {{ pagos|length }} registro{{ 's' if pagos|length != 1 else '' }}
                 </span>
             </div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary, #8B6F5A);">
+            <div style="font-size: 0.85rem; color: var(--text-secondary, #7B8491);">
                 Moneda oficial: <strong>Córdobas (C$)</strong>
             </div>
         </div>
@@ -218,7 +218,7 @@
             <div class="table-container" style="overflow-x: auto; width: 100%;">
                 <table class="data-table" id="tablaPagosEmpleados" style="width: 100%; margin: 0; border-collapse: collapse;">
                     <thead>
-                        <tr style="background: var(--bg-secondary, #FAF1E6); border-bottom: 2px solid var(--border-color, #EFE6DC);">
+                        <tr style="background: var(--bg-secondary, #F7F8FA); border-bottom: 2px solid var(--border-color, #E8EBEF);">
                             <th style="width: 90px; text-align: center; padding: 12px 10px; font-size: 12px;"># COMPROBANTE</th>
                             <th style="width: 140px; text-align: center; padding: 12px 10px; font-size: 12px;">FECHA Y HORA</th>
                             <th style="padding: 12px 15px; font-size: 12px;">COLABORADOR</th>
@@ -236,31 +236,31 @@
                             data-cargo="{{ (p.NombreCargo or '')|lower }}"
                             data-metodo="{{ (p.NombreMetodo or '')|lower }}"
                             data-fecha="{{ p.FechaPago.strftime('%Y-%m-%d') if p.FechaPago else '' }}"
-                            style="border-bottom: 1px solid var(--border-color, #EFE6DC); transition: background 0.15s ease;">
+                            style="border-bottom: 1px solid var(--border-color, #E8EBEF); transition: background 0.15s ease;">
                             
                             <!-- No Comprobante -->
                             <td style="text-align: center; padding: 10px 10px; font-size: 13px;">
-                                <span class="badge" style="background: rgba(242, 140, 40, 0.12); color: var(--primary, #F28C28); font-weight: 700; padding: 3px 8px; border-radius: 6px;">
+                                <span class="badge" style="background: rgba(245, 130, 32, 0.12); color: var(--primary, #F58220); font-weight: 700; padding: 3px 8px; border-radius: 6px;">
                                     #NOM-{{ "%05d"|format(p.IdPagoEmpleado) }}
                                 </span>
                             </td>
 
                             <!-- Fecha y Hora -->
-                            <td style="text-align: center; padding: 10px 10px; font-size: 12.5px; color: var(--text-secondary, #8B6F5A); white-space: nowrap;">
+                            <td style="text-align: center; padding: 10px 10px; font-size: 12.5px; color: var(--text-secondary, #7B8491); white-space: nowrap;">
                                 {{ p.FechaPago.strftime('%d/%m/%Y %H:%M') if p.FechaPago else '—' }}
                             </td>
 
                             <!-- Empleado -->
                             <td style="padding: 10px 15px; font-size: 13.5px;">
                                 <div style="display: flex; align-items: center; gap: 9px;">
-                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: rgba(242, 140, 40, 0.15); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--primary, #F28C28); font-weight: 700;">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: rgba(245, 130, 32, 0.15); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--primary, #F58220); font-weight: 700;">
                                         <i class="fas fa-user-tie"></i>
                                     </div>
                                     <div>
-                                        <div style="font-weight: 700; color: var(--text, #4A3728);">
+                                        <div style="font-weight: 700; color: var(--text, #252B36);">
                                             {{ p.NombreEmpleado or (p.PrimerNombre ~ ' ' ~ p.PrimerApellido) }}
                                         </div>
-                                        <small style="color: var(--text-secondary, #8B6F5A); font-size: 11.5px;">
+                                        <small style="color: var(--text-secondary, #7B8491); font-size: 11.5px;">
                                             Tel: {{ p.Telefono or '—' }}
                                         </small>
                                     </div>
@@ -269,13 +269,13 @@
 
                             <!-- Cargo -->
                             <td style="padding: 10px 15px; font-size: 13px;">
-                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 3px 10px; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F58220); border: 1px solid var(--primary-light, #FCE3CC); padding: 3px 10px; border-radius: 8px; font-weight: 600; font-size: 12px;">
                                     {{ p.NombreCargo or 'Colaborador' }}
                                 </span>
                             </td>
 
                             <!-- Salario Base -->
-                            <td style="text-align: right; padding: 10px 15px; font-size: 13px; color: var(--text-secondary, #8B6F5A); white-space: nowrap;">
+                            <td style="text-align: right; padding: 10px 15px; font-size: 13px; color: var(--text-secondary, #7B8491); white-space: nowrap;">
                                 C$ {{ "%.2f"|format(p.SalarioBase|float if p.SalarioBase else 0) }}
                             </td>
 
@@ -314,16 +314,16 @@
                             <td class="columna-acciones" style="text-align: center; padding: 10px 10px;">
                                 <button type="button" onclick="abrirComprobanteEmpleado({{ p.IdPagoEmpleado }})" class="btn btn-secondary btn-sm" title="Ver e imprimir comprobante oficial de nómina"
                                         style="padding: 6px 10px; font-size: 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;">
-                                    <i class="fas fa-file-invoice" style="color: var(--primary, #F28C28);"></i>
+                                    <i class="fas fa-file-invoice" style="color: var(--primary, #F58220);"></i>
                                     <span>Recibo</span>
                                 </button>
                             </td>
                         </tr>
                         {% else %}
                         <tr id="filaSinPagosEmp">
-                            <td colspan="8" style="text-align: center; padding: 50px 20px; color: var(--text-secondary, #8B6F5A);">
-                                <i class="fas fa-file-invoice-dollar" style="font-size: 48px; color: var(--border-color, #EFE6DC); margin-bottom: 15px; display: block;"></i>
-                                <h3 style="margin: 0 0 5px 0; color: var(--text, #4A3728); font-size: 1.15rem;">No hay pagos de nómina registrados</h3>
+                            <td colspan="8" style="text-align: center; padding: 50px 20px; color: var(--text-secondary, #7B8491);">
+                                <i class="fas fa-file-invoice-dollar" style="font-size: 48px; color: var(--border-color, #E8EBEF); margin-bottom: 15px; display: block;"></i>
+                                <h3 style="margin: 0 0 5px 0; color: var(--text, #252B36); font-size: 1.15rem;">No hay pagos de nómina registrados</h3>
                                 <p style="margin: 0 0 16px 0; font-size: 0.95rem;">Los salarios y desembolsos registrados a empleados aparecerán automáticamente aquí.</p>
                                 <button type="button" onclick="abrirModalNuevoPagoEmpleado()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
                                     <i class="fas fa-plus-circle"></i> Registrar Primer Pago
@@ -354,13 +354,13 @@
 <!-- MODAL PARA REGISTRAR PAGO A EMPLEADO                          -->
 <!-- ============================================================== -->
 <div id="modalNuevoPagoEmpleado" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99998;">
-    <div class="custom-modal-box" style="max-width: 520px; width: 95%; padding: 0; border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border-color, #EFE6DC); box-shadow: 0 25px 50px rgba(74, 55, 40, 0.25);">
-        <div style="background: var(--bg-secondary, #FAF1E6); padding: 16px 22px; border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: space-between; align-items: center;">
+    <div class="custom-modal-box" style="max-width: 520px; width: 95%; padding: 0; border-radius: 16px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border-color, #E8EBEF); box-shadow: 0 25px 50px rgba(16, 24, 40, 0.25);">
+        <div style="background: var(--bg-secondary, #F7F8FA); padding: 16px 22px; border-bottom: 1px solid var(--border-color, #E8EBEF); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-money-bill-wave" style="color: var(--primary, #F28C28); font-size: 1.2rem;"></i>
-                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text, #4A3728); font-weight: 700;">Registrar Pago a Empleado</h3>
+                <i class="fas fa-money-bill-wave" style="color: var(--primary, #F58220); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.15rem; color: var(--text, #252B36); font-weight: 700;">Registrar Pago a Empleado</h3>
             </div>
-            <button type="button" onclick="cerrarModalNuevoPagoEmpleado()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #8B6F5A); cursor: pointer; padding: 4px;" title="Cerrar">
+            <button type="button" onclick="cerrarModalNuevoPagoEmpleado()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #7B8491); cursor: pointer; padding: 4px;" title="Cerrar">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -368,11 +368,11 @@
         <form method="POST" action="/empleado_pago" style="margin: 0; padding: 22px;">
             <!-- Select Empleado -->
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="empIdEmpleado" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #4A3728); display: block; margin-bottom: 6px;">
-                    <i class="fas fa-user-tie" style="color: var(--primary, #F28C28); margin-right: 4px;"></i> Colaborador / Empleado <span class="required" style="color: red;">*</span>
+                <label for="empIdEmpleado" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #252B36); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-user-tie" style="color: var(--primary, #F58220); margin-right: 4px;"></i> Colaborador / Empleado <span class="required" style="color: red;">*</span>
                 </label>
                 <select id="empIdEmpleado" name="IdEmpleado" required onchange="autollenarSalarioEmpleado(this)"
-                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary, #FFFDF9); border: 1.5px solid var(--border-color, #EFE6DC); color: var(--text, #4A3728); font-size: 14px; outline: none;">
+                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary, #FFFFFF); border: 1.5px solid var(--border-color, #E8EBEF); color: var(--text, #252B36); font-size: 14px; outline: none;">
                     <option value="">Seleccionar colaborador...</option>
                     {% for emp in empleados %}
                         <option value="{{ emp.IdEmpleado }}" data-salario="{{ emp.Salario }}">
@@ -380,18 +380,18 @@
                         </option>
                     {% endfor %}
                 </select>
-                <small id="txtSalarioSugerido" style="color: var(--text-secondary, #8B6F5A); font-size: 12px; margin-top: 4px; display: block;">
+                <small id="txtSalarioSugerido" style="color: var(--text-secondary, #7B8491); font-size: 12px; margin-top: 4px; display: block;">
                     Seleccione un colaborador para cargar su salario base registrado.
                 </small>
             </div>
 
             <!-- Select Método de Pago -->
             <div class="form-group" style="margin-bottom: 16px;">
-                <label for="empIdMetodoPago" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #4A3728); display: block; margin-bottom: 6px;">
-                    <i class="fas fa-credit-card" style="color: var(--primary, #F28C28); margin-right: 4px;"></i> Método de Pago <span class="required" style="color: red;">*</span>
+                <label for="empIdMetodoPago" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #252B36); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-credit-card" style="color: var(--primary, #F58220); margin-right: 4px;"></i> Método de Pago <span class="required" style="color: red;">*</span>
                 </label>
                 <select id="empIdMetodoPago" name="IdMetodoPago" required
-                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary, #FFFDF9); border: 1.5px solid var(--border-color, #EFE6DC); color: var(--text, #4A3728); font-size: 14px; outline: none;">
+                        style="width: 100%; height: 42px; padding: 8px 12px; border-radius: 8px; background: var(--bg-primary, #FFFFFF); border: 1.5px solid var(--border-color, #E8EBEF); color: var(--text, #252B36); font-size: 14px; outline: none;">
                     <option value="">Seleccionar método...</option>
                     {% for mp in metodos_pago %}
                         <option value="{{ mp.IdMetodoPago }}">{{ mp.NombreMetodo }}</option>
@@ -401,14 +401,14 @@
 
             <!-- Input Monto -->
             <div class="form-group" style="margin-bottom: 22px;">
-                <label for="empMonto" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #4A3728); display: block; margin-bottom: 6px;">
-                    <i class="fas fa-coins" style="color: var(--primary, #F28C28); margin-right: 4px;"></i> Monto Desembolsado (C$) <span class="required" style="color: red;">*</span>
+                <label for="empMonto" style="font-size: 0.88rem; font-weight: 600; color: var(--text, #252B36); display: block; margin-bottom: 6px;">
+                    <i class="fas fa-coins" style="color: var(--primary, #F58220); margin-right: 4px;"></i> Monto Desembolsado (C$) <span class="required" style="color: red;">*</span>
                 </label>
                 <input type="number" id="empMonto" name="Monto" step="0.01" min="0.01" required placeholder="0.00"
-                       style="width: 100%; height: 42px; padding: 8px 14px; border-radius: 8px; background: var(--bg-primary, #FFFDF9); border: 1.5px solid var(--border-color, #EFE6DC); color: var(--text, #4A3728); font-size: 15px; font-weight: 700; outline: none;">
+                       style="width: 100%; height: 42px; padding: 8px 14px; border-radius: 8px; background: var(--bg-primary, #FFFFFF); border: 1.5px solid var(--border-color, #E8EBEF); color: var(--text, #252B36); font-size: 15px; font-weight: 700; outline: none;">
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color, #EFE6DC); padding-top: 18px;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color, #E8EBEF); padding-top: 18px;">
                 <button type="button" onclick="cerrarModalNuevoPagoEmpleado()" class="btn btn-secondary" style="padding: 10px 18px; font-size: 14px;">
                     Cancelar
                 </button>
@@ -424,15 +424,15 @@
 <!-- MODAL DE COMPROBANTE OFICIAL DE NÓMINA / SALARIO              -->
 <!-- ============================================================== -->
 <div id="modalComprobanteEmpleado" class="custom-modal-overlay" style="display: none; align-items: center; justify-content: center; z-index: 99999;">
-    <div class="custom-modal-box" style="max-width: 600px; width: 95%; padding: 0; border-radius: 18px; overflow: hidden; text-align: left; background: #FFFFFF; border: 1px solid var(--border-color, #EFE6DC); box-shadow: 0 25px 50px -12px rgba(45, 31, 22, 0.35);">
+    <div class="custom-modal-box" style="max-width: 600px; width: 95%; padding: 0; border-radius: 18px; overflow: hidden; text-align: left; background: #FFFFFF; border: 1px solid var(--border-color, #E8EBEF); box-shadow: 0 25px 50px -12px rgba(45, 31, 22, 0.35);">
         
         <!-- Header del Modal -->
-        <div style="background: var(--bg-secondary, #FAF1E6); padding: 15px 22px; border-bottom: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: var(--bg-secondary, #F7F8FA); padding: 15px 22px; border-bottom: 1px solid var(--border-color, #E8EBEF); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-file-invoice-dollar" style="color: var(--primary, #F28C28); font-size: 1.2rem;"></i>
-                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text, #4A3728); font-weight: 700;">Comprobante Oficial de Salario / Nómina</h3>
+                <i class="fas fa-file-invoice-dollar" style="color: var(--primary, #F58220); font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text, #252B36); font-weight: 700;">Comprobante Oficial de Salario / Nómina</h3>
             </div>
-            <button type="button" onclick="cerrarComprobanteEmpleado()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #8B6F5A); cursor: pointer; padding: 4px;" title="Cerrar">
+            <button type="button" onclick="cerrarComprobanteEmpleado()" style="background: none; border: none; font-size: 1.3rem; color: var(--text-secondary, #7B8491); cursor: pointer; padding: 4px;" title="Cerrar">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -443,15 +443,15 @@
             <!-- Encabezado de la Empresa -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px dashed #E5E7EB; padding-bottom: 18px; margin-bottom: 18px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #F28C28;">
+                    <img src="/static/image/logo.jpeg" alt="World Gym" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #F58220;">
                     <div>
-                        <h2 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #4A3728; letter-spacing: -0.5px;">WORLD <span style="color: #F28C28;">GYM</span></h2>
-                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #8B6F5A;">Administración de Recursos Humanos & Nómina</p>
+                        <h2 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #252B36; letter-spacing: -0.5px;">WORLD <span style="color: #F58220;">GYM</span></h2>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: #7B8491;">Administración de Recursos Humanos & Nómina</p>
                         <p style="margin: 1px 0 0 0; font-size: 0.75rem; color: #9CA3AF;">RUC: J0310000000001 | Tel: +505 8888-9999</p>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <div id="comprobanteNumero" style="font-size: 1.1rem; font-weight: 800; color: #F28C28;">#NOM-00000</div>
+                    <div id="comprobanteNumero" style="font-size: 1.1rem; font-weight: 800; color: #F58220;">#NOM-00000</div>
                     <div style="margin-top: 4px;">
                         <span class="badge" style="background: #D1FAE5; color: #065F46; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;">
                             PAGADO / LIQUIDADO
@@ -467,7 +467,7 @@
                 <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px;">
                     <div>
                         <div style="font-size: 0.95rem; font-weight: 700; color: #1F2937;" id="comprobanteEmpleadoNombre">Empleado Nombre</div>
-                        <div style="font-size: 0.8rem; color: #4B5563;">Cargo: <strong id="comprobanteEmpleadoCargo" style="color: #F28C28;">Entrenador</strong></div>
+                        <div style="font-size: 0.8rem; color: #4B5563;">Cargo: <strong id="comprobanteEmpleadoCargo" style="color: #F58220;">Entrenador</strong></div>
                         <div style="font-size: 0.8rem; color: #6B7280;" id="comprobanteEmpleadoCorreo">correo@ejemplo.com</div>
                     </div>
                     <div style="text-align: right;">
@@ -508,7 +508,7 @@
                 </div>
                 <div style="text-align: right;">
                     <div style="font-size: 0.8rem; color: #6B7280; text-transform: uppercase; font-weight: 600;">Total Cancelado</div>
-                    <div style="font-size: 1.6rem; font-weight: 900; color: #F28C28;" id="comprobanteTotalFinal">C$ 0.00</div>
+                    <div style="font-size: 1.6rem; font-weight: 900; color: #F58220;" id="comprobanteTotalFinal">C$ 0.00</div>
                 </div>
             </div>
 
@@ -535,7 +535,7 @@
         </div>
 
         <!-- Footer con Acciones -->
-        <div style="background: var(--bg-secondary, #FAF1E6); padding: 14px 22px; border-top: 1px solid var(--border-color, #EFE6DC); display: flex; justify-content: flex-end; gap: 10px;">
+        <div style="background: var(--bg-secondary, #F7F8FA); padding: 14px 22px; border-top: 1px solid var(--border-color, #E8EBEF); display: flex; justify-content: flex-end; gap: 10px;">
             <button type="button" onclick="cerrarComprobanteEmpleado()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;">
                 Cerrar
             </button>
@@ -551,7 +551,7 @@
 <!-- ============================================================== -->
 <style>
     .fila-pago-emp:hover {
-        background: rgba(242, 140, 40, 0.04) !important;
+        background: rgba(245, 130, 32, 0.04) !important;
     }
 
     /* ============================================================== */
@@ -801,7 +801,7 @@
         } else {
             if (txtSal) {
                 txtSal.textContent = 'Seleccione un colaborador para cargar su salario base registrado.';
-                txtSal.style.color = 'var(--text-secondary, #8B6F5A)';
+                txtSal.style.color = 'var(--text-secondary, #7B8491)';
             }
         }
     }

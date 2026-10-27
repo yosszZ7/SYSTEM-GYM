@@ -16,15 +16,15 @@
     </div>
 
     <!-- TARJETA DE BÚSQUEDA COMPACTA Y DELGADA -->
-    <div class="card" style="margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(74, 55, 40, 0.05);">
+    <div class="card" style="margin-bottom: 1rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(16, 24, 40, 0.05);">
         <div class="card-body" style="padding: 10px 16px;">
             <div class="search-box" style="max-width: 580px; margin: 0 auto;">
                 <div class="search-input-group" style="display: flex; gap: 8px; align-items: center;">
                     <div style="position: relative; flex: 1;">
                         <input type="text" id="buscadorEjercicios" placeholder="Nombre del ejercicio o grupo muscular..." aria-label="Nombre del ejercicio"
-                               style="width: 100%; height: 38px; padding: 6px 34px 6px 14px; border: 1.5px solid var(--border-color, #EFE6DC); border-radius: 8px; background: #FFFFFF; color: var(--text, #4A3728); font-size: 13.5px; outline: none; transition: all 0.2s ease;">
+                               style="width: 100%; height: 38px; padding: 6px 34px 6px 14px; border: 1.5px solid var(--border-color, #E8EBEF); border-radius: 8px; background: #FFFFFF; color: var(--text, #252B36); font-size: 13.5px; outline: none; transition: all 0.2s ease;">
                         <button type="button" id="btnLimpiarBusqueda" onclick="restablecerListaCompleta()" title="Limpiar búsqueda" 
-                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #8B6F5A); cursor: pointer; display: none; padding: 4px; font-size: 13px;">
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #7B8491); cursor: pointer; display: none; padding: 4px; font-size: 13px;">
                             <i class="fas fa-times-circle"></i>
                         </button>
                     </div>
@@ -32,7 +32,7 @@
                         <i class="fas fa-search"></i> Buscar
                     </button>
                 </div>
-                <small class="form-text" style="display: block; margin-top: 4px; color: var(--text-secondary, #8B6F5A); font-size: 11.5px; text-align: center;">
+                <small class="form-text" style="display: block; margin-top: 4px; color: var(--text-secondary, #7B8491); font-size: 11.5px; text-align: center;">
                     Presione Enter o haga clic en el botón para buscar
                 </small>
             </div>
@@ -73,9 +73,9 @@
                         <tr class="fila-ejercicio-inicial">
                             <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ ejercicio.IdEjercicio }}</td>
                             <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ ejercicio.NombreEjercicio }}</strong></td>
-                            <td style="padding: 8px 10px; font-size: 13px; color: var(--text-secondary, #8B6F5A);">{{ ejercicio.Descripcion or '-' }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px; color: var(--text-secondary, #7B8491);">{{ ejercicio.Descripcion or '-' }}</td>
                             <td style="padding: 8px 10px;">
-                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F58220); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
                                     {{ ejercicio.NombreGrupo }}
                                 </span>
                             </td>
@@ -85,7 +85,7 @@
                                     <i class="fas fa-play"></i> Ver
                                 </a>
                                 {% else %}
-                                <span style="color: var(--text-secondary, #8B6F5A);">-</span>
+                                <span style="color: var(--text-secondary, #7B8491);">-</span>
                                 {% endif %}
                             </td>
                             <td class="table-actions" style="text-align: center; padding: 8px 8px;">
@@ -96,8 +96,8 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
-                                <i class="fas fa-dumbbell" style="font-size: 2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
+                            <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #7B8491);">
+                                <i class="fas fa-dumbbell" style="font-size: 2rem; color: var(--border-color, #E8EBEF); display: block; margin-bottom: 0.5rem;"></i>
                                 No hay ejercicios registrados en el sistema
                             </td>
                         </tr>
@@ -139,10 +139,10 @@ document.addEventListener('DOMContentLoaded', function() {
             cuerpoTabla.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center" style="padding: 2rem 1rem;">
-                        <div class="spinner-border" role="status" style="width: 1.8rem; height: 1.8rem; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F28C28);">
+                        <div class="spinner-border" role="status" style="width: 1.8rem; height: 1.8rem; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F58220);">
                             <span class="sr-only">Buscando...</span>
                         </div>
-                        <p style="margin: 6px 0 0 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Buscando ejercicios...</p>
+                        <p style="margin: 6px 0 0 0; font-size: 12.5px; color: var(--text-secondary, #7B8491);">Buscando ejercicios...</p>
                     </td>
                 </tr>`;
         }
@@ -161,10 +161,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (cuerpoTabla) {
                         cuerpoTabla.innerHTML = `
                             <tr>
-                                <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #8B6F5A);">
-                                    <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #EFE6DC); display: block; margin-bottom: 0.5rem;"></i>
-                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #4A3728);">No se encontraron ejercicios con el término "<strong>${nombre}</strong>"</span>
-                                    <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #8B6F5A);">Intente con otro término o restablezca la lista completa</p>
+                                <td colspan="6" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #7B8491);">
+                                    <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #E8EBEF); display: block; margin-bottom: 0.5rem;"></i>
+                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #252B36);">No se encontraron ejercicios con el término "<strong>${nombre}</strong>"</span>
+                                    <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #7B8491);">Intente con otro término o restablezca la lista completa</p>
                                     <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
                                         <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los ejercicios
                                     </button>
@@ -185,15 +185,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     const grupo = e.NombreGrupo || '-';
                     const videoBtn = e.VideoUrl ? 
                         `<a href="${e.VideoUrl}" target="_blank" class="btn-view" style="padding: 3px 8px; font-size: 11.5px;"><i class="fas fa-play"></i> Ver</a>` : 
-                        `<span style="color: var(--text-secondary, #8B6F5A);">-</span>`;
+                        `<span style="color: var(--text-secondary, #7B8491);">-</span>`;
 
                     htmlFilas += `
                         <tr>
                             <td style="text-align: center; padding: 8px 8px; font-size: 13px;">${e.IdEjercicio}</td>
                             <td style="padding: 8px 10px; font-size: 13px;"><strong>${e.NombreEjercicio}</strong></td>
-                            <td style="padding: 8px 10px; font-size: 13px; color: var(--text-secondary, #8B6F5A);">${desc}</td>
+                            <td style="padding: 8px 10px; font-size: 13px; color: var(--text-secondary, #7B8491);">${desc}</td>
                             <td style="padding: 8px 10px;">
-                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F28C28); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
+                                <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F58220); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
                                     ${grupo}
                                 </span>
                             </td>
@@ -258,11 +258,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         inputBuscar.addEventListener('focus', function() {
-            this.style.borderColor = 'var(--primary, #F28C28)';
-            this.style.boxShadow = '0 0 0 3px rgba(242, 140, 40, 0.15)';
+            this.style.borderColor = 'var(--primary, #F58220)';
+            this.style.boxShadow = '0 0 0 3px rgba(245, 130, 32, 0.15)';
         });
         inputBuscar.addEventListener('blur', function() {
-            this.style.borderColor = 'var(--border-color, #EFE6DC)';
+            this.style.borderColor = 'var(--border-color, #E8EBEF)';
             this.style.boxShadow = 'none';
         });
     }
