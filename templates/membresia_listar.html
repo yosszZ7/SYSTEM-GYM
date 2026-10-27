@@ -1,76 +1,228 @@
 {% extends "base.html" %}
 
-{% block title %}Lista de Membresías{% endblock %}
-{% block breadcrumb %}Membresías / Lista{% endblock %}
+{% block title %}Membresías — World Gym{% endblock %}
+{% block breadcrumb %}Membresías / Planes Disponibles{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/membresias.css') }}?v=2.0">
+{% endblock %}
 
 {% block content %}
-<div class="page-container">
-    <div class="page-header">
-        <div class="page-header-left">
-            <h1><i class="fas fa-id-card"></i> Lista de Membresías</h1>
-            <p>Monitoreo de los planes de membresía disponibles en el sistema</p>
-        </div>
-    </div>
+<div class="wg-membresias-wrapper">
+    <section class="wg-membresias-showcase" aria-label="Planes de Membresía World Gym">
 
-    <!-- LISTA DE MEMBRESÍAS -->
-    <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px;">
-            <h2 style="margin: 0; font-size: 1.1rem;"><i class="fas fa-list"></i> Planes de Membresía Disponibles</h2>
-            <span class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
-                {{ membresias|length }} plan{{ 'es' if membresias|length != 1 else '' }}
-            </span>
-        </div>
-
-        <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="overflow-x: auto; width: 100%; border: none; border-radius: 0; box-shadow: none;">
-                <table class="data-table data-table-compact" style="width: 100%; margin: 0;">
-                    <thead>
-                        <tr>
-                            <th style="width: 55px; text-align: center; padding: 10px 8px; font-size: 11px;">ID</th>
-                            <th style="padding: 10px 10px; font-size: 11px;">NOMBRE DE MEMBRESÍA</th>
-                            <th style="width: 130px; padding: 10px 10px; font-size: 11px;">PRECIO</th>
-                            <th style="width: 130px; padding: 10px 10px; font-size: 11px;">DURACIÓN</th>
-                            <th style="text-align: center; width: 85px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for membresia in membresias %}
-                        <tr>
-                            <td style="text-align: center; padding: 8px 8px; font-size: 13px;"><strong>#{{ membresia.IdMembresia }}</strong></td>
-                            <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ membresia.NombreMembresia }}</strong></td>
-                            <td style="padding: 8px 10px; font-size: 13px; font-weight: 700; color: #10B981; white-space: nowrap;">
-                                C${{ membresia.Precio }}
-                            </td>
-                            <td style="padding: 8px 10px;">
-                                <span class="badge badge-info" style="font-size: 11.5px; padding: 3px 8px; border-radius: 6px;">
-                                    {% if membresia.DuracionMeses > 0 %}
-                                        {{ membresia.DuracionMeses }} {% if membresia.DuracionMeses == 1 %}Mes{% else %}Meses{% endif %}
-                                    {% else %}
-                                        {{ membresia.DuracionDias }} {% if membresia.DuracionDias == 1 %}Día{% else %}Días{% endif %}
-                                    {% endif %}
-                                </span>
-                            </td>
-                            <td class="table-actions" style="text-align: center; padding: 8px 8px;">
-                                <a href="/membresia_actualizar?id={{ membresia.IdMembresia }}" class="btn-edit" title="Editar" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="/membresia_eliminar?id={{ membresia.IdMembresia }}" class="btn-delete" title="Eliminar" style="padding: 4px 8px; font-size: 12px;">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #7B8491);">
-                                <i class="fas fa-id-card" style="font-size: 2rem; color: var(--border-color, #E8EBEF); display: block; margin-bottom: 0.5rem;"></i>
-                                No hay membresías registradas en el sistema
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- CABECERA EDITORIAL DEPORTIVA -->
+        <header class="wg-membresias-header">
+            <div class="wg-membresias-eyebrow-row">
+                <span class="wg-membresias-eyebrow">MEMBRESÍAS</span>
+                <a href="/cliente_membresia" class="wg-membresias-quick-link" title="Ir a asignar membresía a un cliente">
+                    <i class="fas fa-user-check"></i> Asignar Plan
+                </a>
             </div>
+
+            <div class="wg-membresias-headline-row">
+                <h1 class="wg-membresias-title">ELIGE TU PLAN Y EMPIEZA HOY</h1>
+                <div class="wg-membresias-header-line" aria-hidden="true"></div>
+                <p class="wg-membresias-subtitle">
+                    Entrena a tu ritmo, con la flexibilidad que necesitas. Nuestros planes se adaptan a tu estilo de vida.
+                </p>
+            </div>
+        </header>
+
+        <!-- CUADRÍCULA HORIZONTAL DE LOS 4 PLANES -->
+        <div class="wg-plans-grid">
+            {% for membresia in membresias|sort(attribute='DuracionDias') %}
+                {# Mapeo visual respetando los datos reales de la base de datos #}
+                {% set dias = membresia.DuracionDias|int if membresia.DuracionDias is not none else 0 %}
+                {% set meses = membresia.DuracionMeses|int if membresia.DuracionMeses is not none else 0 %}
+                {% set tipo_lower = (membresia.Tipo or '')|lower %}
+                {% set nombre_lower = (membresia.NombreMembresia or '')|lower %}
+
+                {% if dias == 1 or 'diario' in tipo_lower or 'día' in nombre_lower or 'dia' in nombre_lower %}
+                    {% set titulo_plan = 'PLAN DIARIO' %}
+                    {% set duracion_plan = '1 DÍA' %}
+                    {% set imagen_plan = url_for('static', filename='image/membresias/plan_diario.png') %}
+                    {% set es_destacado = false %}
+                {% elif dias == 7 or 'semanal' in tipo_lower %}
+                    {% set titulo_plan = 'PLAN SEMANAL' %}
+                    {% set duracion_plan = '7 DÍAS' %}
+                    {% set imagen_plan = url_for('static', filename='image/membresias/plan_semanal.png') %}
+                    {% set es_destacado = false %}
+                {% elif dias == 15 or 'quincenal' in tipo_lower %}
+                    {% set titulo_plan = 'PLAN QUINCENAL' %}
+                    {% set duracion_plan = '15 DÍAS' %}
+                    {% set imagen_plan = url_for('static', filename='image/membresias/plan_quincenal.png') %}
+                    {% set es_destacado = false %}
+                {% elif dias >= 28 or meses >= 1 or 'mensual' in tipo_lower %}
+                    {% set titulo_plan = 'PLAN MENSUAL' %}
+                    {% set duracion_plan = (dias if dias > 0 else 30) ~ ' DÍAS' %}
+                    {% set imagen_plan = url_for('static', filename='image/membresias/plan_mensual.png') %}
+                    {% set es_destacado = true %}
+                {% else %}
+                    {% set titulo_plan = membresia.NombreMembresia|upper %}
+                    {% set duracion_plan = (dias ~ ' DÍAS') if dias > 0 else (meses ~ ' MESES') %}
+                    {% set imagen_plan = url_for('static', filename='image/membresias/plan_mensual.png') %}
+                    {% set es_destacado = false %}
+                {% endif %}
+
+                {% set precio_formateado = "%.2f"|format(membresia.Precio|float) %}
+
+                <article class="wg-plan-card {% if es_destacado %}is-featured{% endif %}"
+                         onclick="abrirDetalleMembresia(this)"
+                         data-id="{{ membresia.IdMembresia }}"
+                         data-titulo="{{ titulo_plan }}"
+                         data-nombre-db="{{ membresia.NombreMembresia }}"
+                         data-duracion="{{ duracion_plan }}"
+                         data-precio="{{ precio_formateado }}"
+                         data-tipo="{{ membresia.Tipo or 'Estándar' }}">
+
+                    {% if es_destacado %}
+                        <span class="wg-plan-badge">MÁS POPULAR</span>
+                    {% endif %}
+
+                    <div class="wg-plan-top">
+                        <h2 class="wg-plan-name">{{ titulo_plan }}</h2>
+                        <div class="wg-plan-duration">{{ duracion_plan }}</div>
+
+                        <div class="wg-plan-price-wrap">
+                            <span class="wg-plan-currency">C$</span>
+                            <span class="wg-plan-amount">{{ precio_formateado }}</span>
+                        </div>
+
+                        <div class="wg-plan-divider" aria-hidden="true"></div>
+                        <div class="wg-plan-gold-dash" aria-hidden="true"></div>
+                    </div>
+
+                    <div class="wg-plan-media">
+                        <img src="{{ imagen_plan }}" alt="{{ titulo_plan }} - World Gym" class="wg-plan-img" loading="lazy">
+                    </div>
+
+                    <footer class="wg-plan-footer">
+                        <button type="button" class="wg-plan-btn-details" onclick="event.stopPropagation(); abrirDetalleMembresia(this.closest('.wg-plan-card'));">
+                            <span>VER DETALLES</span>
+                            <span class="wg-arrow" aria-hidden="true">&rarr;</span>
+                        </button>
+
+                        <div class="wg-plan-admin-actions" onclick="event.stopPropagation();">
+                            <a href="/cliente_membresia?id_membresia={{ membresia.IdMembresia }}" class="wg-plan-icon-link" title="Seleccionar este plan">
+                                <i class="fas fa-check-circle"></i>
+                            </a>
+                            <a href="/membresia_actualizar?id={{ membresia.IdMembresia }}" class="wg-plan-icon-link" title="Editar membresía">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                        </div>
+                    </footer>
+                </article>
+            {% else %}
+                <div class="wg-empty-plans">
+                    <i class="fas fa-id-card" style="font-size: 2rem; color: var(--wg-gold); display: block; margin-bottom: 10px;"></i>
+                    No hay planes de membresía registrados en el sistema.
+                </div>
+            {% endfor %}
+        </div>
+
+    </section>
+</div>
+
+<!-- MODAL DE DETALLES DEL PLAN (DATOS REALES DE BASE DE DATOS + ACCIONES) -->
+<div id="wgModalPlan" class="wg-modal-overlay" onclick="if(event.target === this) cerrarDetalleMembresia();">
+    <div class="wg-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="wgModalTitulo">
+        <div class="wg-modal-header">
+            <div>
+                <span class="wg-modal-eyebrow" id="wgModalDuracion">DURACIÓN</span>
+                <h3 class="wg-modal-title" id="wgModalTitulo">PLAN DE MEMBRESÍA</h3>
+            </div>
+            <button type="button" class="wg-modal-close" onclick="cerrarDetalleMembresia()" title="Cerrar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="wg-modal-body">
+            <div class="wg-modal-price-banner">
+                <span class="wg-modal-price-label">Precio del Plan</span>
+                <div class="wg-modal-price-value">
+                    <span>C$</span><strong id="wgModalPrecio">0.00</strong>
+                </div>
+            </div>
+
+            <div class="wg-modal-specs">
+                <div class="wg-modal-spec-item full-width">
+                    <span class="wg-modal-spec-label">Nombre registrado en sistema</span>
+                    <div class="wg-modal-spec-val" id="wgModalNombreDb">—</div>
+                </div>
+                <div class="wg-modal-spec-item">
+                    <span class="wg-modal-spec-label">Vigencia</span>
+                    <div class="wg-modal-spec-val" id="wgModalVigenciaSpec">—</div>
+                </div>
+                <div class="wg-modal-spec-item">
+                    <span class="wg-modal-spec-label">Modalidad / Código</span>
+                    <div class="wg-modal-spec-val" id="wgModalTipoId">—</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="wg-modal-footer">
+            <div class="wg-modal-admin-links">
+                <a href="#" id="wgModalBtnEditar" class="wg-btn-outline-dark" title="Editar membresía">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <a href="#" id="wgModalBtnEliminar" class="wg-btn-outline-dark danger" title="Eliminar membresía">
+                    <i class="fas fa-trash"></i> Eliminar
+                </a>
+            </div>
+
+            <a href="#" id="wgModalBtnSeleccionar" class="wg-btn-gold-select">
+                <span>SELECCIONAR PLAN</span>
+                <span>&rarr;</span>
+            </a>
         </div>
     </div>
 </div>
+
+<script>
+    function abrirDetalleMembresia(cardEl) {
+        if (!cardEl) return;
+
+        var id = cardEl.getAttribute('data-id');
+        var titulo = cardEl.getAttribute('data-titulo');
+        var nombreDb = cardEl.getAttribute('data-nombre-db');
+        var duracion = cardEl.getAttribute('data-duracion');
+        var precio = cardEl.getAttribute('data-precio');
+        var tipo = cardEl.getAttribute('data-tipo');
+
+        document.getElementById('wgModalTitulo').textContent = titulo;
+        document.getElementById('wgModalDuracion').textContent = 'MEMBRESÍA WORLD GYM • ' + duracion;
+        document.getElementById('wgModalPrecio').textContent = precio;
+        document.getElementById('wgModalNombreDb').textContent = nombreDb;
+        document.getElementById('wgModalVigenciaSpec').textContent = duracion;
+        document.getElementById('wgModalTipoId').textContent = tipo + ' (#' + id + ')';
+
+        document.getElementById('wgModalBtnSeleccionar').href = '/cliente_membresia?id_membresia=' + encodeURIComponent(id);
+        document.getElementById('wgModalBtnEditar').href = '/membresia_actualizar?id=' + encodeURIComponent(id);
+        document.getElementById('wgModalBtnEliminar').href = '/membresia_eliminar?id=' + encodeURIComponent(id);
+
+        var overlay = document.getElementById('wgModalPlan');
+        overlay.style.display = 'flex';
+        setTimeout(function() {
+            overlay.classList.add('active');
+        }, 10);
+    }
+
+    function cerrarDetalleMembresia() {
+        var overlay = document.getElementById('wgModalPlan');
+        overlay.classList.remove('active');
+        setTimeout(function() {
+            overlay.style.display = 'none';
+        }, 200);
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarDetalleMembresia();
+        }
+    });
+</script>
 {% endblock %}

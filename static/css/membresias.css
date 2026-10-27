@@ -1,0 +1,708 @@
+/* ==========================================================================
+   WORLD GYM — SECCIÓN DE MEMBRESÍAS (DISEÑO DEPORTIVO MINIMALISTA DARK & GOLD)
+   Tipografía: League Spartan / Montserrat (Títulos y Precios) + Inter (Textos)
+   Paleta: Negro profundo (#0A0B0E), Gris carbón (#121418), Blanco (#FFFFFF),
+           Dorado suave (#C9A86A)
+   ========================================================================== */
+
+:root {
+    --wg-bg-deep: #0A0B0E;
+    --wg-bg-panel: #0E1014;
+    --wg-card-bg: #121418;
+    --wg-card-bg-hover: #16191F;
+    --wg-gold: #C9A86A;
+    --wg-gold-bright: #DFBE7F;
+    --wg-gold-muted: rgba(201, 168, 106, 0.28);
+    --wg-gold-border: rgba(201, 168, 106, 0.68);
+    --wg-white: #FFFFFF;
+    --wg-text-light: #D5D8DF;
+    --wg-text-muted: #949AA6;
+    --wg-border-subtle: rgba(255, 255, 255, 0.08);
+    --wg-font-display: 'Montserrat', 'League Spartan', sans-serif;
+    --wg-font-body: 'Montserrat', 'Inter', sans-serif;
+}
+
+/* Ajuste del contenedor cuando se muestra la sección de membresías */
+.wg-membresias-wrapper {
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 8px 4px 28px 4px;
+}
+
+/* Panel principal Negro Profundo */
+.wg-membresias-showcase {
+    position: relative;
+    background: radial-gradient(circle at 82% 18%, rgba(201, 168, 106, 0.05) 0%, transparent 45%),
+                linear-gradient(180deg, #0D0F13 0%, #090A0D 100%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 48px 44px 52px 44px;
+    color: var(--wg-white);
+    font-family: var(--wg-font-body);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+
+/* Textura sutil de fondo oscuro */
+.wg-membresias-showcase::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 15% 85%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   CABECERA DE LA SECCIÓN (EYEBROW, TÍTULO, LÍNEA DORADA Y SUBTÍTULO)
+   ========================================================================== */
+.wg-membresias-header {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 38px;
+}
+
+.wg-membresias-eyebrow-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 16px;
+}
+
+.wg-membresias-eyebrow {
+    display: inline-block;
+    font-family: var(--wg-font-display);
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--wg-gold);
+}
+
+.wg-membresias-quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--wg-font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--wg-text-muted);
+    text-decoration: none;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.22s ease;
+}
+
+.wg-membresias-quick-link:hover {
+    color: var(--wg-gold-bright);
+    border-color: var(--wg-gold-muted);
+    background: rgba(201, 168, 106, 0.06);
+}
+
+.wg-membresias-headline-row {
+    display: grid;
+    grid-template-columns: auto 1fr minmax(260px, 385px);
+    align-items: center;
+    gap: 28px;
+}
+
+.wg-membresias-title {
+    margin: 0;
+    font-family: var(--wg-font-display);
+    font-size: clamp(1.55rem, 2.35vw, 2.25rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.12;
+    color: var(--wg-white);
+}
+
+/* Línea divisoria horizontal con acento dorado como en la referencia */
+.wg-membresias-header-line {
+    height: 1px;
+    width: 100%;
+    min-width: 40px;
+    background: linear-gradient(
+        90deg,
+        var(--wg-gold) 0%,
+        rgba(201, 168, 106, 0.45) 35%,
+        rgba(255, 255, 255, 0.08) 100%
+    );
+}
+
+.wg-membresias-subtitle {
+    margin: 0;
+    font-family: var(--wg-font-body);
+    font-size: 0.86rem;
+    font-weight: 400;
+    line-height: 1.58;
+    color: #B4B9C2;
+    letter-spacing: 0.01em;
+}
+
+/* ==========================================================================
+   CUADRÍCULA DE LOS 4 PLANES DE MEMBRESÍA
+   ========================================================================== */
+.wg-plans-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+/* Tarjeta individual rectangular, sobria y elegante */
+.wg-plan-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 415px;
+    background: linear-gradient(180deg, #15181E 0%, #101216 55%, #0D0F13 100%);
+    border: 1px solid var(--wg-border-subtle);
+    border-radius: 5px;
+    overflow: hidden;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    cursor: pointer;
+}
+
+.wg-plan-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(201, 168, 106, 0.38);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Plan Mensual Destacado: Borde fino dorado y etiqueta discreta */
+.wg-plan-card.is-featured {
+    border: 1px solid var(--wg-gold-border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 22px rgba(201, 168, 106, 0.08);
+}
+
+.wg-plan-card.is-featured:hover {
+    border-color: var(--wg-gold-bright);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 26px rgba(201, 168, 106, 0.14);
+}
+
+/* Etiqueta superior derecha: MÁS POPULAR */
+.wg-plan-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 4;
+    background: linear-gradient(135deg, #D5B577 0%, #B89250 100%);
+    color: #0B0C0E;
+    font-family: var(--wg-font-display);
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 4px 9px;
+    border-radius: 3px;
+    line-height: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================================
+   CONTENIDO SUPERIOR DE LA TARJETA (NOMBRE, DURACIÓN, PRECIO, LÍNEA DORADA)
+   ========================================================================== */
+.wg-plan-top {
+    position: relative;
+    z-index: 3;
+    padding: 26px 24px 0 24px;
+}
+
+.wg-plan-name {
+    margin: 0;
+    font-family: var(--wg-font-display);
+    font-size: 1.16rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--wg-white);
+    line-height: 1.2;
+    padding-right: 76px; /* Espacio por si tiene insignia MÁS POPULAR */
+}
+
+.wg-plan-card:not(.is-featured) .wg-plan-name {
+    padding-right: 0;
+}
+
+.wg-plan-duration {
+    margin-top: 5px;
+    font-family: var(--wg-font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--wg-gold);
+}
+
+.wg-plan-price-wrap {
+    margin-top: 22px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+}
+
+.wg-plan-currency {
+    font-family: var(--wg-font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--wg-gold);
+    letter-spacing: 0.01em;
+}
+
+.wg-plan-amount {
+    font-family: var(--wg-font-display);
+    font-size: 2.15rem;
+    font-weight: 800;
+    color: var(--wg-white);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+/* Línea sutil completa + acento corto dorado debajo */
+.wg-plan-divider {
+    margin-top: 16px;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.wg-plan-gold-dash {
+    margin-top: 12px;
+    width: 24px;
+    height: 2px;
+    background: var(--wg-gold);
+}
+
+/* ==========================================================================
+   FOTOGRAFÍA DEPORTIVA INTEGRADA EN CADA TARJETA
+   ========================================================================== */
+.wg-plan-media {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 195px;
+    margin-top: auto;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Fundido superior e inferior para integrar la foto con el gris carbón */
+.wg-plan-media::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(
+        180deg,
+        #12151B 0%,
+        rgba(18, 21, 27, 0.35) 28%,
+        rgba(14, 16, 20, 0.12) 68%,
+        rgba(12, 14, 18, 0.88) 100%
+    );
+}
+
+.wg-plan-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+    display: block;
+    filter: contrast(1.04) brightness(0.95);
+    transition: transform 0.45s ease;
+}
+
+.wg-plan-card:hover .wg-plan-img {
+    transform: scale(1.03);
+}
+
+/* ==========================================================================
+   PIE DE TARJETA Y BOTÓN DISCRETO «VER DETALLES →»
+   ========================================================================== */
+.wg-plan-footer {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 24px;
+    background: rgba(12, 14, 18, 0.9);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.wg-plan-btn-details {
+    background: none;
+    border: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--wg-font-display);
+    font-size: 0.73rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--wg-text-light);
+    cursor: pointer;
+    transition: color 0.2s ease, gap 0.2s ease;
+}
+
+.wg-plan-btn-details .wg-arrow {
+    color: var(--wg-gold);
+    font-size: 0.85rem;
+    transition: transform 0.2s ease;
+}
+
+.wg-plan-card:hover .wg-plan-btn-details,
+.wg-plan-card.is-featured .wg-plan-btn-details {
+    color: var(--wg-white);
+}
+
+.wg-plan-card:hover .wg-plan-btn-details .wg-arrow {
+    transform: translateX(4px);
+    color: var(--wg-gold-bright);
+}
+
+/* Acciones rápidas discretas para administración (Editar) */
+.wg-plan-admin-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+}
+
+.wg-plan-card:hover .wg-plan-admin-actions {
+    opacity: 0.95;
+}
+
+.wg-plan-icon-link {
+    color: var(--wg-text-muted);
+    font-size: 0.78rem;
+    text-decoration: none;
+    padding: 4px;
+    transition: color 0.2s ease;
+}
+
+.wg-plan-icon-link:hover {
+    color: var(--wg-gold-bright);
+}
+
+/* ==========================================================================
+   MODAL MINIMALISTA DE DETALLES Y SELECCIÓN DE PLAN
+   ========================================================================== */
+.wg-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(5, 6, 8, 0.82);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+.wg-modal-overlay.active {
+    opacity: 1;
+}
+
+.wg-modal-dialog {
+    width: 100%;
+    max-width: 480px;
+    background: #121418;
+    border: 1px solid var(--wg-gold-border);
+    border-radius: 6px;
+    color: var(--wg-white);
+    font-family: var(--wg-font-body);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+    overflow: hidden;
+    transform: translateY(10px);
+    transition: transform 0.22s ease;
+}
+
+.wg-modal-overlay.active .wg-modal-dialog {
+    transform: translateY(0);
+}
+
+.wg-modal-header {
+    padding: 22px 26px 18px 26px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.wg-modal-eyebrow {
+    display: block;
+    font-family: var(--wg-font-display);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--wg-gold);
+    margin-bottom: 4px;
+}
+
+.wg-modal-title {
+    margin: 0;
+    font-family: var(--wg-font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--wg-white);
+}
+
+.wg-modal-close {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--wg-text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wg-modal-close:hover {
+    color: var(--wg-white);
+    border-color: var(--wg-gold);
+}
+
+.wg-modal-body {
+    padding: 24px 26px;
+}
+
+.wg-modal-price-banner {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(201, 168, 106, 0.25);
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.wg-modal-price-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--wg-text-muted);
+}
+
+.wg-modal-price-value {
+    font-family: var(--wg-font-display);
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--wg-white);
+}
+
+.wg-modal-price-value span {
+    color: var(--wg-gold);
+    font-size: 1.15rem;
+    margin-right: 2px;
+}
+
+.wg-modal-specs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.wg-modal-spec-item {
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+}
+
+.wg-modal-spec-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.wg-modal-spec-label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--wg-text-muted);
+    margin-bottom: 4px;
+}
+
+.wg-modal-spec-val {
+    font-family: var(--wg-font-display);
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--wg-white);
+}
+
+.wg-modal-footer {
+    padding: 16px 26px;
+    background: #0D0F13;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.wg-modal-admin-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wg-btn-outline-dark {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 13px;
+    font-family: var(--wg-font-body);
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--wg-text-light);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.wg-btn-outline-dark:hover {
+    border-color: var(--wg-gold);
+    color: var(--wg-gold-bright);
+}
+
+.wg-btn-outline-dark.danger:hover {
+    border-color: #EF4444;
+    color: #F87171;
+}
+
+.wg-btn-gold-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 20px;
+    font-family: var(--wg-font-display);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #0B0C0E;
+    background: linear-gradient(135deg, #DBC086 0%, #C29B58 100%);
+    border: 1px solid #DFBE7F;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.wg-btn-gold-select:hover {
+    background: linear-gradient(135deg, #E5CC96 0%, #CFA863 100%);
+    color: #0B0C0E;
+    transform: translateY(-1px);
+}
+
+/* Estado vacío */
+.wg-empty-plans {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 56px 24px;
+    border: 1px dashed rgba(201, 168, 106, 0.3);
+    border-radius: 6px;
+    color: var(--wg-text-muted);
+}
+
+/* ==========================================================================
+   ADAPTABILIDAD RESPONSIVA (COMPUTADORAS, TABLETS Y CELULARES)
+   ========================================================================== */
+@media (max-width: 1200px) {
+    .wg-membresias-showcase {
+        padding: 38px 30px 42px 30px;
+    }
+
+    .wg-membresias-headline-row {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .wg-membresias-header-line {
+        max-width: 180px;
+    }
+
+    .wg-membresias-subtitle {
+        max-width: 620px;
+    }
+
+    .wg-plans-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+}
+
+@media (max-width: 640px) {
+    .wg-membresias-wrapper {
+        padding: 0 0 20px 0;
+    }
+
+    .wg-membresias-showcase {
+        padding: 28px 18px 32px 18px;
+        border-radius: 6px;
+    }
+
+    .wg-membresias-eyebrow-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .wg-membresias-title {
+        font-size: 1.45rem;
+    }
+
+    .wg-plans-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .wg-plan-card {
+        min-height: 380px;
+    }
+
+    .wg-modal-specs {
+        grid-template-columns: 1fr;
+    }
+
+    .wg-modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .wg-btn-gold-select {
+        justify-content: center;
+    }
+
+    .wg-modal-admin-links {
+        justify-content: space-between;
+    }
+}

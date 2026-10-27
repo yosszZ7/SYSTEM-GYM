@@ -1,27 +1,35 @@
 {% extends "base.html" %}
 
 {% block title %}Asignar Membresía{% endblock %}
-{% block breadcrumb %}Clientes / Asignar Membresía{% endblock %}
+{% block breadcrumb %}Membresías / Asignar Plan{% endblock %}
 
 {% block content %}
 <div class="page-container">
     <div class="page-header">
         <div class="page-header-left">
             <h1><i class="fas fa-id-card"></i> Asignar Membresía</h1>
-            <p>Asigne una membresía a un cliente existente</p>
+            <p>Asigne un plan de membresía a un cliente registrado</p>
         </div>
-        <a href="/cliente_listar" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver
-        </a>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/membresia_listar" class="btn btn-secondary">
+                <i class="fas fa-th-large"></i> Ver Planes
+            </a>
+            <a href="/cliente_listar" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Clientes
+            </a>
+        </div>
     </div>
 
     <div class="card">
         <div class="card-header">
             <h2><i class="fas fa-id-card"></i> Datos de la Membresía</h2>
-            <span class="badge badge-info"><i class="fas fa-clock"></i> Nueva</span>
+            <span class="badge badge-info"><i class="fas fa-clock"></i> Nueva Asignación</span>
         </div>
         
         <div class="card-body">
+            {% set preselected_membresia = request.args.get('id_membresia', '') %}
+            {% set preselected_cliente = request.args.get('id_cliente', '') %}
+
             <form method="POST" action="/cliente_membresia">
                 <!-- SpAsignarMembresia: IdCliente, IdMembresia, IdMetodoPago, Monto -->
                 <div class="form-grid">
@@ -31,27 +39,30 @@
                         </label>
                         <select id="IdCliente" name="IdCliente" required>
                             <option value="">Seleccionar cliente...</option>
-                            <!-- Estos valores vienen de la base de datos -->
-                            <option value="1">Juan Pérez</option>
-                            <option value="2">Ana Gómez</option>
-                            <option value="3">Carlos Rodríguez</option>
-                            <option value="4">María López</option>
+                            {% for c in clientes %}
+                                <option value="{{ c.IdCliente }}" {% if preselected_cliente|string == c.IdCliente|string %}selected{% endif %}>
+                                    {{ c.PrimerNombre }} {{ c.SegundoNombre or '' }} {{ c.PrimerApellido }} {{ c.SegundoApellido or '' }} (#{{ c.IdCliente }})
+                                </option>
+                            {% endfor %}
                         </select>
                         <small class="help-text">Cliente que recibirá la membresía</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="IdMembresia">
-                            <i class="fas fa-id-card"></i> Membresía <span class="required">*</span>
+                            <i class="fas fa-id-card"></i> Plan de Membresía <span class="required">*</span>
                         </label>
-                        <select id="IdMembresia" name="IdMembresia" required>
+                        <select id="IdMembresia" name="IdMembresia" required onchange="actualizarPrecioPlanSeleccionado(this)">
                             <option value="">Seleccionar membresía...</option>
-                            <!-- Estos valores vienen de la base de datos -->
-                            <option value="1">Básica - C$29/mes</option>
-                            <option value="2">Premium - C$49/mes</option>
-                            <option value="3">VIP - C$79/mes</option>
+                            {% for m in membresias|sort(attribute='DuracionDias') %}
+                                <option value="{{ m.IdMembresia }}"
+                                        data-precio="{{ '%.2f'|format(m.Precio|float) }}"
+                                        {% if preselected_membresia|string == m.IdMembresia|string %}selected{% endif %}>
+                                    {{ m.NombreMembresia }} — C${{ "%.2f"|format(m.Precio|float) }} ({{ m.DuracionDias }} {% if m.DuracionDias == 1 %}día{% else %}días{% endif %})
+                                </option>
+                            {% endfor %}
                         </select>
-                        <small class="help-text">Tipo de membresía</small>
+                        <small class="help-text">Seleccione uno de los planes disponibles</small>
                     </div>
                     
                     <div class="form-group">
@@ -60,13 +71,15 @@
                         </label>
                         <select id="IdMetodoPago" name="IdMetodoPago" required>
                             <option value="">Seleccionar método...</option>
-                            <!-- Estos valores vienen de la base de datos -->
-                            <option value="1">Efectivo</option>
-                            <option value="2">Tarjeta Débito</option>
-                            <option value="3">Tarjeta Crédito</option>
-                            <option value="4">Transferencia</option>
+                            {% for mp in metodos_pago %}
+                                <option value="{{ mp.IdMetodoPago }}">{{ mp.Nombre }}</option>
+                            {% else %}
+                                <option value="1">Efectivo</option>
+                                <option value="2">Tarjeta</option>
+                                <option value="3">Transferencia</option>
+                            {% endfor %}
                         </select>
-                        <small class="help-text">Método de pago</small>
+                        <small class="help-text">Método de pago utilizado</small>
                     </div>
                     
                     <div class="form-group">
@@ -74,8 +87,8 @@
                             <span style="font-weight:bold; margin-right:5px; color:var(--text-secondary);">C$</span> Monto <span class="required">*</span>
                         </label>
                         <input type="number" id="Monto" name="Monto" 
-                               placeholder="Ej: 35.00" step="0.01" min="0" required>
-                        <small class="help-text">Monto a pagar (debe ser mayor a 0)</small>
+                               placeholder="0.00" step="0.01" min="0" required>
+                        <small class="help-text">Monto correspondiente al plan seleccionado</small>
                     </div>
                 </div>
 
@@ -92,4 +105,23 @@
         </div>
     </div>
 </div>
+
+<script>
+    function actualizarPrecioPlanSeleccionado(selectEl) {
+        if (!selectEl) return;
+        var opt = selectEl.options[selectEl.selectedIndex];
+        var precio = opt ? opt.getAttribute('data-precio') : '';
+        var montoInput = document.getElementById('Monto');
+        if (montoInput && precio) {
+            montoInput.value = precio;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectPlan = document.getElementById('IdMembresia');
+        if (selectPlan && selectPlan.value) {
+            actualizarPrecioPlanSeleccionado(selectPlan);
+        }
+    });
+</script>
 {% endblock %}
