@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- Estilos de la Tienda del Cliente -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=2.2.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=2.3.0">
 </head>
 <body class="tienda-body">
 
@@ -112,6 +112,10 @@
             <!-- Derecha: Acciones de Usuario, Buscador y Carrito -->
             <div class="store-header-actions">
                 {% if es_admin_o_staff %}
+                <a href="/dashboard" class="store-back-dashboard" title="Regresar al Dashboard del sistema">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver al Dashboard</span>
+                </a>
                 <a href="/producto_listar" class="store-admin-pill" title="Ir al panel administrativo de productos">
                     <i class="fas fa-sliders"></i>
                     <span>Administrar Productos</span>

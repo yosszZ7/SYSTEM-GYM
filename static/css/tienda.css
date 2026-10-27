@@ -247,6 +247,29 @@ body.tienda-body {
     background: var(--store-primary);
 }
 
+/* Botón para regresar al Dashboard (solo personal / administradores) */
+.store-back-dashboard {
+    text-decoration: none;
+    background: var(--store-primary-soft);
+    color: var(--store-primary);
+    border: 1.5px solid #FED7AA;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 7px 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.store-back-dashboard:hover {
+    background: var(--store-primary);
+    border-color: var(--store-primary);
+    color: #FFFFFF;
+}
+
 .store-icon-btn {
     position: relative;
     background: none;
@@ -1461,7 +1484,8 @@ body.tienda-body {
     .store-detail-grid {
         grid-template-columns: 1fr;
     }
-    .store-admin-pill span {
+    .store-admin-pill span,
+    .store-back-dashboard span {
         display: none;
     }
 }
