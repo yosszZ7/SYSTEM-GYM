@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgShaker" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="70%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </radialGradient>
+    <linearGradient id="shakerCup" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#18181B"/>
+      <stop offset="30%" stop-color="#3F3F46"/>
+      <stop offset="65%" stop-color="#27272A"/>
+      <stop offset="100%" stop-color="#09090B"/>
+    </linearGradient>
+    <filter id="shadow8" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="15" flood-color="#0F172A" flood-opacity="0.17"/>
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgShaker)"/>
+  <ellipse cx="250" cy="442" rx="95" ry="15" fill="#0F172A" opacity="0.12"/>
+  <g filter="url(#shadow8)">
+    <!-- Flip Cap Spout -->
+    <rect x="228" y="54" width="44" height="28" rx="8" fill="#F58220"/>
+    <!-- Carry Loop -->
+    <path d="M295 85 L340 85 L340 112 L295 112 Z" fill="#18181B"/>
+    <!-- Dome Lid -->
+    <path d="M168 118 Q250 68 332 118 Z" fill="#18181B"/>
+    <!-- Orange Collar -->
+    <rect x="162" y="116" width="176" height="24" rx="6" fill="#F58220"/>
+    <!-- Tapered Shaker Body -->
+    <path d="M170 140 L330 140 L308 426 Q250 436 192 426 Z" fill="url(#shakerCup)"/>
+    <!-- Vertical Logo Print -->
+    <text x="250" y="246" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Impact, sans-serif" font-weight="900" font-size="26" letter-spacing="1.5">WORLD<tspan fill="#F58220">GYM</tspan></text>
+    <text x="250" y="268" text-anchor="middle" fill="#A1A1AA" font-family="Inter, sans-serif" font-weight="700" font-size="11" letter-spacing="3">PRO SHAKER</text>
+    <!-- Stainless Mixer Ball Icon -->
+    <circle cx="250" cy="322" r="24" fill="none" stroke="#F58220" stroke-width="2.5" stroke-dasharray="6 4"/>
+    <ellipse cx="250" cy="322" rx="24" ry="10" fill="none" stroke="#F58220" stroke-width="2"/>
+    <text x="250" y="378" text-anchor="middle" fill="#E4E4E7" font-family="Inter, sans-serif" font-weight="700" font-size="12" letter-spacing="1">700 ML • LIBRE DE BPA</text>
+    <!-- Measurement ticks -->
+    <line x1="298" y1="185" x2="310" y2="185" stroke="#71717A" stroke-width="2"/>
+    <line x1="295" y1="230" x2="307" y2="230" stroke="#71717A" stroke-width="2"/>
+    <line x1="292" y1="275" x2="304" y2="275" stroke="#71717A" stroke-width="2"/>
+    <line x1="289" y1="320" x2="301" y2="320" stroke="#71717A" stroke-width="2"/>
+  </g>
+</svg>

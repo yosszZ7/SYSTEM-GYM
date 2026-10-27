@@ -7,12 +7,22 @@
 <div class="page-container">
     <div class="page-header">
         <div class="page-header-left">
-            <h1><i class="fas fa-box"></i> Lista de Productos</h1>
-            <p>Gestión completa de todos los productos registrados</p>
+            <h1><i class="fas fa-box"></i> Catálogo y Administración de Productos</h1>
+            <p>Gestione los suplementos, precios, imágenes, ofertas, existencias y visibilidad en la Tienda del Cliente</p>
         </div>
-        <a href="/producto_registrar" class="btn btn-primary">
-            <i class="fas fa-plus-circle"></i> Nuevo Producto
-        </a>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/tienda" class="btn btn-secondary" title="Abrir la Tienda de Suplementos y Productos">
+                <i class="fas fa-store" style="color: #F58220;"></i> Ver Tienda del Cliente
+            </a>
+            <form method="POST" action="/producto_sincronizar_catalogo" style="margin: 0;">
+                <button type="submit" class="btn btn-secondary" title="Registrar productos de demostración en la base de datos SQL Server sin duplicar">
+                    <i class="fas fa-wand-magic-sparkles"></i> Cargar Catálogo Base en BD
+                </button>
+            </form>
+            <a href="/producto_registrar" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Nuevo Producto
+            </a>
+        </div>
     </div>
 
     <!-- TARJETA DE BÚSQUEDA COMPACTA Y DELGADA -->
@@ -21,7 +31,7 @@
             <div class="search-box" style="max-width: 580px; margin: 0 auto;">
                 <div class="search-input-group" style="display: flex; gap: 8px; align-items: center;">
                     <div style="position: relative; flex: 1;">
-                        <input type="text" id="buscadorProductos" placeholder="Nombre del producto a buscar..." aria-label="Nombre del producto"
+                        <input type="text" id="buscadorProductos" placeholder="Buscar por nombre, marca o categoría..." aria-label="Nombre del producto"
                                style="width: 100%; height: 38px; padding: 6px 34px 6px 14px; border: 1.5px solid var(--border-color, #E8EBEF); border-radius: 8px; background: #FFFFFF; color: var(--text, #252B36); font-size: 13.5px; outline: none; transition: all 0.2s ease;">
                         <button type="button" id="btnLimpiarBusqueda" onclick="restablecerListaCompleta()" title="Limpiar búsqueda" 
                                 style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary, #7B8491); cursor: pointer; display: none; padding: 4px; font-size: 13px;">
@@ -32,9 +42,6 @@
                         <i class="fas fa-search"></i> Buscar
                     </button>
                 </div>
-                <small class="form-text" style="display: block; margin-top: 4px; color: var(--text-secondary, #7B8491); font-size: 11.5px; text-align: center;">
-                    Presione Enter o haga clic en el botón para buscar
-                </small>
             </div>
         </div>
     </div>
@@ -43,7 +50,7 @@
     <div class="card" id="cardResultados">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 20px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <h2 style="margin: 0; font-size: 1.1rem;" id="tituloTabla"><i class="fas fa-list"></i> Productos Registrados</h2>
+                <h2 style="margin: 0; font-size: 1.1rem;" id="tituloTabla"><i class="fas fa-list"></i> Productos en Base de Datos</h2>
                 <span id="productoCountBadge" class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
                     {{ productos|length }} registro{{ 's' if productos|length != 1 else '' }}
                 </span>
@@ -61,46 +68,86 @@
                     <thead>
                         <tr>
                             <th style="width: 45px; text-align: center; padding: 10px 8px; font-size: 11px;">ID</th>
-                            <th style="padding: 10px 10px; font-size: 11px;">NOMBRE PRODUCTO</th>
+                            <th style="width: 58px; text-align: center; padding: 10px 8px; font-size: 11px;">IMG</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRODUCTO / PRESENTACIÓN</th>
                             <th style="padding: 10px 10px; font-size: 11px;">MARCA</th>
                             <th style="padding: 10px 10px; font-size: 11px;">CATEGORÍA</th>
-                            <th style="padding: 10px 10px; font-size: 11px;">PRECIO</th>
-                            <th style="width: 70px; text-align: center; padding: 10px 8px; font-size: 11px;">STOCK</th>
-                            <th style="width: 115px; text-align: center; padding: 10px 10px; font-size: 11px; white-space: nowrap;">FECHA REGISTRO</th>
-                            <th style="text-align: center; width: 65px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
+                            <th style="padding: 10px 10px; font-size: 11px;">PRECIO (C$)</th>
+                            <th style="width: 85px; text-align: center; padding: 10px 8px; font-size: 11px;">OFERTA</th>
+                            <th style="width: 75px; text-align: center; padding: 10px 8px; font-size: 11px;">STOCK</th>
+                            <th style="width: 95px; text-align: center; padding: 10px 8px; font-size: 11px;">TIENDA</th>
+                            <th style="text-align: center; width: 85px; padding: 10px 8px; font-size: 11px;">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaProductos">
                         {% for producto in productos %}
                         <tr class="fila-producto-inicial">
                             <td style="text-align: center; padding: 8px 8px; font-size: 13px;">{{ producto.IdProducto }}</td>
-                            <td style="padding: 8px 10px; font-size: 13px;"><strong>{{ producto.NombreProducto }}</strong></td>
+                            <td style="text-align: center; padding: 6px 8px;">
+                                <img src="{{ producto.ImagenUrl or '/static/image/productos/default_suplemento.svg' }}"
+                                     alt="{{ producto.NombreProducto }}"
+                                     style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px; border: 1px solid #E8EBEF; background: #FFFFFF; padding: 3px;"
+                                     onerror="this.src='/static/image/productos/default_suplemento.svg'">
+                            </td>
+                            <td style="padding: 8px 10px; font-size: 13px;">
+                                <strong>{{ producto.NombreProducto }}</strong>
+                                {% if producto.EsDemo %}
+                                <span style="background: #EEF2FF; color: #4338CA; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-left: 4px;">DEMO</span>
+                                {% endif %}
+                                {% if producto.Presentacion %}
+                                <small style="display: block; color: #7B8491; font-size: 11.5px;">{{ producto.Presentacion }}</small>
+                                {% endif %}
+                            </td>
                             <td style="padding: 8px 10px; font-size: 13px;">{{ producto.Marca or '-' }}</td>
                             <td style="padding: 8px 10px;">
                                 <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F58220); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
-                                    {{ producto.Categoria or 'General' }}
+                                    {{ producto.CategoriaTienda or producto.Categoria or 'General' }}
                                 </span>
                             </td>
-                            <td style="padding: 8px 10px; font-size: 13px; font-weight: 600; color: #10B981; white-space: nowrap;">C${{ producto.Precio }}</td>
+                            <td style="padding: 8px 10px; font-size: 13px; font-weight: 700; color: #10B981; white-space: nowrap;">
+                                C${{ "%.2f"|format(producto.Precio|float) }}
+                                {% if producto.Descuento and producto.Descuento > 0 and producto.PrecioAnterior %}
+                                <small style="display: block; color: #94A3B8; text-decoration: line-through; font-size: 11px;">C${{ "%.2f"|format(producto.PrecioAnterior|float) }}</small>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center; padding: 8px 8px;">
+                                {% if producto.Descuento and producto.Descuento > 0 %}
+                                <span style="background: #FACC15; color: #18181B; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
+                                    -{{ producto.Descuento }}%
+                                </span>
+                                {% else %}
+                                <span style="color: #94A3B8; font-size: 12px;">—</span>
+                                {% endif %}
+                            </td>
                             <td style="text-align: center; padding: 8px 8px; font-size: 13px;">
                                 <span class="badge {% if producto.Stock > 5 %}badge-success{% elif producto.Stock > 0 %}badge-warning{% else %}badge-danger{% endif %}" style="font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
                                     {{ producto.Stock }}
                                 </span>
                             </td>
-                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">
-                                {{ producto.FechaRegistro }}
+                            <td style="text-align: center; padding: 8px 8px;">
+                                <button type="button"
+                                        onclick="alternarVisibilidadTienda({{ producto.IdProducto }}, this)"
+                                        class="badge {% if producto.VisibleTienda is not defined or producto.VisibleTienda %}badge-success{% else %}badge-danger{% endif %}"
+                                        style="border: none; cursor: pointer; font-size: 11px; padding: 4px 9px; border-radius: 999px;"
+                                        title="Clic para activar o desactivar en la tienda del cliente">
+                                    {% if producto.VisibleTienda is not defined or producto.VisibleTienda %}
+                                    <i class="fas fa-eye"></i> Visible
+                                    {% else %}
+                                    <i class="fas fa-eye-slash"></i> Oculto
+                                    {% endif %}
+                                </button>
                             </td>
                             <td class="table-actions" style="text-align: center; padding: 8px 8px;">
-                                <a href="/producto_actualizar/{{ producto.IdProducto }}" class="btn-edit" title="Editar" style="padding: 4px 8px; font-size: 12px;">
+                                <a href="/producto_actualizar/{{ producto.IdProducto }}" class="btn-edit" title="Editar producto, imagen y oferta" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="8" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #7B8491);">
+                            <td colspan="10" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #7B8491);">
                                 <i class="fas fa-box-open" style="font-size: 2rem; color: var(--border-color, #E8EBEF); display: block; margin-bottom: 0.5rem;"></i>
-                                No hay productos registrados en el sistema
+                                No hay productos registrados en la base de datos. Puede hacer clic en <strong>"Cargar Catálogo Base en BD"</strong> o <strong>"Nuevo Producto"</strong>.
                             </td>
                         </tr>
                         {% endfor %}
@@ -112,6 +159,25 @@
 </div>
 
 <script>
+function alternarVisibilidadTienda(idProducto, btnEl) {
+    fetch('/api/tienda/visibilidad/' + idProducto, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (data.visible) {
+                    btnEl.className = 'badge badge-success';
+                    btnEl.innerHTML = '<i class="fas fa-eye"></i> Visible';
+                } else {
+                    btnEl.className = 'badge badge-danger';
+                    btnEl.innerHTML = '<i class="fas fa-eye-slash"></i> Oculto';
+                }
+                if (typeof mostrarToast === 'function') {
+                    mostrarToast(data.mensaje || 'Visibilidad actualizada', 'success');
+                }
+            }
+        });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const inputBuscar = document.getElementById('buscadorProductos');
     const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
@@ -125,25 +191,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let debounceTimer = null;
 
-    function formatearFecha(fechaStr) {
-        if (!fechaStr || fechaStr === '-') return '-';
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaStr)) return fechaStr;
-        const matchISO = String(fechaStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (matchISO) {
-            return `${matchISO[3]}/${matchISO[2]}/${matchISO[1]}`;
-        }
-        try {
-            const d = new Date(fechaStr);
-            if (isNaN(d.getTime())) return fechaStr;
-            const day = String(d.getUTCDate()).padStart(2, '0');
-            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-            const year = d.getUTCFullYear();
-            return `${day}/${month}/${year}`;
-        } catch (e) {
-            return fechaStr;
-        }
-    }
-
     window.ejecutarBusquedaProducto = function() {
         const nombre = inputBuscar ? inputBuscar.value.trim() : '';
 
@@ -154,18 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!nombre) {
             restablecerListaCompleta();
             return;
-        }
-
-        if (cuerpoTabla) {
-            cuerpoTabla.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center" style="padding: 2rem 1rem;">
-                        <div class="spinner-border" role="status" style="width: 1.8rem; height: 1.8rem; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; animation: spinner-border .75s linear infinite; color: var(--primary, #F58220);">
-                            <span class="sr-only">Buscando...</span>
-                        </div>
-                        <p style="margin: 6px 0 0 0; font-size: 12.5px; color: var(--text-secondary, #7B8491);">Buscando productos...</p>
-                    </td>
-                </tr>`;
         }
 
         fetch('/api/productos/buscar?nombre=' + encodeURIComponent(nombre))
@@ -182,13 +217,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (cuerpoTabla) {
                         cuerpoTabla.innerHTML = `
                             <tr>
-                                <td colspan="8" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #7B8491);">
+                                <td colspan="10" class="text-center" style="padding: 2.5rem 1rem; color: var(--text-secondary, #7B8491);">
                                     <i class="fas fa-search" style="font-size: 2.2rem; color: var(--border-color, #E8EBEF); display: block; margin-bottom: 0.5rem;"></i>
-                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #252B36);">No se encontraron productos con el nombre "<strong>${nombre}</strong>"</span>
-                                    <p style="margin: 4px 0 14px 0; font-size: 12.5px; color: var(--text-secondary, #7B8491);">Intente con otro término o restablezca la lista completa</p>
-                                    <button type="button" onclick="restablecerListaCompleta()" class="btn btn-secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">
-                                        <i class="fas fa-list" style="margin-right: 4px;"></i> Ver todos los productos
-                                    </button>
+                                    <span style="font-size: 1rem; font-weight: 600; color: var(--text, #252B36);">No se encontraron productos con "${nombre}"</span>
                                 </td>
                             </tr>`;
                     }
@@ -203,29 +234,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 let htmlFilas = '';
                 data.forEach(function(p) {
                     const marca = p.Marca || '-';
-                    const categoria = p.Categoria || 'General';
-                    const precio = p.Precio || '0.00';
+                    const categoria = p.CategoriaTienda || p.Categoria || 'General';
+                    const precio = Number(p.Precio || 0).toFixed(2);
                     const stock = p.Stock !== undefined ? p.Stock : 0;
-                    const fechaRegistro = formatearFecha(p.FechaRegistro);
+                    const img = p.ImagenUrl || '/static/image/productos/default_suplemento.svg';
                     const badgeStockClass = stock > 5 ? 'badge-success' : (stock > 0 ? 'badge-warning' : 'badge-danger');
+                    const visible = p.VisibleTienda !== false;
 
                     htmlFilas += `
                         <tr>
                             <td style="text-align: center; padding: 8px 8px; font-size: 13px;">${p.IdProducto}</td>
-                            <td style="padding: 8px 10px; font-size: 13px;"><strong>${p.NombreProducto}</strong></td>
+                            <td style="text-align: center; padding: 6px 8px;">
+                                <img src="${img}" alt="${p.NombreProducto}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px; border: 1px solid #E8EBEF; background: #FFFFFF; padding: 3px;">
+                            </td>
+                            <td style="padding: 8px 10px; font-size: 13px;">
+                                <strong>${p.NombreProducto}</strong>
+                                ${p.Presentacion ? `<small style="display:block;color:#7B8491;font-size:11.5px;">${p.Presentacion}</small>` : ''}
+                            </td>
                             <td style="padding: 8px 10px; font-size: 13px;">${marca}</td>
                             <td style="padding: 8px 10px;">
                                 <span class="badge badge-primary" style="background: var(--primary-bg, #FFF7ED); color: var(--primary, #F58220); border: 1px solid var(--primary-light, #FCE3CC); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11.5px;">
                                     ${categoria}
                                 </span>
                             </td>
-                            <td style="padding: 8px 10px; font-size: 13px; font-weight: 600; color: #10B981; white-space: nowrap;">C$${precio}</td>
+                            <td style="padding: 8px 10px; font-size: 13px; font-weight: 700; color: #10B981; white-space: nowrap;">C$${precio}</td>
+                            <td style="text-align: center; padding: 8px 8px;">
+                                ${p.Descuento > 0 ? `<span style="background:#FACC15;color:#18181B;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;">-${p.Descuento}%</span>` : '—'}
+                            </td>
                             <td style="text-align: center; padding: 8px 8px; font-size: 13px;">
                                 <span class="badge ${badgeStockClass}" style="font-size: 11.5px; padding: 2px 8px; border-radius: 6px;">
                                     ${stock}
                                 </span>
                             </td>
-                            <td style="text-align: center; padding: 8px 10px; font-size: 13px; white-space: nowrap;">${fechaRegistro}</td>
+                            <td style="text-align: center; padding: 8px 8px;">
+                                <span class="badge ${visible ? 'badge-success' : 'badge-danger'}" style="font-size: 11px; padding: 4px 9px; border-radius: 999px;">
+                                    ${visible ? 'Visible' : 'Oculto'}
+                                </span>
+                            </td>
                             <td class="table-actions" style="text-align: center; padding: 8px 8px;">
                                 <a href="/producto_actualizar/${p.IdProducto}" class="btn-edit" title="Editar" style="padding: 4px 8px; font-size: 12px;">
                                     <i class="fas fa-edit"></i>
@@ -237,17 +282,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (cuerpoTabla) {
                     cuerpoTabla.innerHTML = htmlFilas;
                 }
-            })
-            .catch(() => {
-                if (cuerpoTabla) {
-                    cuerpoTabla.innerHTML = `
-                        <tr>
-                            <td colspan="8" class="text-center" style="padding: 2.5rem 1rem; color: #EF4444;">
-                                <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                                Error al buscar productos. Intente nuevamente.
-                            </td>
-                        </tr>`;
-                }
             });
     };
 
@@ -255,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (inputBuscar) inputBuscar.value = '';
         if (btnLimpiar) btnLimpiar.style.display = 'none';
         if (btnVerTodosContainer) btnVerTodosContainer.style.display = 'none';
-        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Productos Registrados';
+        if (tituloTabla) tituloTabla.innerHTML = '<i class="fas fa-list"></i> Productos en Base de Datos';
         if (badgeCount) {
             badgeCount.textContent = totalInicial + (totalInicial === 1 ? ' registro' : ' registros');
             badgeCount.className = 'badge badge-info';
@@ -263,7 +297,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cuerpoTabla) {
             cuerpoTabla.innerHTML = htmlInicialTabla;
         }
-        if (inputBuscar) inputBuscar.focus();
     };
 
     if (inputBuscar) {
@@ -276,25 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 debounceTimer = setTimeout(window.ejecutarBusquedaProducto, 250);
             }
         });
-
-        inputBuscar.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                clearTimeout(debounceTimer);
-                window.ejecutarBusquedaProducto();
-            }
-        });
-
-        inputBuscar.addEventListener('focus', function() {
-            this.style.borderColor = 'var(--primary, #F58220)';
-            this.style.boxShadow = '0 0 0 3px rgba(245, 130, 32, 0.15)';
-        });
-        inputBuscar.addEventListener('blur', function() {
-            this.style.borderColor = 'var(--border-color, #E8EBEF)';
-            this.style.boxShadow = 'none';
-        });
     }
 });
 </script>
-</div>
 {% endblock %}

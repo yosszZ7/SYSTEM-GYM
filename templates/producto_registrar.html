@@ -8,29 +8,33 @@
     <div class="page-header">
         <div class="page-header-left">
             <h1><i class="fas fa-box"></i> Registrar Producto</h1>
-            <p>Complete los datos para agregar un nuevo producto al inventario</p>
+            <p>Complete los datos para agregar un nuevo producto al inventario y a la Tienda de Suplementos</p>
         </div>
-        <a href="/producto_listar" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver
-        </a>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/tienda" class="btn btn-secondary" title="Ver cómo luce la tienda para el cliente">
+                <i class="fas fa-store"></i> Ver Tienda del Cliente
+            </a>
+            <a href="/producto_listar" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h2><i class="fas fa-box"></i> Datos del Producto</h2>
+            <h2><i class="fas fa-box"></i> Datos del Producto y Configuración de Tienda</h2>
             <span class="badge badge-info"><i class="fas fa-clock"></i> Nuevo</span>
         </div>
         
         <div class="card-body">
-            <form method="POST" action="/producto_registrar">
-                <!-- SpRegistrarProducto: NombreProducto, Marca, Categoria, Precio -->
+            <form method="POST" action="/producto_registrar" enctype="multipart/form-data">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="NombreProducto">
                             <i class="fas fa-tag"></i> Nombre del Producto <span class="required">*</span>
                         </label>
                         <input type="text" id="NombreProducto" name="NombreProducto" 
-                               placeholder="Ej: Proteína Whey" maxlength="100" required>
+                               placeholder="Ej: Proteína Raptor Hydro Whey" maxlength="100" required>
                         <small class="help-text">Máximo 100 caracteres</small>
                     </div>
                     
@@ -39,8 +43,8 @@
                             <i class="fas fa-trademark"></i> Marca <span class="required">*</span>
                         </label>
                         <input type="text" id="Marca" name="Marca" 
-                               placeholder="Ej: Optimum Nutrition" maxlength="100" required>
-                        <small class="help-text">Máximo 100 caracteres</small>
+                               placeholder="Ej: RAPTOR PERFORMANCE / POWER LABS" maxlength="100" required>
+                        <small class="help-text">Marca del suplemento o accesorio</small>
                     </div>
                     
                     <div class="form-group">
@@ -49,22 +53,35 @@
                         </label>
                         <select id="Categoria" name="Categoria" required>
                             <option value="">Seleccionar categoría...</option>
-                            <option value="Suplementos">Suplementos</option>
-                            <option value="Ropa">Ropa</option>
-                            <option value="Accesorios">Accesorios</option>
-                            <option value="Bebidas">Bebidas</option>
+                            <option value="Proteínas">Proteínas</option>
+                            <option value="Creatina">Creatina</option>
+                            <option value="Preentrenos">Preentrenos</option>
+                            <option value="Ganadores de masa">Ganadores de masa muscular</option>
+                            <option value="Bebidas energéticas">Bebidas energéticas e hidratación</option>
+                            <option value="Accesorios">Accesorios (Shakers, Guantes, Straps)</option>
+                            <option value="Suplementos">Otros Suplementos Deportivos</option>
+                            <option value="Ropa">Ropa Deportiva</option>
                             <option value="Equipos">Equipos</option>
                         </select>
-                        <small class="help-text">Categoría del producto</small>
+                        <small class="help-text">Categoría en la que aparecerá en la tienda</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Presentacion">
+                            <i class="fas fa-weight-hanging"></i> Presentación / Contenido
+                        </label>
+                        <input type="text" id="Presentacion" name="Presentacion"
+                               placeholder="Ej: Bote 5 lbs (2.27 kg) • 71 servicios • Sabor Chocolate" maxlength="180">
+                        <small class="help-text">Peso, servicios, sabor o talla del producto</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="Precio">
-                            <i class="fas fa-dollar-sign"></i> Precio <span class="required">*</span>
+                            <i class="fas fa-coins"></i> Precio Actual (C$) <span class="required">*</span>
                         </label>
                         <input type="number" id="Precio" name="Precio" 
-                               placeholder="Ej: 35.00" step="0.01" min="0" required>
-                        <small class="help-text">Precio del producto (debe ser mayor a 0)</small>
+                               placeholder="Ej: 2650.00" step="0.01" min="0.01" required>
+                        <small class="help-text">Precio de venta al cliente en córdobas nicaragüenses (C$)</small>
                     </div>
 
                     <div class="form-group">
@@ -72,13 +89,80 @@
                             <i class="fas fa-boxes"></i> Stock Inicial <span class="required">*</span>
                         </label>
                         <input type="number" id="Stock" name="Stock" 
-                               value="0" step="1" min="0" required style="width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text); font-size: 14px;">
-                        <small class="help-text">Cantidad inicial disponible en inventario</small>
+                               value="10" step="1" min="0" required>
+                        <small class="help-text">Cantidad disponible en inventario</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Descuento">
+                            <i class="fas fa-percent"></i> Descuento de Oferta (%)
+                        </label>
+                        <input type="number" id="Descuento" name="Descuento"
+                               value="0" step="1" min="0" max="90">
+                        <small class="help-text">Si es mayor a 0%, mostrará la etiqueta amarilla OFERTA en la tienda</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="PrecioAnterior">
+                            <i class="fas fa-tag"></i> Precio Anterior (C$) <small style="font-weight: 400;">(Opcional)</small>
+                        </label>
+                        <input type="number" id="PrecioAnterior" name="PrecioAnterior"
+                               placeholder="Se calcula automáticamente si hay % descuento" step="0.01" min="0">
+                        <small class="help-text">Precio tachado antes del descuento</small>
                     </div>
                 </div>
 
-                <!-- Botones -->
-                <div class="card-footer">
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="Descripcion">
+                        <i class="fas fa-align-left"></i> Descripción del Producto
+                    </label>
+                    <textarea id="Descripcion" name="Descripcion" rows="2" maxlength="500"
+                              placeholder="Ej: Proteína aislada de suero de alta pureza con 30g de proteína y 6.8g de BCAA por servicio..."></textarea>
+                </div>
+
+                <!-- SECCIÓN DE IMAGEN DEL PRODUCTO -->
+                <div style="margin-top: 18px; padding: 16px; border: 1px solid var(--border-color, #E8EBEF); border-radius: 12px; background: #F8FAFC;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14.5px; font-weight: 700; color: var(--text, #252B36);">
+                        <i class="fas fa-image" style="color: #F58220;"></i> Imagen del Producto para la Tienda
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: center;">
+                        <div class="form-group" style="margin: 0;">
+                            <label for="ImagenArchivo"><i class="fas fa-upload"></i> Subir fotografía desde tu equipo</label>
+                            <input type="file" id="ImagenArchivo" name="ImagenArchivo" accept="image/*" onchange="previsualizarArchivoImagen(this)">
+                            <small class="help-text">Formatos permitidos: JPG, PNG, WEBP, SVG</small>
+                        </div>
+
+                        <div class="form-group" style="margin: 0;">
+                            <label for="ImagenPredefinida"><i class="fas fa-images"></i> O elegir ilustración deportiva de referencia</label>
+                            <select id="ImagenPredefinida" name="ImagenPredefinida" onchange="previsualizarSelectorImagen(this.value)">
+                                <option value="">Asignar automáticamente según nombre/categoría</option>
+                                {% for img in imagenes_suplementos %}
+                                <option value="{{ img.url }}">{{ img.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="help-text">Se usa si no subes una foto personalizada</small>
+                        </div>
+
+                        <div style="width: 96px; height: 96px; border-radius: 12px; border: 1px solid #E8EBEF; background: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 8px;">
+                            <img id="previewImagenProducto" src="/static/image/productos/raptor_whey.svg" alt="Vista previa" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPCIONES DE VISIBILIDAD Y DESTACADO EN TIENDA -->
+                <div style="margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; padding: 12px 16px; border-radius: 10px; background: #FFF7ED; border: 1px solid #FED7AA;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin: 0;">
+                        <input type="checkbox" name="VisibleTienda" value="1" checked style="width: 18px; height: 18px; accent-color: #F58220;">
+                        <span><i class="fas fa-eye" style="color: #F58220;"></i> Mostrar producto en la Tienda del Cliente</span>
+                    </label>
+
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin: 0;">
+                        <input type="checkbox" name="Destacado" value="1" style="width: 18px; height: 18px; accent-color: #F58220;">
+                        <span><i class="fas fa-bolt" style="color: #F59E0B;"></i> Destacar en la sección principal de Ofertas / Destacados</span>
+                    </label>
+                </div>
+
+                <div class="card-footer" style="margin-top: 20px;">
                     <button type="reset" class="btn btn-secondary">
                         <i class="fas fa-undo"></i> Limpiar
                     </button>
@@ -90,4 +174,25 @@
         </div>
     </div>
 </div>
+
+<script>
+function previsualizarArchivoImagen(input) {
+    const preview = document.getElementById('previewImagenProducto');
+    if (input.files && input.files[0] && preview) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function previsualizarSelectorImagen(url) {
+    const preview = document.getElementById('previewImagenProducto');
+    const fileInput = document.getElementById('ImagenArchivo');
+    if (fileInput && fileInput.files && fileInput.files.length > 0) return;
+    if (preview) {
+        preview.src = url || '/static/image/productos/default_suplemento.svg';
+    }
+}
+</script>
 {% endblock %}

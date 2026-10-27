@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="65%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </radialGradient>
+    <linearGradient id="tubBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#18181B"/>
+      <stop offset="22%" stop-color="#3F3F46"/>
+      <stop offset="50%" stop-color="#1F1F23"/>
+      <stop offset="82%" stop-color="#09090B"/>
+      <stop offset="100%" stop-color="#27272A"/>
+    </linearGradient>
+    <linearGradient id="raptorRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="50%" stop-color="#B91C1C"/>
+      <stop offset="100%" stop-color="#7F1D1D"/>
+    </linearGradient>
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="50%" stop-color="#FDE047"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <filter id="dropShadow" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGlow)"/>
+  <ellipse cx="250" cy="442" rx="135" ry="18" fill="#0F172A" opacity="0.12"/>
+  <g filter="url(#dropShadow)">
+    <!-- Lid -->
+    <rect x="148" y="58" width="204" height="36" rx="8" fill="url(#tubBody)"/>
+    <rect x="148" y="82" width="204" height="8" fill="#DC2626"/>
+    <!-- Neck -->
+    <path d="M160 94 L340 94 L358 128 L142 128 Z" fill="url(#tubBody)"/>
+    <!-- Main Tub -->
+    <rect x="132" y="124" width="236" height="304" rx="26" fill="url(#tubBody)"/>
+    <!-- Label -->
+    <rect x="136" y="160" width="228" height="236" rx="8" fill="url(#raptorRed)"/>
+    <!-- Metallic stripes -->
+    <rect x="136" y="160" width="228" height="8" fill="url(#goldAccent)"/>
+    <rect x="136" y="388" width="228" height="8" fill="url(#goldAccent)"/>
+    <!-- Claw / Graphic Accent -->
+    <path d="M165 180 L205 250 L185 255 L155 185 Z" fill="#FDE047" opacity="0.22"/>
+    <path d="M195 175 L238 255 L218 260 L182 180 Z" fill="#FDE047" opacity="0.28"/>
+    <path d="M225 180 L265 250 L248 255 L212 185 Z" fill="#FDE047" opacity="0.22"/>
+    <!-- Brand -->
+    <rect x="190" y="182" width="120" height="24" rx="4" fill="#18181B"/>
+    <text x="250" y="199" text-anchor="middle" fill="#FDE047" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="13" letter-spacing="2">PERFORMANCE</text>
+    <text x="250" y="248" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Impact, sans-serif" font-weight="900" font-size="42" letter-spacing="1.5">RAPTOR</text>
+    <text x="250" y="274" text-anchor="middle" fill="#FDE047" font-family="Inter, Arial, sans-serif" font-weight="800" font-size="15" letter-spacing="3">HYDRO WHEY ISOLATE</text>
+    <!-- Macro badges -->
+    <rect x="156" y="294" width="60" height="46" rx="6" fill="#18181B" opacity="0.9"/>
+    <text x="186" y="316" text-anchor="middle" fill="#FDE047" font-family="Inter, sans-serif" font-weight="900" font-size="16">30g</text>
+    <text x="186" y="331" text-anchor="middle" fill="#E4E4E7" font-family="Inter, sans-serif" font-weight="700" font-size="9">PROTEÍNA</text>
+
+    <rect x="220" y="294" width="60" height="46" rx="6" fill="#18181B" opacity="0.9"/>
+    <text x="250" y="316" text-anchor="middle" fill="#FDE047" font-family="Inter, sans-serif" font-weight="900" font-size="16">6.8g</text>
+    <text x="250" y="331" text-anchor="middle" fill="#E4E4E7" font-family="Inter, sans-serif" font-weight="700" font-size="9">BCAA</text>
+
+    <rect x="284" y="294" width="60" height="46" rx="6" fill="#18181B" opacity="0.9"/>
+    <text x="314" y="316" text-anchor="middle" fill="#FDE047" font-family="Inter, sans-serif" font-weight="900" font-size="16">0g</text>
+    <text x="314" y="331" text-anchor="middle" fill="#E4E4E7" font-family="Inter, sans-serif" font-weight="700" font-size="9">AZÚCAR</text>
+
+    <text x="250" y="368" text-anchor="middle" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="700" font-size="12" letter-spacing="1">CHOCOLATE SUPREMO • 5 LBS (2.27 KG)</text>
+    <!-- Specular Highlight -->
+    <rect x="148" y="130" width="22" height="290" rx="10" fill="#FFFFFF" opacity="0.1"/>
+  </g>
+</svg>

@@ -8,11 +8,16 @@
     <div class="page-header">
         <div class="page-header-left">
             <h1><i class="fas fa-box-edit"></i> Actualizar Producto</h1>
-            <p>Modifique los datos del producto seleccionado</p>
+            <p>Modifique precios, existencias, descuentos, imagen o visibilidad en la Tienda del Cliente</p>
         </div>
-        <a href="/producto_listar" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver
-        </a>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/tienda" class="btn btn-secondary">
+                <i class="fas fa-store"></i> Ver en Tienda
+            </a>
+            <a href="/producto_listar" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
     </div>
 
     <div class="card">
@@ -22,8 +27,7 @@
         </div>
         
         <div class="card-body">
-            <form method="POST" action="/producto_actualizar/{{ producto.IdProducto }}">
-                <!-- SpActualizarProducto: IdProducto, NombreProducto, Marca, Categoria, Precio -->
+            <form method="POST" action="/producto_actualizar/{{ producto.IdProducto }}" enctype="multipart/form-data">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="NombreProducto">
@@ -40,7 +44,7 @@
                         </label>
                         <input type="text" id="Marca" name="Marca" 
                                value="{{ producto.Marca }}" maxlength="100" required>
-                        <small class="help-text">Máximo 100 caracteres</small>
+                        <small class="help-text">Marca del producto</small>
                     </div>
                     
                     <div class="form-group">
@@ -49,22 +53,37 @@
                         </label>
                         <select id="Categoria" name="Categoria" required>
                             <option value="">Seleccionar categoría...</option>
-                            <option value="Suplementos" {% if producto.Categoria == 'Suplementos' %}selected{% endif %}>Suplementos</option>
-                            <option value="Ropa" {% if producto.Categoria == 'Ropa' %}selected{% endif %}>Ropa</option>
-                            <option value="Accesorios" {% if producto.Categoria == 'Accesorios' %}selected{% endif %}>Accesorios</option>
-                            <option value="Bebidas" {% if producto.Categoria == 'Bebidas' %}selected{% endif %}>Bebidas</option>
-                            <option value="Equipos" {% if producto.Categoria == 'Equipos' %}selected{% endif %}>Equipos</option>
+                            {% set cat_actual = producto.Categoria or '' %}
+                            <option value="Proteínas" {% if cat_actual == 'Proteínas' %}selected{% endif %}>Proteínas</option>
+                            <option value="Creatina" {% if cat_actual == 'Creatina' %}selected{% endif %}>Creatina</option>
+                            <option value="Preentrenos" {% if cat_actual == 'Preentrenos' %}selected{% endif %}>Preentrenos</option>
+                            <option value="Ganadores de masa" {% if cat_actual == 'Ganadores de masa' %}selected{% endif %}>Ganadores de masa muscular</option>
+                            <option value="Bebidas energéticas" {% if cat_actual == 'Bebidas energéticas' or cat_actual == 'Bebidas' %}selected{% endif %}>Bebidas energéticas e hidratación</option>
+                            <option value="Accesorios" {% if cat_actual == 'Accesorios' %}selected{% endif %}>Accesorios (Shakers, Guantes, Straps)</option>
+                            <option value="Suplementos" {% if cat_actual == 'Suplementos' %}selected{% endif %}>Otros Suplementos Deportivos</option>
+                            <option value="Ropa" {% if cat_actual == 'Ropa' %}selected{% endif %}>Ropa Deportiva</option>
+                            <option value="Equipos" {% if cat_actual == 'Equipos' %}selected{% endif %}>Equipos</option>
                         </select>
-                        <small class="help-text">Categoría del producto</small>
+                        <small class="help-text">Categoría del producto en la tienda</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Presentacion">
+                            <i class="fas fa-weight-hanging"></i> Presentación / Contenido
+                        </label>
+                        <input type="text" id="Presentacion" name="Presentacion"
+                               value="{{ producto.Presentacion or '' }}"
+                               placeholder="Ej: Bote 5 lbs • 71 servicios • Sabor Chocolate" maxlength="180">
+                        <small class="help-text">Peso, servicios, sabor o presentación</small>
                     </div>
                     
                     <div class="form-group">
                         <label for="Precio">
-                            <i class="fas fa-dollar-sign"></i> Precio <span class="required">*</span>
+                            <i class="fas fa-coins"></i> Precio Actual (C$) <span class="required">*</span>
                         </label>
                         <input type="number" id="Precio" name="Precio" 
                                value="{{ producto.Precio }}" step="0.01" min="0" required>
-                        <small class="help-text">Precio del producto (no puede ser negativo)</small>
+                        <small class="help-text">Precio vigente en córdobas nicaragüenses (C$)</small>
                     </div>
 
                     <div class="form-group">
@@ -72,12 +91,81 @@
                             <i class="fas fa-boxes"></i> Stock Actual <span class="required">*</span>
                         </label>
                         <input type="number" id="Stock" name="Stock" 
-                               value="{{ producto.Stock }}" step="1" min="0" required style="width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-tertiary); color: var(--text); font-size: 14px;">
-                        <small class="help-text">Cantidad actual disponible en inventario</small>
+                               value="{{ producto.Stock }}" step="1" min="0" required>
+                        <small class="help-text">Existencias disponibles en inventario</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Descuento">
+                            <i class="fas fa-percent"></i> Descuento de Oferta (%)
+                        </label>
+                        <input type="number" id="Descuento" name="Descuento"
+                               value="{{ producto.Descuento or 0 }}" step="1" min="0" max="90">
+                        <small class="help-text">Porcentaje de descuento visible en tienda (0 a 90%)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="PrecioAnterior">
+                            <i class="fas fa-tag"></i> Precio Anterior (C$) <small style="font-weight: 400;">(Opcional)</small>
+                        </label>
+                        <input type="number" id="PrecioAnterior" name="PrecioAnterior"
+                               value="{{ producto.PrecioAnterior if producto.Descuento and producto.Descuento > 0 else '' }}"
+                               placeholder="Automático según descuento" step="0.01" min="0">
+                        <small class="help-text">Precio de referencia tachado cuando está en oferta</small>
                     </div>
                 </div>
 
-                <div class="card-footer">
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="Descripcion">
+                        <i class="fas fa-align-left"></i> Descripción del Producto
+                    </label>
+                    <textarea id="Descripcion" name="Descripcion" rows="2" maxlength="500"
+                              placeholder="Descripción detallada del producto...">{{ producto.Descripcion or '' }}</textarea>
+                </div>
+
+                <!-- SECCIÓN DE IMAGEN DEL PRODUCTO -->
+                <div style="margin-top: 18px; padding: 16px; border: 1px solid var(--border-color, #E8EBEF); border-radius: 12px; background: #F8FAFC;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14.5px; font-weight: 700; color: var(--text, #252B36);">
+                        <i class="fas fa-image" style="color: #F58220;"></i> Imagen del Producto en la Tienda
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: center;">
+                        <div class="form-group" style="margin: 0;">
+                            <label for="ImagenArchivo"><i class="fas fa-upload"></i> Subir nueva fotografía</label>
+                            <input type="file" id="ImagenArchivo" name="ImagenArchivo" accept="image/*" onchange="previsualizarArchivoImagen(this)">
+                            <small class="help-text">Suba una imagen si desea reemplazar la actual</small>
+                        </div>
+
+                        <div class="form-group" style="margin: 0;">
+                            <label for="ImagenPredefinida"><i class="fas fa-images"></i> O elegir ilustración deportiva del catálogo</label>
+                            <select id="ImagenPredefinida" name="ImagenPredefinida" onchange="previsualizarSelectorImagen(this.value)">
+                                <option value="{{ producto.ImagenUrl or '' }}">Conservar imagen actual</option>
+                                {% for img in imagenes_suplementos %}
+                                <option value="{{ img.url }}" {% if producto.ImagenUrl == img.url %}selected{% endif %}>{{ img.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="help-text">Imágenes de suplementos y accesorios deportivos</small>
+                        </div>
+
+                        <div style="width: 96px; height: 96px; border-radius: 12px; border: 1px solid #E8EBEF; background: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 8px;">
+                            <img id="previewImagenProducto" src="{{ producto.ImagenUrl or '/static/image/productos/default_suplemento.svg' }}" alt="Vista previa" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPCIONES DE VISIBILIDAD Y DESTACADO EN TIENDA -->
+                <div style="margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; padding: 12px 16px; border-radius: 10px; background: #FFF7ED; border: 1px solid #FED7AA;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin: 0;">
+                        <input type="checkbox" name="VisibleTienda" value="1" {% if producto.VisibleTienda is not defined or producto.VisibleTienda %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #F58220;">
+                        <span><i class="fas fa-eye" style="color: #F58220;"></i> Mostrar producto en la Tienda del Cliente</span>
+                    </label>
+
+                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin: 0;">
+                        <input type="checkbox" name="Destacado" value="1" {% if producto.Destacado %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #F58220;">
+                        <span><i class="fas fa-bolt" style="color: #F59E0B;"></i> Destacar en la sección principal de Ofertas / Destacados</span>
+                    </label>
+                </div>
+
+                <div class="card-footer" style="margin-top: 20px;">
                     <a href="/producto_listar" class="btn btn-secondary">
                         <i class="fas fa-times"></i> Cancelar
                     </a>
@@ -89,4 +177,25 @@
         </div>
     </div>
 </div>
+
+<script>
+function previsualizarArchivoImagen(input) {
+    const preview = document.getElementById('previewImagenProducto');
+    if (input.files && input.files[0] && preview) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function previsualizarSelectorImagen(url) {
+    const preview = document.getElementById('previewImagenProducto');
+    const fileInput = document.getElementById('ImagenArchivo');
+    if (fileInput && fileInput.files && fileInput.files.length > 0) return;
+    if (preview && url) {
+        preview.src = url;
+    }
+}
+</script>
 {% endblock %}

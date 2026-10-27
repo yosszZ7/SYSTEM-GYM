@@ -270,7 +270,7 @@
                     mostrarMensaje('Inicio exitoso, redirigiendo...', 'success');
                     
                     setTimeout(function() {
-                        window.location.href = '/dashboard';
+                        window.location.href = data.redirect_url || (data.usuario && String(data.usuario.rol || '').toLowerCase() === 'cliente' ? '/tienda' : '/dashboard');
                     }, 800);
                 } else {
                     mostrarMensaje(data.error || 'Credenciales incorrectas', 'error');

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgDrink" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="70%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </radialGradient>
+    <linearGradient id="canSilver" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94A3B8"/>
+      <stop offset="30%" stop-color="#F8FAFC"/>
+      <stop offset="65%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#64748B"/>
+    </linearGradient>
+    <linearGradient id="canBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="55%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#090D16"/>
+    </linearGradient>
+    <filter id="shadow7" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgDrink)"/>
+  <ellipse cx="250" cy="442" rx="95" ry="14" fill="#0F172A" opacity="0.12"/>
+  <g filter="url(#shadow7)">
+    <!-- Can Top Rim -->
+    <rect x="182" y="74" width="136" height="12" rx="5" fill="url(#canSilver)"/>
+    <path d="M184 86 L316 86 L330 112 L170 112 Z" fill="url(#canSilver)"/>
+    <!-- Can Cylinder -->
+    <rect x="170" y="112" width="160" height="304" rx="14" fill="url(#canBody)"/>
+    <!-- Orange Energy Stripe -->
+    <path d="M170 145 L330 120 L330 295 L170 320 Z" fill="#F58220"/>
+    <!-- Lightning Bolt -->
+    <polygon points="262,138 222,212 252,212 234,282 284,198 252,198" fill="#FDE047"/>
+    <text x="250" y="344" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Impact, sans-serif" font-weight="900" font-size="25" letter-spacing="1.5">GYM FUEL</text>
+    <text x="250" y="366" text-anchor="middle" fill="#F58220" font-family="Inter, sans-serif" font-weight="800" font-size="11.5" letter-spacing="2">ENERGY + ELECTROLITOS</text>
+    <text x="250" y="394" text-anchor="middle" fill="#94A3B8" font-family="Inter, sans-serif" font-weight="700" font-size="11">ZERO AZÚCAR • 500 ML</text>
+    <!-- Bottom Rim -->
+    <path d="M170 412 L330 412 L318 428 L182 428 Z" fill="url(#canSilver)"/>
+    <rect x="182" y="114" width="16" height="296" rx="8" fill="#FFFFFF" opacity="0.14"/>
+  </g>
+</svg>

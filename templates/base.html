@@ -65,6 +65,10 @@
                     <i class="fas fa-chart-pie"></i>
                     <span>Dashboard</span>
                 </a>
+                <a href="/tienda" class="nav-link {% if request.endpoint == 'tienda' %}active{% endif %}">
+                    <i class="fas fa-store"></i>
+                    <span>Tienda de Suplementos</span>
+                </a>
 
                 <!-- GESTIÓN -->
                 <div class="menu-title">Gestión</div>
@@ -202,6 +206,9 @@
                         </a>
                         <a href="/producto_registrar" class="{% if request.endpoint == 'producto_registrar' %}active{% endif %}">
                             <i class="fas fa-plus-circle"></i> Registrar Producto
+                        </a>
+                        <a href="/tienda" class="{% if request.endpoint == 'tienda' %}active{% endif %}">
+                            <i class="fas fa-store"></i> Ver Tienda Cliente
                         </a>
                     </div>
                 </div>

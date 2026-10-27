@@ -100,6 +100,18 @@ from backend.servicios.limpiar_error import limpiar_error_sql
 from backend.servicios.SolicitarRecuperacionContrasena import SolicitarRecuperacionContrasena
 from backend.servicios.VerificarTokenRecuperacion import VerificarTokenRecuperacion
 from backend.servicios.RestablecerContrasena import RestablecerContrasenaConToken
+from backend.servicios.TiendaServicio import (
+    ObtenerCatalogoTienda,
+    GuardarMetaProducto,
+    EnriquecerProducto,
+    ObtenerMapaMetaProductos,
+    SincronizarCatalogoBaseEnBD,
+    ProcesarPedidoTienda,
+    IMAGENES_SUPLEMENTOS,
+    InferirImagenSuplemento
+)
+from werkzeug.utils import secure_filename
+import base64
 
 app = Flask(__name__)
 app.secret_key = 'gym_sistem_secret_key_2026_xyz'
@@ -158,9 +170,26 @@ def _parse_fecha(fecha_val):
         return None
 
 # ==================================================
-# DECORADORES
+# DECORADORES Y CONTROL DE ACCESO POR ROL
 # ==================================================
+def _es_rol_cliente():
+    rol = str(session.get('rol') or '').strip().lower()
+    return rol == 'cliente'
+
 def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'usuario_id' not in session:
+            return redirect(url_for('login'))
+        # Proteger rutas administrativas para que los clientes solo accedan a la tienda
+        if _es_rol_cliente():
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Acceso restringido al panel administrativo.'}), 403
+            return redirect(url_for('tienda'))
+        return f(*args, **kwargs)
+    return decorated
+
+def tienda_login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'usuario_id' not in session:
@@ -168,12 +197,57 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def _procesar_imagen_subida(archivo_file, imagen_predefinida="", nombre="", marca="", categoria="", imagen_actual=""):
+    """
+    Procesa un archivo de imagen subido por el administrador o selecciona la imagen deportiva indicada.
+    """
+    if archivo_file and getattr(archivo_file, 'filename', ''):
+        nombre_seguro = secure_filename(archivo_file.filename)
+        ext = os.path.splitext(nombre_seguro)[1].lower()
+        if ext in ('.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif'):
+            raw_bytes = archivo_file.read()
+            if raw_bytes:
+                # Guardar en static/image/productos/uploads/
+                carpeta_uploads = os.path.join(os.path.dirname(__file__), 'static', 'image', 'productos', 'uploads')
+                os.makedirs(carpeta_uploads, exist_ok=True)
+                stamp = datetime.now().strftime('%Y%m%d%H%M%S')
+                final_name = f"prod_{stamp}_{nombre_seguro}"
+                ruta_disco = os.path.join(carpeta_uploads, final_name)
+                try:
+                    with open(ruta_disco, 'wb') as out_f:
+                        out_f.write(raw_bytes)
+                except Exception as e:
+                    print("Aviso guardando imagen en disco:", e)
+
+                # Si pesa menos de 750 KB, devolvemos Data URI para persistencia garantizada en SQL Server en Render
+                if len(raw_bytes) <= 750 * 1024:
+                    mime_map = {
+                        '.png': 'image/png',
+                        '.jpg': 'image/jpeg',
+                        '.jpeg': 'image/jpeg',
+                        '.webp': 'image/webp',
+                        '.svg': 'image/svg+xml',
+                        '.gif': 'image/gif'
+                    }
+                    mime = mime_map.get(ext, 'image/png')
+                    b64 = base64.b64encode(raw_bytes).decode('ascii')
+                    return f"data:{mime};base64,{b64}"
+                return f"/static/image/productos/uploads/{final_name}"
+
+    if imagen_predefinida and imagen_predefinida.strip():
+        return imagen_predefinida.strip()
+    if imagen_actual and imagen_actual.strip():
+        return imagen_actual.strip()
+    return InferirImagenSuplemento(nombre, marca, categoria)
+
 # ==================================================
 # RUTAS PRINCIPALES
 # ==================================================
 @app.route('/')
 def index():
     if 'usuario_id' in session:
+        if _es_rol_cliente():
+            return redirect(url_for('tienda'))
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
@@ -249,7 +323,13 @@ def api_login():
         session['nivel'] = res.get('Nivel')
         session['cliente_id'] = res.get('IdCliente')
         session['empleado_id'] = res.get('IdEmpleado')
-        return jsonify({'success': True, 'usuario': {'nombre': res.get('NombreUsuario'), 'rol': res.get('NombreRol')}})
+        rol_str = str(res.get('NombreRol') or '').strip().lower()
+        redirect_url = '/tienda' if rol_str == 'cliente' else '/dashboard'
+        return jsonify({
+            'success': True,
+            'redirect_url': redirect_url,
+            'usuario': {'nombre': res.get('NombreUsuario'), 'rol': res.get('NombreRol')}
+        })
     
     return jsonify({'success': False, 'error': res})
 
@@ -507,7 +587,9 @@ def api_empleados_listar():
 def api_productos_listar():
     success, productos = ListarProductos()
     if success:
-        return jsonify(productos or [])
+        mapa = ObtenerMapaMetaProductos()
+        enriquecidos = [EnriquecerProducto(p, mapa) for p in (productos or [])]
+        return jsonify(enriquecidos)
     return jsonify([])
 
 @app.route('/api/ejercicios/listar')
@@ -704,7 +786,9 @@ def api_productos_buscar():
     productos = []
     if nombre:
         _, productos = BuscarProductoPorNombre(nombre)
-    return jsonify(productos or [])
+    mapa = ObtenerMapaMetaProductos()
+    enriquecidos = [EnriquecerProducto(p, mapa) for p in (productos or [])]
+    return jsonify(enriquecidos)
 
 @app.route('/api/maquinaria/buscar')
 @login_required
@@ -1602,35 +1686,143 @@ def empleado_entrenadores():
     return render_template('empleado_entrenadores.html', usuario=session.get('usuario_nombre'), entrenadores=entrenadores or [])
 
 # ==================================================
-# RUTAS HTML - PRODUCTOS
+# RUTAS HTML Y API - PRODUCTOS Y TIENDA DE SUPLEMENTOS
 # ==================================================
+@app.route('/tienda')
+@tienda_login_required
+def tienda():
+    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=True)
+    rol_actual = str(session.get('rol') or 'Cliente')
+    es_admin_o_staff = rol_actual.strip().lower() != 'cliente'
+    return render_template(
+        'tienda.html',
+        usuario=session.get('usuario_nombre', 'Cliente'),
+        usuario_rol=rol_actual,
+        es_admin_o_staff=es_admin_o_staff,
+        catalogo=catalogo
+    )
+
+@app.route('/api/tienda/productos', methods=['GET'])
+@tienda_login_required
+def api_tienda_productos():
+    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=True)
+    return jsonify({'success': True, 'productos': catalogo})
+
+@app.route('/api/tienda/checkout', methods=['POST'])
+@tienda_login_required
+def api_tienda_checkout():
+    data = request.json or {}
+    items = data.get('items', [])
+    notas = data.get('notas', '')
+    ok, msg, comprobante = ProcesarPedidoTienda(items, usuario_sesion=session, notas=notas)
+    if ok:
+        catalogo_actualizado = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=True)
+        return jsonify({
+            'success': True,
+            'mensaje': msg,
+            'comprobante': comprobante,
+            'catalogo': catalogo_actualizado
+        })
+    return jsonify({'success': False, 'error': msg}), 400
+
+@app.route('/api/tienda/visibilidad/<int:id>', methods=['POST'])
+@login_required
+def api_tienda_visibilidad(id):
+    mapa = ObtenerMapaMetaProductos()
+    meta_actual = mapa.get(str(id), {})
+    visible_actual = True if meta_actual.get('VisibleTienda') is None else bool(meta_actual.get('VisibleTienda'))
+    nuevo_visible = not visible_actual
+    GuardarMetaProducto(
+        id_producto=id,
+        presentacion=meta_actual.get('Presentacion', ''),
+        descripcion=meta_actual.get('Descripcion', ''),
+        imagen_url=meta_actual.get('ImagenUrl', ''),
+        descuento=meta_actual.get('Descuento', 0),
+        precio_anterior=meta_actual.get('PrecioAnterior'),
+        destacado=meta_actual.get('Destacado', False),
+        visible_tienda=nuevo_visible,
+        es_demo=meta_actual.get('EsDemo', False)
+    )
+    estado_txt = 'visible en la tienda' if nuevo_visible else 'oculto de la tienda'
+    return jsonify({'success': True, 'visible': nuevo_visible, 'mensaje': f'Producto marcado como {estado_txt}.'})
+
+@app.route('/producto_sincronizar_catalogo', methods=['POST'])
+@login_required
+def producto_sincronizar_catalogo():
+    insertados, errores = SincronizarCatalogoBaseEnBD()
+    if insertados > 0:
+        flash(f'Se registraron {insertados} suplementos base en la base de datos SQL Server.', 'success')
+    elif errores:
+        flash(f'Aviso al sincronizar catálogo: {errores[0]}', 'warning')
+    else:
+        flash('Todos los productos base de suplementos ya se encuentran registrados en la base de datos.', 'info')
+    return redirect(url_for('producto_listar'))
+
 @app.route('/producto_listar')
 @login_required
 def producto_listar():
     _, productos = ListarProductos()
-    return render_template('producto_listar.html', usuario=session.get('usuario_nombre'), productos=productos or [])
+    mapa = ObtenerMapaMetaProductos()
+    enriquecidos = [EnriquecerProducto(p, mapa) for p in (productos or [])]
+    return render_template('producto_listar.html', usuario=session.get('usuario_nombre'), productos=enriquecidos)
 
 @app.route('/producto_registrar', methods=['GET', 'POST'])
 @login_required
 def producto_registrar():
     if request.method == 'POST':
         data = request.form
+        nombre_prod = (data.get('NombreProducto') or '').strip()
+        marca_prod = (data.get('Marca') or '').strip()
+        cat_prod = (data.get('Categoria') or '').strip()
         stock_val = data.get('Stock', '0')
-        stock = int(stock_val) if stock_val and stock_val.isdigit() else 0
+        stock = int(stock_val) if stock_val and str(stock_val).lstrip('-').isdigit() else 0
+        if stock < 0:
+            flash('Error: la cantidad en stock no puede ser negativa.', 'error')
+            return render_template('producto_registrar.html', usuario=session.get('usuario_nombre'), imagenes_suplementos=IMAGENES_SUPLEMENTOS)
+
+        # Evitar productos duplicados por nombre exacto
+        _, existentes = ListarProductos()
+        if any(str(p.get('NombreProducto') or '').strip().lower() == nombre_prod.lower() for p in (existentes or [])):
+            flash(f'Ya existe un producto registrado con el nombre "{nombre_prod}". Edite el existente para actualizar su stock o precio.', 'error')
+            return render_template('producto_registrar.html', usuario=session.get('usuario_nombre'), imagenes_suplementos=IMAGENES_SUPLEMENTOS)
+
         success, res = RegistrarProducto(
-            data.get('NombreProducto'),
-            data.get('Marca'),
-            data.get('Categoria'),
-            float(data.get('Precio')),
+            nombre_prod,
+            marca_prod,
+            cat_prod,
+            float(data.get('Precio') or 0),
             stock
         )
         if success:
-            flash('Producto registrado exitosamente', 'success')
+            # Buscar el ID del producto recién creado para guardar sus metadatos de tienda
+            _, lista_post = ListarProductos()
+            nuevo = next((p for p in reversed(lista_post or []) if str(p.get('NombreProducto') or '').strip().lower() == nombre_prod.lower()), None)
+            if nuevo:
+                archivo_img = request.files.get('ImagenArchivo')
+                img_url = _procesar_imagen_subida(
+                    archivo_img,
+                    imagen_predefinida=data.get('ImagenPredefinida', ''),
+                    nombre=nombre_prod,
+                    marca=marca_prod,
+                    categoria=cat_prod
+                )
+                GuardarMetaProducto(
+                    id_producto=nuevo['IdProducto'],
+                    presentacion=data.get('Presentacion', ''),
+                    descripcion=data.get('Descripcion', ''),
+                    imagen_url=img_url,
+                    descuento=data.get('Descuento', 0),
+                    precio_anterior=data.get('PrecioAnterior'),
+                    destacado=bool(data.get('Destacado')),
+                    visible_tienda=bool(data.get('VisibleTienda')),
+                    es_demo=False
+                )
+            flash('Producto registrado y publicado en la Tienda exitosamente', 'success')
             return redirect(url_for('producto_listar'))
         else:
             flash(f'Error: {res}', 'error')
             
-    return render_template('producto_registrar.html', usuario=session.get('usuario_nombre'))
+    return render_template('producto_registrar.html', usuario=session.get('usuario_nombre'), imagenes_suplementos=IMAGENES_SUPLEMENTOS)
 
 @app.route('/producto_actualizar', methods=['GET', 'POST'])
 @app.route('/producto_actualizar/<int:id>', methods=['GET', 'POST'])
@@ -1643,30 +1835,62 @@ def producto_actualizar(id=None):
         else:
             flash('ID de producto no proporcionado', 'error')
             return redirect(url_for('producto_listar'))
+
+    _, productos = ListarProductos()
+    producto_raw = next((p for p in (productos or []) if p.get('IdProducto') == id), None)
+    if not producto_raw:
+        flash('Producto no encontrado', 'error')
+        return redirect(url_for('producto_listar'))
+
+    mapa = ObtenerMapaMetaProductos()
+    producto = EnriquecerProducto(producto_raw, mapa)
+
     if request.method == 'POST':
         data = request.form
+        nombre_prod = (data.get('NombreProducto') or '').strip()
+        marca_prod = (data.get('Marca') or '').strip()
+        cat_prod = (data.get('Categoria') or '').strip()
         stock_val = data.get('Stock')
-        stock = int(stock_val) if stock_val and stock_val.isdigit() else None
+        stock = int(stock_val) if stock_val is not None and str(stock_val).lstrip('-').isdigit() else None
+        if stock is not None and stock < 0:
+            flash('Error: el stock no puede ser negativo.', 'error')
+            return render_template('producto_actualizar.html', usuario=session.get('usuario_nombre'), producto=producto, imagenes_suplementos=IMAGENES_SUPLEMENTOS)
+
         success, res = ActualizarProducto(
             id,
-            data.get('NombreProducto'),
-            data.get('Marca'),
-            data.get('Categoria'),
-            float(data.get('Precio')),
+            nombre_prod,
+            marca_prod,
+            cat_prod,
+            float(data.get('Precio') or 0),
             stock
         )
         if success:
-            flash('Producto actualizado exitosamente', 'success')
+            archivo_img = request.files.get('ImagenArchivo')
+            img_url = _procesar_imagen_subida(
+                archivo_img,
+                imagen_predefinida=data.get('ImagenPredefinida', ''),
+                nombre=nombre_prod,
+                marca=marca_prod,
+                categoria=cat_prod,
+                imagen_actual=producto.get('ImagenUrl', '')
+            )
+            GuardarMetaProducto(
+                id_producto=id,
+                presentacion=data.get('Presentacion', ''),
+                descripcion=data.get('Descripcion', ''),
+                imagen_url=img_url,
+                descuento=data.get('Descuento', 0),
+                precio_anterior=data.get('PrecioAnterior'),
+                destacado=bool(data.get('Destacado')),
+                visible_tienda=bool(data.get('VisibleTienda')),
+                es_demo=False
+            )
+            flash('Producto actualizado exitosamente en el inventario y en la Tienda', 'success')
             return redirect(url_for('producto_listar'))
         else:
             flash(f'Error: {res}', 'error')
-            
-    _, productos = ListarProductos()
-    producto = next((p for p in (productos or []) if p.get('IdProducto') == id), None)
-    if not producto:
-        flash('Producto no encontrado', 'error')
-        return redirect(url_for('producto_listar'))
-    return render_template('producto_actualizar.html', usuario=session.get('usuario_nombre'), producto=producto)
+
+    return render_template('producto_actualizar.html', usuario=session.get('usuario_nombre'), producto=producto, imagenes_suplementos=IMAGENES_SUPLEMENTOS)
 
 # ==================================================
 # RUTAS HTML - EJERCICIOS

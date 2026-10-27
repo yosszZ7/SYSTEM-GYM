@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgOrange" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="70%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </radialGradient>
+    <linearGradient id="jarBlack" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#18181B"/>
+      <stop offset="28%" stop-color="#3F3F46"/>
+      <stop offset="60%" stop-color="#18181B"/>
+      <stop offset="100%" stop-color="#09090B"/>
+    </linearGradient>
+    <linearGradient id="preGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="50%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#9A3412"/>
+    </linearGradient>
+    <filter id="shadow3" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="15" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgOrange)"/>
+  <ellipse cx="250" cy="432" rx="120" ry="15" fill="#0F172A" opacity="0.12"/>
+  <g filter="url(#shadow3)">
+    <!-- Lid -->
+    <rect x="164" y="118" width="172" height="32" rx="7" fill="#F97316"/>
+    <rect x="164" y="142" width="172" height="8" fill="#18181B"/>
+    <!-- Body -->
+    <rect x="148" y="148" width="204" height="268" rx="22" fill="url(#jarBlack)"/>
+    <!-- Label -->
+    <rect x="152" y="180" width="196" height="206" rx="8" fill="url(#preGrad)"/>
+    <rect x="152" y="180" width="196" height="6" fill="#FDE047"/>
+    <rect x="152" y="380" width="196" height="6" fill="#FDE047"/>
+    <!-- Brand -->
+    <rect x="188" y="194" width="124" height="22" rx="11" fill="#18181B"/>
+    <text x="250" y="209" text-anchor="middle" fill="#FDE047" font-family="Inter, sans-serif" font-weight="900" font-size="12" letter-spacing="2">POWER SERIES</text>
+    <text x="250" y="250" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Impact, sans-serif" font-weight="900" font-size="32" letter-spacing="1">NITRO PUMP</text>
+    <text x="250" y="272" text-anchor="middle" fill="#FEF08A" font-family="Inter, sans-serif" font-weight="800" font-size="13" letter-spacing="2">EXTREME PRE-WORKOUT</text>
+    <!-- Badges -->
+    <rect x="166" y="288" width="168" height="48" rx="8" fill="#18181B" opacity="0.9"/>
+    <text x="250" y="309" text-anchor="middle" fill="#F97316" font-family="Inter, sans-serif" font-weight="900" font-size="14">350mg CAFEÍNA • 6g CITRULINA</text>
+    <text x="250" y="326" text-anchor="middle" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="700" font-size="10" letter-spacing="1">ENERGÍA EXPLOSIVA Y ENFOQUE</text>
+    <text x="250" y="364" text-anchor="middle" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="700" font-size="12" letter-spacing="1">FRUIT PUNCH • 30 SERVICIOS</text>
+    <rect x="162" y="156" width="16" height="250" rx="8" fill="#FFFFFF" opacity="0.1"/>
+  </g>
+</svg>

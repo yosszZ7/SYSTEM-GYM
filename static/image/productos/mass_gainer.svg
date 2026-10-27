@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGreen" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#ECFDF5"/>
+      <stop offset="70%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </radialGradient>
+    <linearGradient id="bagBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="30%" stop-color="#1F2937"/>
+      <stop offset="70%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+    <linearGradient id="massGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="50%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#065F46"/>
+    </linearGradient>
+    <filter id="shadow6" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="500" height="500" fill="url(#bgGreen)"/>
+  <ellipse cx="250" cy="444" rx="145" ry="18" fill="#0F172A" opacity="0.13"/>
+  <g filter="url(#shadow6)">
+    <!-- Jumbo Gainer Bag/Tub -->
+    <path d="M122 72 L378 72 L364 428 Q250 440 136 428 Z" rx="18" fill="url(#bagBody)"/>
+    <rect x="122" y="72" width="256" height="22" rx="4" fill="#10B981"/>
+    <!-- Label -->
+    <rect x="138" y="134" width="224" height="250" rx="10" fill="url(#massGreen)"/>
+    <rect x="138" y="134" width="224" height="8" fill="#FACC15"/>
+    <rect x="138" y="376" width="224" height="8" fill="#FACC15"/>
+    <text x="250" y="168" text-anchor="middle" fill="#FEF08A" font-family="Inter, sans-serif" font-weight="900" font-size="13" letter-spacing="2.5">HIGH CALORIE FORMULA</text>
+    <text x="250" y="214" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Impact, sans-serif" font-weight="900" font-size="36" letter-spacing="1">MASS GAINER</text>
+    <text x="250" y="240" text-anchor="middle" fill="#D1FAE5" font-family="Inter, sans-serif" font-weight="800" font-size="14" letter-spacing="2">HIPERCALÓRICO ANABÓLICO</text>
+    <!-- Macro boxes -->
+    <rect x="154" y="260" width="90" height="56" rx="8" fill="#0F172A" opacity="0.9"/>
+    <text x="199" y="286" text-anchor="middle" fill="#FACC15" font-family="Inter, sans-serif" font-weight="900" font-size="18">1,250</text>
+    <text x="199" y="304" text-anchor="middle" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="700" font-size="10">CALORÍAS</text>
+
+    <rect x="256" y="260" width="90" height="56" rx="8" fill="#0F172A" opacity="0.9"/>
+    <text x="301" y="286" text-anchor="middle" fill="#34D399" font-family="Inter, sans-serif" font-weight="900" font-size="18">50g</text>
+    <text x="301" y="304" text-anchor="middle" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="700" font-size="10">PROTEÍNA</text>
+
+    <text x="250" y="352" text-anchor="middle" fill="#FFFFFF" font-family="Inter, sans-serif" font-weight="800" font-size="12.5" letter-spacing="1">6 LBS (2.72 KG) • CHOCOLATE FUDGE</text>
+  </g>
+</svg>
