@@ -1692,6 +1692,7 @@ def empleado_entrenadores():
 @tienda_login_required
 def tienda():
     catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=True)
+    _, membresias = ListarMembresias()
     rol_actual = str(session.get('rol') or 'Cliente')
     es_admin_o_staff = rol_actual.strip().lower() != 'cliente'
     return render_template(
@@ -1699,7 +1700,8 @@ def tienda():
         usuario=session.get('usuario_nombre', 'Cliente'),
         usuario_rol=rol_actual,
         es_admin_o_staff=es_admin_o_staff,
-        catalogo=catalogo
+        catalogo=catalogo,
+        membresias=membresias or []
     )
 
 @app.route('/api/tienda/productos', methods=['GET'])

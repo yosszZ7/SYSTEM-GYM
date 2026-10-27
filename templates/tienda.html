@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tienda de Suplementos y Productos Deportivos | WORLDGYM">
-    <title>Tienda de Suplementos y Productos | WORLDGYM</title>
+    <meta name="description" content="Tienda de Suplementos, Productos Deportivos y Planes de Membresía | WORLDGYM">
+    <title>Tienda y Membresías | WORLDGYM</title>
 
-    <!-- Google Fonts - Concert One (Display) + Inter (UI) -->
+    <!-- Google Fonts - League Spartan + Montserrat (Deportiva/Geométrica) + Inter (UI) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Concert+One&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=League+Spartan:wght@700;800&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- Estilos de la Tienda del Cliente -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=2.3.0">
+    <!-- Estilos de la Tienda y de la Sección de Membresías -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=2.4.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/membresias.css') }}?v=2.1.0">
 </head>
 <body class="tienda-body">
 
     <!-- ==================================================================
-         1. ENCABEZADO PRINCIPAL (DISEÑO LIMPIO Y ALINEADO MODELO FITSHOP)
+         1. ENCABEZADO PRINCIPAL
          ================================================================== -->
     <header class="store-header">
         <div class="store-topbar">
@@ -30,8 +31,8 @@
                     <img src="/static/image/logo.jpeg" alt="WORLDGYM Logo">
                 </div>
                 <div class="store-brand-text">
-                    <h1 class="store-brand-wordmark">world<span>gym</span></h1>
-                    <span class="store-brand-tagline">VITAMINAS • SUPLEMENTOS &amp; MÁS</span>
+                    <h1 class="store-brand-wordmark">WORLD<span>GYM</span></h1>
+                    <span class="store-brand-tagline">MEMBRESÍAS • SUPLEMENTOS &amp; MÁS</span>
                 </div>
             </a>
 
@@ -40,8 +41,11 @@
                 <a href="#inicio" class="store-nav-link active" onclick="restablecerFiltrosTienda()">
                     Inicio
                 </a>
+                <a href="#membresiasSection" class="store-nav-link">
+                    Membresías
+                </a>
                 <a href="#catalogoSection" class="store-nav-link" onclick="restablecerFiltrosTienda()">
-                    Ir a la tienda
+                    Productos
                 </a>
 
                 <!-- Desplegable Por Categoría -->
@@ -145,6 +149,9 @@
                         <a href="/dashboard">
                             <i class="fas fa-gauge-high"></i> Panel Administrativo
                         </a>
+                        <a href="/membresia_listar">
+                            <i class="fas fa-id-card"></i> Administrar Membresías
+                        </a>
                         <a href="/producto_registrar">
                             <i class="fas fa-plus-circle"></i> Nuevo Producto
                         </a>
@@ -187,7 +194,7 @@
     </header>
 
     <!-- ==================================================================
-         3. CONTENIDO PRINCIPAL DE LA TIENDA
+         3. CONTENIDO PRINCIPAL DE LA TIENDA Y MEMBRESÍAS
          ================================================================== -->
     <main class="store-main" id="inicio">
 
@@ -195,19 +202,19 @@
         <section class="store-hero">
             <div class="store-hero-content">
                 <div class="store-hero-badge">
-                    <i class="fas fa-bolt"></i> TIENDA OFICIAL DE SUPLEMENTOS • WORLDGYM
+                    <i class="fas fa-bolt"></i> TIENDA OFICIAL &amp; MEMBRESÍAS • WORLDGYM
                 </div>
-                <h2>Suplementación deportiva para <span>máxima fuerza</span> y resultados</h2>
+                <h2>ENTRENA CON <span>MÁXIMA FUERZA</span> Y RESULTADOS</h2>
                 <p>
-                    Proteínas Raptor, suplementos Power, aislados Whey, creatina monohidratada,
-                    pre-entrenos y ganadores de masa muscular. Pedí en línea y retirá en recepción de nuestro gimnasio.
+                    Planes de membresía flexibles adaptados a tu ritmo y suplementación deportiva de alto rendimiento:
+                    proteínas, creatina monohidratada, pre-entrenos y ganadores de masa muscular.
                 </p>
                 <div class="store-hero-actions">
-                    <button type="button" class="store-btn-cta" onclick="filtrarSoloOfertas()">
-                        Ver Ofertas Especiales <i class="fas fa-arrow-right"></i>
-                    </button>
+                    <a href="#membresiasSection" class="store-btn-cta">
+                        Ver Planes de Membresía <i class="fas fa-arrow-right"></i>
+                    </a>
                     <a href="#catalogoSection" class="store-btn-outline">
-                        Explorar Catálogo Completo
+                        Explorar Suplementos
                     </a>
                 </div>
             </div>
@@ -220,10 +227,129 @@
         </section>
 
         <!-- ==============================================================
-             4. SECCIÓN VISUAL DE CATEGORÍAS (MODELO IMAGEN 1 FITSHOP)
+             4. SECCIÓN DE PLANES DE MEMBRESÍA WORLD GYM (DARK & GOLD)
+             ============================================================== -->
+        {% set planes_respaldo = [
+            {'IdMembresia': 1, 'NombreMembresia': 'Pase de un día', 'Precio': 50.00, 'DuracionDias': 1, 'DuracionMeses': 0, 'Tipo': 'Diario'},
+            {'IdMembresia': 2, 'NombreMembresia': 'Membresía basica semanal', 'Precio': 150.00, 'DuracionDias': 7, 'DuracionMeses': 0, 'Tipo': 'Semanal'},
+            {'IdMembresia': 3, 'NombreMembresia': 'Membresia basica quincenal', 'Precio': 300.00, 'DuracionDias': 15, 'DuracionMeses': 0, 'Tipo': 'Quincenal'},
+            {'IdMembresia': 4, 'NombreMembresia': 'Membresia basica mensual', 'Precio': 500.00, 'DuracionDias': 30, 'DuracionMeses': 1, 'Tipo': 'Mensual'}
+        ] %}
+        {% set lista_planes = membresias if (membresias is defined and membresias and membresias|length > 0) else planes_respaldo %}
+
+        <section class="wg-membresias-showcase" id="membresiasSection" style="margin-bottom: 58px;" aria-label="Planes de Membresía World Gym">
+            <header class="wg-membresias-header">
+                <div class="wg-membresias-eyebrow-row">
+                    <span class="wg-membresias-eyebrow">MEMBRESÍAS</span>
+                    {% if es_admin_o_staff %}
+                    <a href="/cliente_membresia" class="wg-membresias-quick-link" title="Asignar membresía a un cliente">
+                        <i class="fas fa-user-check"></i> Asignar Plan
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="wg-membresias-headline-row">
+                    <h2 class="wg-membresias-title">ELIGE TU PLAN Y EMPIEZA HOY</h2>
+                    <div class="wg-membresias-header-line" aria-hidden="true"></div>
+                    <p class="wg-membresias-subtitle">
+                        Entrena a tu ritmo, con la flexibilidad que necesitas. Nuestros planes se adaptan a tu estilo de vida.
+                    </p>
+                </div>
+            </header>
+
+            <div class="wg-plans-grid">
+                {% for membresia in lista_planes|sort(attribute='DuracionDias') %}
+                    {% set dias = membresia.DuracionDias|int if membresia.DuracionDias is not none else 0 %}
+                    {% set meses = membresia.DuracionMeses|int if membresia.DuracionMeses is not none else 0 %}
+                    {% set tipo_lower = (membresia.Tipo or '')|lower %}
+                    {% set nombre_lower = (membresia.NombreMembresia or '')|lower %}
+
+                    {% if dias == 1 or 'diario' in tipo_lower or 'día' in nombre_lower or 'dia' in nombre_lower %}
+                        {% set titulo_plan = 'PLAN DIARIO' %}
+                        {% set duracion_plan = '1 DÍA' %}
+                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_diario.png') %}
+                        {% set es_destacado = false %}
+                    {% elif dias == 7 or 'semanal' in tipo_lower %}
+                        {% set titulo_plan = 'PLAN SEMANAL' %}
+                        {% set duracion_plan = '7 DÍAS' %}
+                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_semanal.png') %}
+                        {% set es_destacado = false %}
+                    {% elif dias == 15 or 'quincenal' in tipo_lower %}
+                        {% set titulo_plan = 'PLAN QUINCENAL' %}
+                        {% set duracion_plan = '15 DÍAS' %}
+                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_quincenal.png') %}
+                        {% set es_destacado = false %}
+                    {% elif dias >= 28 or meses >= 1 or 'mensual' in tipo_lower %}
+                        {% set titulo_plan = 'PLAN MENSUAL' %}
+                        {% set duracion_plan = (dias if dias > 0 else 30) ~ ' DÍAS' %}
+                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_mensual.png') %}
+                        {% set es_destacado = true %}
+                    {% else %}
+                        {% set titulo_plan = membresia.NombreMembresia|upper %}
+                        {% set duracion_plan = (dias ~ ' DÍAS') if dias > 0 else (meses ~ ' MESES') %}
+                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_mensual.png') %}
+                        {% set es_destacado = false %}
+                    {% endif %}
+
+                    {% set precio_formateado = "%.2f"|format(membresia.Precio|float) %}
+
+                    <article class="wg-plan-card {% if es_destacado %}is-featured{% endif %}"
+                             onclick="abrirDetalleMembresiaTienda(this)"
+                             data-id="{{ membresia.IdMembresia }}"
+                             data-titulo="{{ titulo_plan }}"
+                             data-nombre-db="{{ membresia.NombreMembresia }}"
+                             data-duracion="{{ duracion_plan }}"
+                             data-precio="{{ precio_formateado }}"
+                             data-tipo="{{ membresia.Tipo or 'Estándar' }}">
+
+                        {% if es_destacado %}
+                            <span class="wg-plan-badge">MÁS POPULAR</span>
+                        {% endif %}
+
+                        <div class="wg-plan-top">
+                            <h3 class="wg-plan-name">{{ titulo_plan }}</h3>
+                            <div class="wg-plan-duration">{{ duracion_plan }}</div>
+
+                            <div class="wg-plan-price-wrap">
+                                <span class="wg-plan-currency">C$</span>
+                                <span class="wg-plan-amount">{{ precio_formateado }}</span>
+                            </div>
+
+                            <div class="wg-plan-divider" aria-hidden="true"></div>
+                            <div class="wg-plan-gold-dash" aria-hidden="true"></div>
+                        </div>
+
+                        <div class="wg-plan-media">
+                            <img src="{{ imagen_plan }}" alt="{{ titulo_plan }} - World Gym" class="wg-plan-img" loading="lazy">
+                        </div>
+
+                        <footer class="wg-plan-footer">
+                            <button type="button" class="wg-plan-btn-details" onclick="event.stopPropagation(); abrirDetalleMembresiaTienda(this.closest('.wg-plan-card'));">
+                                <span>VER DETALLES</span>
+                                <span class="wg-arrow" aria-hidden="true">&rarr;</span>
+                            </button>
+
+                            {% if es_admin_o_staff %}
+                            <div class="wg-plan-admin-actions" onclick="event.stopPropagation();">
+                                <a href="/cliente_membresia?id_membresia={{ membresia.IdMembresia }}" class="wg-plan-icon-link" title="Asignar este plan">
+                                    <i class="fas fa-check-circle"></i>
+                                </a>
+                                <a href="/membresia_actualizar?id={{ membresia.IdMembresia }}" class="wg-plan-icon-link" title="Editar membresía">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </footer>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             5. SECCIÓN VISUAL DE CATEGORÍAS
              ============================================================== -->
         <section class="store-categories-showcase" id="categoriasVisualSection">
-            <h2 class="store-display-heading">Categorías</h2>
+            <h2 class="store-display-heading">CATEGORÍAS DE SUPLEMENTOS</h2>
             <p class="store-display-subtitle">
                 Explora nuestras categorías de suplementos y encuentra el aliado ideal para tu meta fitness.
             </p>
@@ -280,15 +406,14 @@
         </section>
 
         <!-- ==============================================================
-             5. SECCIÓN "POTENCIA TU RENDIMIENTO" — PRODUCTOS DESTACADOS
-                Y CATÁLOGO (MODELO IMAGEN 2 FITSHOP)
+             6. SECCIÓN "POTENCIA TU RENDIMIENTO" — CATÁLOGO DE PRODUCTOS
              ============================================================== -->
         <section class="store-catalog-section" id="catalogoSection">
             <div class="store-catalog-header-center">
-                <h2 class="store-display-heading">Potencia tu rendimiento</h2>
+                <h2 class="store-display-heading">POTENCIA TU RENDIMIENTO</h2>
             </div>
 
-            <!-- Píldoras Centradas de Categorías (Activa en negro #111111, inactivas en gris #F3F4F6) -->
+            <!-- Píldoras Centradas de Categorías -->
             <div class="store-pill-tabs" role="tablist" aria-label="Filtrar suplementos por categoría">
                 <button type="button" class="store-cat-pill active" data-cat="Todos" onclick="seleccionarCategoriaTienda('Todos')">
                     Todos
@@ -351,7 +476,75 @@
     </main>
 
     <!-- ==================================================================
-         6. CARRITO DE COMPRAS LATERAL (SLIDE-OVER DRAWER)
+         7. MODAL DE DETALLES DEL PLAN DE MEMBRESÍA (DARK & GOLD)
+         ================================================================== -->
+    <div id="wgModalPlan" class="wg-modal-overlay" onclick="if(event.target === this) cerrarDetalleMembresiaTienda();">
+        <div class="wg-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="wgModalTitulo">
+            <div class="wg-modal-header">
+                <div>
+                    <span class="wg-modal-eyebrow" id="wgModalDuracion">DURACIÓN</span>
+                    <h3 class="wg-modal-title" id="wgModalTitulo">PLAN DE MEMBRESÍA</h3>
+                </div>
+                <button type="button" class="wg-modal-close" onclick="cerrarDetalleMembresiaTienda()" title="Cerrar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="wg-modal-body">
+                <div class="wg-modal-price-banner">
+                    <span class="wg-modal-price-label">Precio del Plan</span>
+                    <div class="wg-modal-price-value">
+                        <span>C$</span><strong id="wgModalPrecio">0.00</strong>
+                    </div>
+                </div>
+
+                <div class="wg-modal-specs">
+                    <div class="wg-modal-spec-item full-width">
+                        <span class="wg-modal-spec-label">Nombre registrado en sistema</span>
+                        <div class="wg-modal-spec-val" id="wgModalNombreDb">—</div>
+                    </div>
+                    <div class="wg-modal-spec-item">
+                        <span class="wg-modal-spec-label">Vigencia</span>
+                        <div class="wg-modal-spec-val" id="wgModalVigenciaSpec">—</div>
+                    </div>
+                    <div class="wg-modal-spec-item">
+                        <span class="wg-modal-spec-label">Modalidad / Código</span>
+                        <div class="wg-modal-spec-val" id="wgModalTipoId">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wg-modal-footer">
+                {% if es_admin_o_staff %}
+                <div class="wg-modal-admin-links">
+                    <a href="#" id="wgModalBtnEditar" class="wg-btn-outline-dark" title="Editar membresía">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="#" id="wgModalBtnEliminar" class="wg-btn-outline-dark danger" title="Eliminar membresía">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </a>
+                </div>
+                <a href="#" id="wgModalBtnSeleccionar" class="wg-btn-gold-select">
+                    <span>SELECCIONAR PLAN</span>
+                    <span>&rarr;</span>
+                </a>
+                {% else %}
+                <div class="wg-modal-admin-links">
+                    <button type="button" class="wg-btn-outline-dark" onclick="cerrarDetalleMembresiaTienda()">
+                        Cerrar
+                    </button>
+                </div>
+                <button type="button" id="wgModalBtnSeleccionarCliente" class="wg-btn-gold-select" onclick="seleccionarPlanComoCliente()">
+                    <span>SELECCIONAR PLAN</span>
+                    <span>&rarr;</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================================
+         8. CARRITO DE COMPRAS LATERAL (SLIDE-OVER DRAWER)
          ================================================================== -->
     <div class="store-cart-backdrop" id="storeCartBackdrop" onclick="cerrarCarrito()"></div>
     <aside class="store-cart-drawer" id="storeCartDrawer" aria-label="Carrito de compras">
@@ -399,7 +592,7 @@
     </aside>
 
     <!-- ==================================================================
-         7. MODAL DE VISTA DETALLADA DE PRODUCTO
+         9. MODAL DE VISTA DETALLADA DE PRODUCTO
          ================================================================== -->
     <div class="store-modal-overlay" id="storeProductModal" onclick="if(event.target===this) cerrarModalProducto()">
         <div class="store-modal-card">
@@ -411,7 +604,7 @@
     </div>
 
     <!-- ==================================================================
-         8. MODAL DE COMPROBANTE DE PEDIDO / COMPRA
+         10. MODAL DE COMPROBANTE DE PEDIDO / COMPRA
          ================================================================== -->
     <div class="store-modal-overlay" id="storeReceiptModal" onclick="if(event.target===this) cerrarModalComprobante()">
         <div class="store-modal-card" style="max-width: 500px;">
@@ -427,7 +620,7 @@
         <div class="store-footer-inner">
             <div>
                 <strong style="color: #FFFFFF; font-size: 16px;">WORLD<span style="color: #F58220;">GYM</span> STORE</strong>
-                <p style="margin: 4px 0 0 0; font-size: 13px;">Suplementación deportiva, proteínas, creatinas, pre-entrenos y accesorios de gimnasio.</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px;">Planes de membresía, suplementación deportiva, proteínas, creatinas y accesorios de gimnasio.</p>
             </div>
             <div style="text-align: right; font-size: 12.5px;">
                 <span>Todos los precios están expresados en Córdobas Nicaragüenses (C$)</span>
@@ -438,6 +631,72 @@
     <!-- Datos iniciales del catálogo inyectados desde el servidor -->
     <script>
         window.CATALOGO_INICIAL = {{ catalogo | tojson | safe }};
+
+        var planTiendaActual = { id: '', titulo: '', precio: '', duracion: '' };
+
+        function abrirDetalleMembresiaTienda(cardEl) {
+            if (!cardEl) return;
+
+            var id = cardEl.getAttribute('data-id');
+            var titulo = cardEl.getAttribute('data-titulo');
+            var nombreDb = cardEl.getAttribute('data-nombre-db');
+            var duracion = cardEl.getAttribute('data-duracion');
+            var precio = cardEl.getAttribute('data-precio');
+            var tipo = cardEl.getAttribute('data-tipo');
+
+            planTiendaActual = { id: id, titulo: titulo, precio: precio, duracion: duracion };
+
+            document.getElementById('wgModalTitulo').textContent = titulo;
+            document.getElementById('wgModalDuracion').textContent = 'MEMBRESÍA WORLD GYM • ' + duracion;
+            document.getElementById('wgModalPrecio').textContent = precio;
+            document.getElementById('wgModalNombreDb').textContent = nombreDb;
+            document.getElementById('wgModalVigenciaSpec').textContent = duracion;
+            document.getElementById('wgModalTipoId').textContent = tipo + ' (#' + id + ')';
+
+            var btnSel = document.getElementById('wgModalBtnSeleccionar');
+            if (btnSel) {
+                btnSel.href = '/cliente_membresia?id_membresia=' + encodeURIComponent(id);
+            }
+            var btnEd = document.getElementById('wgModalBtnEditar');
+            if (btnEd) {
+                btnEd.href = '/membresia_actualizar?id=' + encodeURIComponent(id);
+            }
+            var btnEl = document.getElementById('wgModalBtnEliminar');
+            if (btnEl) {
+                btnEl.href = '/membresia_eliminar?id=' + encodeURIComponent(id);
+            }
+
+            var overlay = document.getElementById('wgModalPlan');
+            overlay.style.display = 'flex';
+            setTimeout(function() {
+                overlay.classList.add('active');
+            }, 10);
+        }
+
+        function cerrarDetalleMembresiaTienda() {
+            var overlay = document.getElementById('wgModalPlan');
+            if (!overlay) return;
+            overlay.classList.remove('active');
+            setTimeout(function() {
+                overlay.style.display = 'none';
+            }, 200);
+        }
+
+        function seleccionarPlanComoCliente() {
+            cerrarDetalleMembresiaTienda();
+            var msg = 'Plan seleccionado: ' + planTiendaActual.titulo + ' (' + planTiendaActual.duracion + ' — C$' + planTiendaActual.precio + '). Solicita tu activación en recepción de World Gym.';
+            if (typeof mostrarToastTienda === 'function') {
+                mostrarToastTienda(msg, 'success');
+            } else {
+                alert(msg);
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarDetalleMembresiaTienda();
+            }
+        });
     </script>
     <script src="{{ url_for('static', filename='js/tienda.js') }}?v=2.1.0"></script>
 </body>
