@@ -479,7 +479,7 @@ function initToastContainer() {
         var container = document.createElement('div');
         container.id = 'toastContainer';
         container.className = 'toast-container';
-        container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:350px;pointer-events:none;';
+        container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:350px;pointer-events:none;';
         document.body.appendChild(container);
     }
 }
@@ -1795,60 +1795,99 @@ function shakeElement(element) {
     }, 500);
 }
 
+// ========== UTILIDADES DE INTERFAZ Y ACCESIBILIDAD ==========
+let actividadRecienteCache = [];
+let actividadFiltroActual = 'todos';
+let ventasResumenCache = null;
+let dashboardConteoInicialRealizado = false;
+
+function wgPrefersReducedMotion() {
+    return Boolean(
+        reducedMotionMode ||
+        (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    );
+}
+
+function wgEscapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function wgCapitalizar(texto) {
+    if (!texto) return '';
+    var limpio = String(texto).trim();
+    return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+}
+
+function wgFormatearMoneda(valor) {
+    var num = Number(valor || 0);
+    if (isNaN(num)) num = 0;
+    return 'C$' + num.toLocaleString('es-NI', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 // ========== VERIFICAR SESION ==========
 async function verificarSesion() {
     var stored = localStorage.getItem('user');
-    
-    if (!stored) {
-        console.log('No hay sesion guardada, redirigiendo a login');
-        window.location.href = '/login';
-        return;
-    }
-    
-    try {
-        currentUser = JSON.parse(stored);
-        console.log('Usuario cargado:', currentUser);
-        
-        actualizarElementosUsuario();
-        
+
+    if (stored) {
         try {
-            var response = await fetch('/api/verificar-sesion', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario: currentUser.usuario })
-            });
-            var data = await response.json();
-            if (!data.success) {
-                console.log('Sesion expirada en servidor');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
-                return;
-            }
-        } catch (error) {
-            console.log('Error verificando sesion, continuando...');
+            currentUser = JSON.parse(stored);
+            actualizarElementosUsuario();
+        } catch (parseErr) {
+            localStorage.removeItem('user');
+            stored = null;
         }
-        
+    }
+
+    try {
+        var payload = currentUser && (currentUser.usuario || currentUser.nombre)
+            ? { usuario: currentUser.usuario || currentUser.nombre }
+            : {};
+        var response = await fetch('/api/verificar-sesion', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        var data = await response.json();
+        if (!data.success) {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+            return;
+        }
+        if (data.usuario) {
+            currentUser = Object.assign({}, currentUser || {}, data.usuario);
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            actualizarElementosUsuario();
+        }
     } catch (error) {
-        console.error('Error al cargar usuario:', error);
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        if (!stored) {
+            window.location.href = '/login';
+        }
     }
 }
 
 // ========== ACTUALIZAR ELEMENTOS DE USUARIO ==========
 function actualizarElementosUsuario() {
     if (!currentUser) return;
-    
+
     var nombre = currentUser.nombre || currentUser.usuario || 'Usuario';
     var rol = currentUser.rol || 'Administrador';
     var email = currentUser.email || '';
     var avatar = currentUser.avatar || '';
-    
+
     var selectors = {
         nombre: [
-            '#userName', '.user-name-sidebar', '.user-name-header', 
+            '#userName', '.user-name-sidebar', '.user-name-header',
             '#userNameSidebar', '#userNameHeader', '.user-name',
-            '.profile-btn strong', '.welcome-user', '.user-display-name'
+            '.profile-btn strong', '.profile-menu-name', '.welcome-user', '.user-display-name'
         ],
         rol: [
             '#userRole', '.user-role-sidebar', '.user-role-header',
@@ -1858,62 +1897,116 @@ function actualizarElementosUsuario() {
             '.user-email', '#userEmail', '.user-email-display'
         ]
     };
-    
+
     selectors.nombre.forEach(function(selector) {
         document.querySelectorAll(selector).forEach(function(el) {
             if (el) el.innerText = nombre;
         });
     });
-    
+
     selectors.rol.forEach(function(selector) {
         document.querySelectorAll(selector).forEach(function(el) {
             if (el) el.innerText = rol;
         });
     });
-    
+
     selectors.email.forEach(function(selector) {
         document.querySelectorAll(selector).forEach(function(el) {
             if (el) el.innerText = email;
         });
     });
-    
+
     var welcomeUser = document.getElementById('welcomeUser');
     if (welcomeUser) welcomeUser.innerText = nombre;
-    
+
     var welcomeDate = document.getElementById('currentDate');
     if (welcomeDate) {
-        welcomeDate.innerText = new Date().toLocaleDateString('es-ES', {
+        var fechaTexto = new Date().toLocaleDateString('es-ES', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
+        welcomeDate.innerText = wgCapitalizar(fechaTexto);
     }
-    
-    var avatarElements = document.querySelectorAll('.profile-avatar, .user-avatar-sidebar, .user-avatar-header');
-    avatarElements.forEach(function(el) {
-        if (el) {
-            if (avatar) {
-                el.innerHTML = '<img src="' + avatar + '" alt="' + nombre + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
-            } else {
-                var initial = nombre.charAt(0).toUpperCase();
-                if (!el.querySelector('i')) {
-                    el.textContent = initial;
-                    el.style.backgroundColor = '#F58220';
-                    el.style.color = 'white';
-                    el.style.display = 'flex';
-                    el.style.alignItems = 'center';
-                    el.style.justifyContent = 'center';
-                    el.style.fontSize = '18px';
-                    el.style.fontWeight = '600';
-                }
+
+    if (avatar) {
+        document.querySelectorAll('.profile-avatar, .user-avatar-sidebar, .user-avatar-header').forEach(function(el) {
+            if (el) {
+                var statusDot = el.querySelector('.user-status-dot');
+                el.innerHTML = '<img src="' + wgEscapeHtml(avatar) + '" alt="' + wgEscapeHtml(nombre) + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
+                if (statusDot) el.appendChild(statusDot);
             }
-        }
-    });
-    
+        });
+    }
+
     var lastLogin = localStorage.getItem('lastLogin');
     if (lastLogin) {
         var lastLoginEl = document.getElementById('lastLogin');
         if (lastLoginEl) {
             var date = new Date(lastLogin);
-            lastLoginEl.innerText = 'Ultimo acceso: ' + date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES');
+            lastLoginEl.innerText = 'Último acceso: ' + date.toLocaleDateString('es-ES') + ' ' + date.toLocaleTimeString('es-ES');
+        }
+    }
+}
+
+// ========== BREADCRUMB DINAMICO EN TOPBAR ==========
+function actualizarBreadcrumbDinamico() {
+    var trailEl = document.getElementById('breadcrumbTrail');
+    var currentEl = document.getElementById('breadcrumbCurrent');
+    var sectionPill = document.getElementById('topbarSectionName');
+    if (!trailEl) return;
+
+    var rawText = currentEl ? currentEl.textContent.trim() : '';
+    var activeSub = document.querySelector('.sidebar .submenu a.active');
+    var activeNav = document.querySelector('.sidebar .nav-link.active:not(.dropdown-trigger)');
+    var parentDropdown = activeSub ? activeSub.closest('.nav-dropdown') : null;
+    var parentTrigger = parentDropdown ? parentDropdown.querySelector('.dropdown-trigger') : null;
+
+    var categoria = '';
+    if (parentTrigger && parentTrigger.dataset.category) {
+        categoria = parentTrigger.dataset.category;
+    } else if (activeNav && activeNav.dataset.category) {
+        categoria = activeNav.dataset.category;
+    }
+
+    var partes = rawText
+        ? rawText.split('/').map(function(s) { return s.trim(); }).filter(Boolean)
+        : [];
+
+    if (partes.length === 0) {
+        if (activeSub) {
+            partes = [activeSub.textContent.trim()];
+        } else if (activeNav) {
+            partes = [activeNav.textContent.trim()];
+        } else {
+            partes = ['Dashboard'];
+        }
+    }
+
+    var esDashboard = (window.location.pathname === '/dashboard' || window.location.pathname === '/');
+    if (!esDashboard && partes.length === 1 && parentTrigger) {
+        var grupoNombre = parentTrigger.querySelector('span') ? parentTrigger.querySelector('span').textContent.trim() : '';
+        if (grupoNombre && grupoNombre.toLowerCase() !== partes[0].toLowerCase()) {
+            partes.unshift(grupoNombre);
+        }
+    }
+
+    var htmlPartes = [];
+    for (var i = 0; i < partes.length; i++) {
+        if (i < partes.length - 1) {
+            htmlPartes.push('<span class="breadcrumb-segment">' + wgEscapeHtml(partes[i]) + '</span>');
+            htmlPartes.push('<span class="breadcrumb-sep" aria-hidden="true">/</span>');
+        } else {
+            htmlPartes.push('<span class="breadcrumb-current" id="breadcrumbCurrent">' + wgEscapeHtml(partes[i]) + '</span>');
+        }
+    }
+    trailEl.innerHTML = htmlPartes.join('');
+
+    if (sectionPill) {
+        if (esDashboard) {
+            sectionPill.textContent = 'Vista general';
+        } else if (categoria) {
+            sectionPill.textContent = categoria;
+        } else {
+            sectionPill.textContent = partes[partes.length - 1];
         }
     }
 }
@@ -1924,21 +2017,48 @@ function initSidebar() {
     var sidebarToggle = document.getElementById('sidebarToggle');
     var mobileMenuToggle = document.getElementById('mobileMenuToggle');
     var sidebarBackdrop = document.getElementById('sidebarBackdrop');
-    
+    var floatingTooltip = document.getElementById('sidebarFloatingTooltip');
+
     if (!sidebar) return;
-    
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+
+    function hideSidebarTooltip() {
+        if (!floatingTooltip) return;
+        floatingTooltip.classList.remove('visible');
+        floatingTooltip.setAttribute('aria-hidden', 'true');
+    }
+
+    function syncCollapsedState(collapsed) {
+        sidebar.classList.toggle('collapsed', collapsed);
+        document.documentElement.classList.toggle('sidebar-is-collapsed', collapsed);
+        try {
+            localStorage.setItem('sidebarCollapsed', collapsed ? 'true' : 'false');
+        } catch (e) {}
+
+        if (sidebarToggle) {
             var icon = sidebarToggle.querySelector('i');
             if (icon) {
-                icon.classList.toggle('fa-chevron-left');
-                icon.classList.toggle('fa-chevron-right');
+                icon.classList.toggle('fa-chevron-left', !collapsed);
+                icon.classList.toggle('fa-chevron-right', collapsed);
             }
+            sidebarToggle.setAttribute('aria-label', collapsed ? 'Expandir menú lateral' : 'Contraer menú lateral');
+            sidebarToggle.setAttribute('title', collapsed ? 'Expandir menú' : 'Contraer menú');
+        }
+        hideSidebarTooltip();
+    }
+
+    var initiallyCollapsed = false;
+    try {
+        initiallyCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    } catch (e) {}
+    syncCollapsedState(initiallyCollapsed);
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            var nextState = !sidebar.classList.contains('collapsed');
+            syncCollapsedState(nextState);
         });
     }
-    
+
     function closeMobileSidebar() {
         sidebar.classList.remove('mobile-open');
         if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
@@ -1957,158 +2077,331 @@ function initSidebar() {
     if (sidebarBackdrop) {
         sidebarBackdrop.addEventListener('click', closeMobileSidebar);
     }
-    
-    if (localStorage.getItem('sidebarCollapsed') === 'true') {
-        sidebar.classList.add('collapsed');
-        if (sidebarToggle) {
-            var icon = sidebarToggle.querySelector('i');
-            if (icon) {
-                icon.classList.remove('fa-chevron-left');
-                icon.classList.add('fa-chevron-right');
+
+    // Marcar enlace activo si coincide por pathname y no fue marcado en servidor
+    var currentPath = window.location.pathname;
+    document.querySelectorAll('.sidebar .nav-link:not(.dropdown-trigger), .sidebar .submenu a').forEach(function(link) {
+        var href = link.getAttribute('href');
+        if (href && href !== '#' && (currentPath === href || currentPath.startsWith(href + '/'))) {
+            link.classList.add('active');
+            var parentDrop = link.closest('.nav-dropdown');
+            if (parentDrop) {
+                parentDrop.classList.add('open');
+                var trig = parentDrop.querySelector('.dropdown-trigger');
+                if (trig) trig.setAttribute('aria-expanded', 'true');
             }
         }
+    });
+
+    // Recordar estado de submenú desplegado durante la navegación
+    var routeOpenedDropdown = sidebar.querySelector('.nav-dropdown.open');
+    if (routeOpenedDropdown && routeOpenedDropdown.dataset.group) {
+        try {
+            localStorage.setItem('sidebarOpenDropdown', routeOpenedDropdown.dataset.group);
+        } catch (e) {}
+    } else if (!initiallyCollapsed) {
+        try {
+            var savedGroup = localStorage.getItem('sidebarOpenDropdown');
+            if (savedGroup && savedGroup !== '__none__') {
+                var remembered = sidebar.querySelector('.nav-dropdown[data-group="' + savedGroup + '"]');
+                if (remembered) {
+                    remembered.classList.add('open');
+                    var remTrig = remembered.querySelector('.dropdown-trigger');
+                    if (remTrig) remTrig.setAttribute('aria-expanded', 'true');
+                }
+            }
+        } catch (e) {}
     }
-    
+
     document.querySelectorAll('.nav-dropdown').forEach(function(dropdown) {
         var trigger = dropdown.querySelector('.dropdown-trigger');
-        if (trigger) {
-            trigger.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Si el sidebar está colapsado, lo expandimos primero para mostrar el menú
-                if (sidebar.classList.contains('collapsed')) {
-                    sidebar.classList.remove('collapsed');
-                    localStorage.setItem('sidebarCollapsed', 'false');
-                    if (sidebarToggle) {
-                        var toggleIcon = sidebarToggle.querySelector('i');
-                        if (toggleIcon) {
-                            toggleIcon.classList.remove('fa-chevron-right');
-                            toggleIcon.classList.add('fa-chevron-left');
-                        }
-                    }
+        if (!trigger) return;
+
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (sidebar.classList.contains('collapsed') && window.innerWidth > 992) {
+                syncCollapsedState(false);
+            }
+
+            document.querySelectorAll('.nav-dropdown').forEach(function(other) {
+                if (other !== dropdown && other.classList.contains('open')) {
+                    other.classList.remove('open');
+                    var otherTrig = other.querySelector('.dropdown-trigger');
+                    if (otherTrig) otherTrig.setAttribute('aria-expanded', 'false');
                 }
-                
-                document.querySelectorAll('.nav-dropdown').forEach(function(d) {
-                    if (d !== dropdown && d.classList.contains('open')) {
-                        d.classList.remove('open');
-                    }
-                });
-                dropdown.classList.toggle('open');
             });
-        }
+
+            var isOpen = dropdown.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            try {
+                localStorage.setItem('sidebarOpenDropdown', isOpen ? (dropdown.dataset.group || '') : '__none__');
+            } catch (err) {}
+        });
     });
-    
+
+    // Tooltips flotantes cuando el sidebar está contraído
+    if (floatingTooltip) {
+        sidebar.querySelectorAll('[data-nav-tooltip]').forEach(function(item) {
+            function showTip() {
+                var isCollapsed = sidebar.classList.contains('collapsed') || document.documentElement.classList.contains('sidebar-is-collapsed');
+                if (!isCollapsed || window.innerWidth <= 992) return;
+                var label = item.getAttribute('data-nav-tooltip');
+                if (!label) return;
+                var rect = item.getBoundingClientRect();
+                var sidebarRect = sidebar.getBoundingClientRect();
+                floatingTooltip.textContent = label;
+                floatingTooltip.style.top = Math.round(rect.top + rect.height / 2) + 'px';
+                floatingTooltip.style.left = Math.round(sidebarRect.right + 10) + 'px';
+                floatingTooltip.setAttribute('aria-hidden', 'false');
+                floatingTooltip.classList.add('visible');
+            }
+
+            item.addEventListener('mouseenter', showTip);
+            item.addEventListener('mouseleave', hideSidebarTooltip);
+            item.addEventListener('focus', showTip);
+            item.addEventListener('blur', hideSidebarTooltip);
+            item.addEventListener('click', hideSidebarTooltip);
+        });
+
+        var sidebarNavEl = sidebar.querySelector('.sidebar-nav');
+        if (sidebarNavEl) {
+            sidebarNavEl.addEventListener('scroll', hideSidebarTooltip, { passive: true });
+        }
+        window.addEventListener('resize', hideSidebarTooltip, { passive: true });
+    }
+
     document.querySelectorAll('.nav-link:not(.dropdown-trigger), .submenu a').forEach(function(link) {
         link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 992) {
                 closeMobileSidebar();
             }
         });
     });
-    
+
+    document.querySelectorAll('a[href="/logout"]').forEach(function(logoutLink) {
+        logoutLink.addEventListener('click', function() {
+            try {
+                localStorage.removeItem('user');
+            } catch (e) {}
+        });
+    });
+
     document.addEventListener('click', function(e) {
-        if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
+        if (window.innerWidth <= 992 && sidebar.classList.contains('mobile-open')) {
             if (!sidebar.contains(e.target) && (!mobileMenuToggle || !mobileMenuToggle.contains(e.target))) {
                 closeMobileSidebar();
             }
         }
     });
-    
-    var currentPath = window.location.pathname;
-    document.querySelectorAll('.nav-link').forEach(function(link) {
-        var href = link.getAttribute('href');
-        if (href && href !== '#' && (currentPath === href || currentPath.startsWith(href + '/'))) {
-            link.classList.add('active');
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+            closeMobileSidebar();
         }
     });
+
+    // Estado loading táctil para botones de acción del encabezado del Dashboard
+    document.querySelectorAll('.dashboard-cta').forEach(function(btn) {
+        if (btn._ctaBound) return;
+        btn._ctaBound = true;
+        btn.addEventListener('click', function(e) {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            btn.classList.add('is-loading');
+            var icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner';
+            }
+            var labelSpan = btn.querySelector('span');
+            var loadingText = btn.getAttribute('data-loading-text');
+            if (labelSpan && loadingText) {
+                labelSpan.textContent = loadingText;
+            }
+        });
+    });
+
+    actualizarBreadcrumbDinamico();
 }
 
-// ========== MODO OSCURO MEJORADO ==========
+// ========== MODO CLARO / OSCURO CON TRANSICION CIRCULAR ==========
+function actualizarColoresGraficoVentas() {
+    var chart = charts.ingresos;
+    if (!chart || !chart.options) return;
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var textColor = isDark ? '#9BA5B7' : '#667085';
+    var gridColor = isDark ? 'rgba(155, 165, 183, 0.09)' : '#EEF1F5';
+
+    if (chart.data && chart.data.datasets && chart.data.datasets[0]) {
+        var ds = chart.data.datasets[0];
+        ds.pointBorderColor = isDark ? '#121721' : '#FFFFFF';
+        var canvas = chart.canvas;
+        if (canvas) {
+            var ctx = canvas.getContext('2d');
+            var grad = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 280);
+            grad.addColorStop(0, isDark ? 'rgba(245, 130, 32, 0.28)' : 'rgba(245, 130, 32, 0.20)');
+            grad.addColorStop(1, 'rgba(245, 130, 32, 0.00)');
+            ds.backgroundColor = grad;
+        }
+    }
+
+    if (chart.options.scales && chart.options.scales.x) {
+        chart.options.scales.x.ticks.color = textColor;
+    }
+    if (chart.options.scales && chart.options.scales.y) {
+        chart.options.scales.y.ticks.color = textColor;
+        chart.options.scales.y.grid.color = gridColor;
+    }
+    if (chart.options.plugins && chart.options.plugins.tooltip) {
+        chart.options.plugins.tooltip.backgroundColor = isDark ? '#1B2332' : '#181D27';
+        chart.options.plugins.tooltip.borderColor = isDark ? '#2D384D' : 'rgba(255,255,255,0.08)';
+    }
+    chart.update('none');
+}
+
 function initDarkMode() {
     var themeToggle = document.getElementById('themeToggle');
     if (!themeToggle) return;
-    
+
     var savedTheme = localStorage.getItem('theme') || 'light';
     var initialTheme = savedTheme === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', initialTheme);
-    
-    themeToggle.innerHTML = initialTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    
+
+    function sincronizarBotonTema(theme) {
+        themeToggle.innerHTML = theme === 'dark'
+            ? '<i class="fas fa-sun"></i>'
+            : '<i class="fas fa-moon"></i>';
+        themeToggle.setAttribute(
+            'aria-label',
+            theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+        );
+        themeToggle.setAttribute(
+            'title',
+            theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+        );
+    }
+
+    sincronizarBotonTema(initialTheme);
     aplicarColoresIconos(initialTheme);
-    
+
     themeToggle.addEventListener('click', function() {
         var html = document.documentElement;
-        var currentTheme = html.getAttribute('data-theme');
+        var currentTheme = html.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
         var newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        html.setAttribute('data-theme', newTheme);
-        
-        var icon = themeToggle.querySelector('i');
-        if (icon) {
-            icon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-        }
-        
-        localStorage.setItem('theme', newTheme);
-        mostrarToast('Modo ' + (newTheme === 'dark' ? 'oscuro' : 'claro') + ' activado', 'info');
-        
-        aplicarColoresIconos(newTheme);
-        
-        if (document.getElementById('ingresosChart')) {
-            graficosCargados = false;
-            cargarGraficos();
-        } else {
-            Object.values(charts).forEach(function(chart) {
-                if (chart && chart.update) chart.update();
+
+        function aplicarCambioTema() {
+            html.setAttribute('data-theme', newTheme);
+            sincronizarBotonTema(newTheme);
+            try {
+                localStorage.setItem('theme', newTheme);
+            } catch (e) {}
+            aplicarColoresIconos(newTheme);
+            actualizarColoresGraficoVentas();
+
+            Object.keys(charts).forEach(function(key) {
+                if (key !== 'ingresos' && charts[key] && charts[key].update) {
+                    charts[key].update();
+                }
+            });
+
+            themeChangeListeners.forEach(function(listener) {
+                listener(newTheme);
             });
         }
-        
-        themeChangeListeners.forEach(function(listener) {
-            listener(newTheme);
-        });
+
+        // Transición circular suave inspirada en @settigation cuando el navegador soporta View Transitions
+        if (document.startViewTransition && !wgPrefersReducedMotion()) {
+            var rect = themeToggle.getBoundingClientRect();
+            var x = rect.left + rect.width / 2;
+            var y = rect.top + rect.height / 2;
+            var maxRadius = Math.hypot(
+                Math.max(x, window.innerWidth - x),
+                Math.max(y, window.innerHeight - y)
+            );
+
+            var transition = document.startViewTransition(function() {
+                aplicarCambioTema();
+            });
+
+            transition.ready.then(function() {
+                document.documentElement.animate(
+                    {
+                        clipPath: [
+                            'circle(0px at ' + x + 'px ' + y + 'px)',
+                            'circle(' + maxRadius + 'px at ' + x + 'px ' + y + 'px)'
+                        ]
+                    },
+                    {
+                        duration: 420,
+                        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                        pseudoElement: '::view-transition-new(root)'
+                    }
+                );
+            }).catch(function() {});
+        } else {
+            aplicarCambioTema();
+        }
+
     });
 }
 
 function aplicarColoresIconos(theme) {
-    // Permitir que el sistema de diseño CSS controle la jerarquía visual de iconos (#F58220 y #7B8491)
-    document.querySelectorAll('.stat-icon i, .page-header h1 i, .card-header h2 i, .card-header h3 i, .table-title i').forEach(function(icon) {
-        icon.style.color = '#F58220';
-    });
+    // La jerarquía cromática de iconos está gobernada íntegramente por variables CSS del Design System
+    return theme;
 }
 
 // ========== NOTIFICACIONES ==========
 function initNotifications() {
     var notificationBtn = document.querySelector('.notification-btn');
     var panel = document.getElementById('notificationPanel');
-    var badge = document.getElementById('notificationBadge');
-    
+
     if (!notificationBtn || !panel) return;
-    
+
     cargarNotificaciones();
-    
+
     notificationBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        panel.classList.toggle('open');
-        if (panel.classList.contains('open')) {
+
+        // Cerrar menú de perfil si está abierto
+        var profileMenu = document.getElementById('profileMenu');
+        var profileDropdown = document.getElementById('profileDropdown');
+        var profileBtn = document.getElementById('profileBtn');
+        if (profileMenu) profileMenu.classList.remove('open');
+        if (profileDropdown) profileDropdown.classList.remove('open');
+        if (profileBtn) profileBtn.setAttribute('aria-expanded', 'false');
+
+        var isOpen = panel.classList.toggle('open');
+        notificationBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        if (isOpen && notificationCount > 0) {
             marcarTodasLeidas();
         }
     });
-    
+
     document.addEventListener('click', function(e) {
         if (!panel.contains(e.target) && !notificationBtn.contains(e.target)) {
             panel.classList.remove('open');
+            notificationBtn.setAttribute('aria-expanded', 'false');
         }
     });
-    
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && panel.classList.contains('open')) {
+            panel.classList.remove('open');
+            notificationBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
     var markAll = document.querySelector('.mark-all');
     if (markAll) {
         markAll.addEventListener('click', function(e) {
             e.stopPropagation();
             marcarTodasLeidas();
             panel.classList.remove('open');
+            notificationBtn.setAttribute('aria-expanded', 'false');
             mostrarToast('Notificaciones marcadas como leídas', 'success');
         });
     }
-    
+
     setInterval(cargarNotificaciones, CONFIG.REFRESH_INTERVAL);
 }
 
@@ -2117,36 +2410,54 @@ async function cargarNotificaciones() {
         var response = await fetch('/api/notificaciones');
         if (!response.ok) return;
         var data = await response.json();
-        
+
         var list = document.querySelector('.notification-list');
         var badge = document.getElementById('notificationBadge');
-        
+        var countPill = document.getElementById('notificationPanelCount');
+
         if (!list) return;
-        
-        var unread = (data || []).filter(function(n) { return !n.leido; }).length;
+
+        var items = Array.isArray(data) ? data : [];
+        var unread = items.filter(function(n) { return !n.leido; }).length;
         notificationCount = unread;
-        
+
         if (badge) {
-            badge.textContent = unread > 0 ? unread : '';
+            badge.textContent = unread > 99 ? '99+' : (unread > 0 ? String(unread) : '');
             badge.style.display = unread > 0 ? 'flex' : 'none';
         }
-        
-        if (!data || data.length === 0) {
-            list.innerHTML = '<div class="empty-state" style="padding:24px 16px;"><i class="fas fa-bell-slash" style="font-size:1.5rem;margin-bottom:6px;"></i><p style="font-size:12.5px;">No hay notificaciones nuevas</p></div>';
+
+        if (countPill) {
+            if (unread > 0) {
+                countPill.textContent = unread + (unread === 1 ? ' pendiente' : ' pendientes');
+                countPill.classList.add('has-unread');
+            } else {
+                countPill.textContent = 'Al día';
+                countPill.classList.remove('has-unread');
+            }
+        }
+
+        if (items.length === 0) {
+            list.innerHTML = '<div class="empty-state" style="padding:28px 16px;">' +
+                '<i class="fas fa-bell-slash" style="font-size:1.35rem;margin-bottom:6px;"></i>' +
+                '<p style="font-size:12.5px;">No hay notificaciones pendientes</p>' +
+            '</div>';
             return;
         }
-        
-        var recent = data.slice(0, CONFIG.MAX_NOTIFICATIONS);
+
+        var recent = items.slice(0, CONFIG.MAX_NOTIFICATIONS);
         list.innerHTML = recent.map(function(n) {
+            var icono = wgEscapeHtml(n.icono || 'fa-bell');
+            var mensaje = wgEscapeHtml(n.mensaje || 'Notificación del sistema');
+            var hace = wgEscapeHtml(n.hace || 'Reciente');
             return '<div class="notification-item ' + (n.leido ? '' : 'unread') + '">' +
-                '<i class="fas ' + (n.icono || 'fa-bell') + '"></i>' +
+                '<i class="fas ' + icono + '"></i>' +
                 '<div style="flex:1;min-width:0;">' +
-                    '<p style="margin:0;font-size:13px;font-weight:500;color:var(--text);">' + (n.mensaje || 'Notificación') + '</p>' +
-                    '<small style="color:var(--text-secondary);font-size:11.5px;">' + (n.hace || 'Reciente') + '</small>' +
+                    '<p style="margin:0;font-size:13px;font-weight:500;color:var(--text);line-height:1.35;">' + mensaje + '</p>' +
+                    '<small style="color:var(--text-muted);font-size:11.5px;">' + hace + '</small>' +
                 '</div>' +
             '</div>';
         }).join('');
-        
+
     } catch (error) {
         console.error('Error cargando notificaciones:', error);
     }
@@ -2155,10 +2466,16 @@ async function cargarNotificaciones() {
 async function marcarTodasLeidas() {
     try {
         await fetch('/api/notificaciones/marcar-todas', { method: 'POST' });
+        notificationCount = 0;
         var badge = document.getElementById('notificationBadge');
         if (badge) {
             badge.textContent = '';
             badge.style.display = 'none';
+        }
+        var countPill = document.getElementById('notificationPanelCount');
+        if (countPill) {
+            countPill.textContent = 'Al día';
+            countPill.classList.remove('has-unread');
         }
         document.querySelectorAll('.notification-item.unread').forEach(function(item) {
             item.classList.remove('unread');
@@ -2172,17 +2489,39 @@ async function marcarTodasLeidas() {
 function initProfile() {
     var profileBtn = document.querySelector('.profile-btn');
     var profileMenu = document.getElementById('profileMenu');
-    
+    var profileDropdown = document.getElementById('profileDropdown') || (profileBtn ? profileBtn.closest('.profile-dropdown') : null);
+
     if (!profileBtn || !profileMenu) return;
-    
+
+    function cerrarMenuPerfil() {
+        profileMenu.classList.remove('open');
+        if (profileDropdown) profileDropdown.classList.remove('open');
+        profileBtn.setAttribute('aria-expanded', 'false');
+    }
+
     profileBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        profileMenu.classList.toggle('open');
+
+        // Cerrar panel de notificaciones si está abierto
+        var notifPanel = document.getElementById('notificationPanel');
+        var notifBtn = document.getElementById('notificationBtn');
+        if (notifPanel) notifPanel.classList.remove('open');
+        if (notifBtn) notifBtn.setAttribute('aria-expanded', 'false');
+
+        var isOpen = profileMenu.classList.toggle('open');
+        if (profileDropdown) profileDropdown.classList.toggle('open', isOpen);
+        profileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     });
-    
+
     document.addEventListener('click', function(e) {
         if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
-            profileMenu.classList.remove('open');
+            cerrarMenuPerfil();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && profileMenu.classList.contains('open')) {
+            cerrarMenuPerfil();
         }
     });
 }
@@ -2191,9 +2530,9 @@ function initProfile() {
 function initFab() {
     var fabBtn = document.getElementById('fabBtn');
     var fabMenu = document.getElementById('fabMenu');
-    
+
     if (!fabBtn || !fabMenu) return;
-    
+
     fabBtn.addEventListener('click', function() {
         fabMenu.classList.toggle('open');
         var icon = fabBtn.querySelector('i');
@@ -2202,7 +2541,7 @@ function initFab() {
             icon.classList.toggle('fa-times');
         }
     });
-    
+
     document.addEventListener('click', function(e) {
         if (!fabBtn.contains(e.target) && !fabMenu.contains(e.target)) {
             fabMenu.classList.remove('open');
@@ -2218,19 +2557,19 @@ function initFab() {
 // ========== INICIALIZAR TOOLTIPS ==========
 function initTooltips() {
     document.querySelectorAll('[data-tooltip]').forEach(function(el) {
-        el.addEventListener('mouseenter', function(e) {
+        el.addEventListener('mouseenter', function() {
             var tooltip = document.createElement('div');
             tooltip.className = 'tooltip';
             tooltip.textContent = this.getAttribute('data-tooltip');
-            tooltip.style.cssText = 'position:fixed;padding:6px 12px;background:var(--bg-secondary);color:var(--text);border-radius:6px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:1px solid var(--border-color);z-index:99999;pointer-events:none;max-width:200px;white-space:nowrap;';
+            tooltip.style.cssText = 'position:fixed;padding:6px 12px;background:var(--bg-elevated);color:var(--text);border-radius:6px;font-size:12px;box-shadow:var(--shadow-md);border:1px solid var(--border-color);z-index:99999;pointer-events:none;max-width:220px;white-space:nowrap;';
             var rect = this.getBoundingClientRect();
-            tooltip.style.top = (rect.top - 30) + 'px';
-            tooltip.style.left = (rect.left + rect.width/2 - 60) + 'px';
+            tooltip.style.top = (rect.top - 32) + 'px';
+            tooltip.style.left = Math.max(8, rect.left + rect.width / 2 - 60) + 'px';
             document.body.appendChild(tooltip);
-            
+
             this.addEventListener('mouseleave', function() {
                 tooltip.remove();
-            });
+            }, { once: true });
         });
     });
 }
@@ -2245,13 +2584,13 @@ function initDataTable() {
             var index = Array.from(this.parentElement.children).indexOf(this);
             var rows = Array.from(tbody.querySelectorAll('tr'));
             var isAsc = this.dataset.sort === 'asc';
-            
+
             rows.sort(function(a, b) {
                 var aVal = a.children[index]?.textContent.trim() || '';
                 var bVal = b.children[index]?.textContent.trim() || '';
                 return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
             });
-            
+
             rows.forEach(function(row) {
                 tbody.appendChild(row);
             });
@@ -2267,32 +2606,34 @@ function initDataTable() {
 function initSearchFunctionality() {
     var searchInput = document.querySelector('.table-search input');
     if (!searchInput) return;
-    
+
     var wrapper = searchInput.parentElement;
     var clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
     clearBtn.innerHTML = '<i class="fas fa-times"></i>';
     clearBtn.className = 'search-clear';
     clearBtn.style.cssText = 'display:none;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 10px;';
     wrapper.appendChild(clearBtn);
-    
-    searchInput.addEventListener('keyup', function(e) {
+
+    searchInput.addEventListener('keyup', function() {
         var filter = this.value.toUpperCase();
         var table = this.closest('.table-container')?.querySelector('.data-table tbody');
         if (!table) return;
-        
+
         var rows = table.getElementsByTagName('tr');
         var visibleCount = 0;
-        
+
         for (var i = 0; i < rows.length; i++) {
             var row = rows[i];
+            if (row.classList.contains('no-results')) continue;
             var text = row.textContent.toUpperCase();
             var match = text.includes(filter);
             row.style.display = match ? '' : 'none';
             if (match) visibleCount++;
         }
-        
+
         clearBtn.style.display = filter ? 'block' : 'none';
-        
+
         var noResults = table.querySelector('.no-results');
         if (visibleCount === 0 && rows.length > 0 && filter) {
             if (!noResults) {
@@ -2301,8 +2642,8 @@ function initSearchFunctionality() {
                 var td = document.createElement('td');
                 td.colSpan = table.querySelector('tr')?.cells?.length || 1;
                 td.className = 'text-center';
-                td.style.cssText = 'padding:40px 20px;color:#94a3b8;text-align:center;';
-                td.innerHTML = '<i class="fas fa-search" style="font-size:24px;display:block;margin-bottom:8px;"></i> No se encontraron resultados';
+                td.style.cssText = 'padding:40px 20px;color:var(--text-muted);text-align:center;';
+                td.innerHTML = '<i class="fas fa-search" style="font-size:22px;display:block;margin-bottom:8px;"></i> No se encontraron resultados';
                 tr.appendChild(td);
                 table.appendChild(tr);
             }
@@ -2310,7 +2651,7 @@ function initSearchFunctionality() {
             noResults.remove();
         }
     });
-    
+
     clearBtn.addEventListener('click', function() {
         searchInput.value = '';
         searchInput.dispatchEvent(new Event('keyup'));
@@ -2321,15 +2662,13 @@ function initSearchFunctionality() {
 // ========== AUTO REFRESH ==========
 function initAutoRefresh() {
     if (refreshInterval) clearInterval(refreshInterval);
-    
+
     refreshInterval = setInterval(function() {
         if (autoRefreshEnabled && document.hidden === false) {
             var path = window.location.pathname;
             if (path === '/dashboard' || path === '/') {
                 cargarDashboard();
-                if (!graficosCargados) {
-                    cargarGraficos();
-                }
+                cargarGraficos();
                 cargarActividadReciente();
             }
         }
@@ -2340,15 +2679,15 @@ function initAutoRefresh() {
 async function cargarDatosPagina() {
     var path = window.location.pathname;
     console.log('Cargando pagina:', path);
-    
+
     var pageMap = {
         '/dashboard': async function() {
-            await cargarDashboard();
-            if (!graficosCargados) {
-                await cargarGraficos();
-                graficosCargados = true;
-            }
-            await cargarActividadReciente();
+            await Promise.all([
+                cargarDashboard(),
+                cargarGraficos(),
+                cargarActividadReciente()
+            ]);
+            graficosCargados = true;
             await cargarQuickActions();
             await cargarEstadisticasRapidas();
         },
@@ -2404,7 +2743,7 @@ async function cargarDatosPagina() {
         '/error_reportar': initReportarError,
         '/error_listar': initListarErrores
     };
-    
+
     var pageFunction = pageMap[path];
     if (pageFunction) {
         try {
@@ -2417,22 +2756,77 @@ async function cargarDatosPagina() {
     }
 }
 
-// ========== DASHBOARD ==========
-function actualizarTendenciaTarjeta(elementId, variacion, textoAlternativo) {
+// ========== DASHBOARD EJECUTIVO Y ANIMACION DE CONTEO ==========
+function animarValorNumerico(el, valorFinal, esMoneda, usarConteoInicial) {
+    if (!el) return;
+    var destino = Number(valorFinal || 0);
+    if (isNaN(destino)) destino = 0;
+
+    function formatear(n) {
+        if (esMoneda) {
+            return wgFormatearMoneda(n);
+        }
+        return Math.round(n).toLocaleString('es-NI');
+    }
+
+    if (el._countRafId) {
+        cancelAnimationFrame(el._countRafId);
+        el._countRafId = null;
+    }
+
+    var previo = (typeof el._lastNumericValue === 'number') ? el._lastNumericValue : 0;
+    el._lastNumericValue = destino;
+    el.setAttribute('data-target', String(destino));
+
+    if (wgPrefersReducedMotion() || (!usarConteoInicial && previo === destino) || (usarConteoInicial && destino === 0)) {
+        el.textContent = formatear(destino);
+        return;
+    }
+
+    var origen = usarConteoInicial ? 0 : previo;
+    if (origen === destino) {
+        el.textContent = formatear(destino);
+        return;
+    }
+
+    var duracion = usarConteoInicial ? 680 : 380;
+    var inicioTs = null;
+
+    function paso(ts) {
+        if (!inicioTs) inicioTs = ts;
+        var progreso = Math.min((ts - inicioTs) / duracion, 1);
+        // easeOutQuart: desaceleración suave estilo SaaS moderno (@settigation)
+        var ease = 1 - Math.pow(1 - progreso, 4);
+        var actual = origen + (destino - origen) * ease;
+        el.textContent = formatear(actual);
+        if (progreso < 1) {
+            el._countRafId = requestAnimationFrame(paso);
+        } else {
+            el.textContent = formatear(destino);
+            el._countRafId = null;
+        }
+    }
+
+    el._countRafId = requestAnimationFrame(paso);
+}
+
+function actualizarTendenciaTarjeta(elementId, variacion, sufijoComparacion, textoAlternativo) {
     var el = document.getElementById(elementId);
     if (!el) return;
-    if (variacion !== null && variacion !== undefined && !isNaN(variacion)) {
+    var sufijo = sufijoComparacion ? (' ' + sufijoComparacion) : '';
+
+    if (variacion !== null && variacion !== undefined && variacion !== '' && !isNaN(variacion)) {
         var num = Number(variacion);
         el.style.display = 'inline-flex';
         if (num > 0) {
             el.className = 'stat-trend positive';
-            el.innerHTML = '<i class="fas fa-arrow-up"></i> +' + num + '% vs mes anterior';
+            el.innerHTML = '<i class="fas fa-arrow-trend-up"></i> +' + num + '%' + wgEscapeHtml(sufijo);
         } else if (num < 0) {
             el.className = 'stat-trend negative';
-            el.innerHTML = '<i class="fas fa-arrow-down"></i> ' + num + '% vs mes anterior';
+            el.innerHTML = '<i class="fas fa-arrow-trend-down"></i> ' + num + '%' + wgEscapeHtml(sufijo);
         } else {
             el.className = 'stat-trend neutral';
-            el.innerHTML = '<i class="fas fa-minus"></i> 0% vs mes anterior';
+            el.innerHTML = '<i class="fas fa-minus"></i> 0%' + wgEscapeHtml(sufijo);
         }
     } else if (textoAlternativo) {
         el.style.display = 'inline-flex';
@@ -2445,72 +2839,121 @@ function actualizarTendenciaTarjeta(elementId, variacion, textoAlternativo) {
 }
 
 async function cargarDashboard() {
-    mostrarLoading(true);
-    
+    var esPrimeraCarga = !dashboardConteoInicialRealizado;
+
     try {
         var response = await fetch('/api/dashboard/stats');
-        if (!response.ok) throw new Error('Error en la respuesta');
+        if (!response.ok) throw new Error('Error en la respuesta de estadísticas');
         var stats = await response.json();
-        
+
+        document.querySelectorAll('[data-stat-card]').forEach(function(card) {
+            card.classList.remove('is-loading');
+        });
+
         var montoVentasMes = (stats.ventas_mes_monto !== undefined) ? stats.ventas_mes_monto : (stats.ventas_mes || 0);
-        var statElements = {
-            'totalClientes': stats.total_clientes || 0,
-            'totalEmpleados': stats.total_empleados || 0,
-            'totalProductos': stats.total_productos || 0,
-            'ventasMes': montoVentasMes,
-            'membresiasActivas': stats.membresias_activas || 0,
-            'totalEjercicios': stats.total_ejercicios || 0,
-            'totalCompras': stats.total_compras || 0,
-            'ventasHoy': stats.ventas_hoy || 0,
-            'clientesNuevos': stats.clientes_nuevos || 0,
-            'ingresosTotales': stats.ingresos_totales || 0
-        };
-        
-        Object.entries(statElements).forEach(function([id, value]) {
-            var el = document.getElementById(id);
+        var metricasPrincipales = [
+            { id: 'totalClientes', val: stats.total_clientes || 0, moneda: false },
+            { id: 'totalEmpleados', val: stats.total_empleados || 0, moneda: false },
+            { id: 'totalProductos', val: stats.total_productos || 0, moneda: false },
+            { id: 'ventasMes', val: montoVentasMes, moneda: true },
+            { id: 'membresiasActivas', val: stats.membresias_activas || 0, moneda: false },
+            { id: 'totalEjercicios', val: stats.total_ejercicios || 0, moneda: false },
+            { id: 'totalCompras', val: stats.total_compras || 0, moneda: false },
+            { id: 'ventasHoy', val: stats.ventas_hoy || 0, moneda: false },
+            { id: 'clientesNuevos', val: stats.clientes_nuevos || 0, moneda: false },
+            { id: 'ingresosTotales', val: stats.ingresos_totales || 0, moneda: true }
+        ];
+
+        metricasPrincipales.forEach(function(item) {
+            var el = document.getElementById(item.id);
             if (el) {
-                if (id === 'ventasMes' || id === 'ingresosTotales') {
-                    el.innerHTML = 'C$' + Number(value).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                } else {
-                    el.innerText = Number(value).toLocaleString('es-NI');
-                }
+                animarValorNumerico(el, item.val, item.moneda, esPrimeraCarga);
             }
         });
 
-        // Mostrar variaciones porcentuales únicamente cuando existen datos reales de comparación
-        actualizarTendenciaTarjeta(
-            'trendClientes',
-            stats.variacion_clientes,
-            stats.clientes_nuevos > 0 ? (stats.clientes_nuevos + ' nuevos este mes') : null
-        );
-        actualizarTendenciaTarjeta(
-            'trendVentas',
-            stats.variacion_ventas_mes,
-            stats.ventas_mes_cantidad > 0 ? (stats.ventas_mes_cantidad + ' ventas este mes') : null
-        );
-        
-        document.querySelectorAll('.stat-number').forEach(function(el) {
-            el.classList.add('fade-in-up');
-            setTimeout(function() {
-                el.classList.remove('fade-in-up');
-            }, 350);
-        });
-        
+        dashboardConteoInicialRealizado = true;
+
+        // Indicadores de variación únicamente cuando existen datos históricos reales (sin cifras ficticias)
+        actualizarTendenciaTarjeta('trendClientes', stats.variacion_clientes, 'últ. 30d', null);
+        actualizarTendenciaTarjeta('trendEmpleados', stats.variacion_empleados, 'últ. 30d', null);
+        actualizarTendenciaTarjeta('trendProductos', stats.variacion_productos, 'últ. 30d', null);
+        actualizarTendenciaTarjeta('trendVentas', stats.variacion_ventas_mes, 'vs mes ant.', null);
+        actualizarTendenciaTarjeta('trendMembresias', stats.variacion_membresias, 'últ. 30d', null);
+        actualizarTendenciaTarjeta('trendEjercicios', null, '', null);
+
+        // Subtítulos contextuales basados exclusivamente en registros reales de la BD
+        var metaClientes = document.getElementById('metaClientes');
+        if (metaClientes) {
+            var altas30d = Number(stats.clientes_ultimos_30d || 0);
+            metaClientes.textContent = altas30d > 0
+                ? (altas30d + (altas30d === 1 ? ' nuevo registro en últimos 30 días' : ' nuevos registros en últimos 30 días'))
+                : 'Padrón general registrado en el sistema';
+        }
+
+        var metaEmpleados = document.getElementById('metaEmpleados');
+        if (metaEmpleados) {
+            var cargos = Number(stats.empleados_cargos || 0);
+            metaEmpleados.textContent = cargos > 0
+                ? ('Equipo distribuido en ' + cargos + (cargos === 1 ? ' cargo activo' : ' cargos activos'))
+                : 'Personal operativo activo';
+        }
+
+        var metaProductos = document.getElementById('metaProductos');
+        if (metaProductos) {
+            var conStock = Number(stats.productos_con_stock || 0);
+            var bajoStock = Number(stats.productos_bajo_stock || 0);
+            if (bajoStock > 0) {
+                metaProductos.textContent = conStock + ' con stock · ' + bajoStock + ' en nivel bajo';
+            } else if (conStock > 0) {
+                metaProductos.textContent = conStock + ' productos con stock disponible';
+            } else {
+                metaProductos.textContent = 'Catálogo general de suplementos y artículos';
+            }
+        }
+
+        var metaVentas = document.getElementById('metaVentas');
+        if (metaVentas) {
+            var cantMes = Number(stats.ventas_mes_cantidad || 0);
+            var histTotal = Number(stats.total_ventas_historicas || 0);
+            if (cantMes > 0) {
+                metaVentas.textContent = cantMes + (cantMes === 1 ? ' venta facturada este mes' : ' ventas facturadas este mes');
+            } else if (histTotal > 0) {
+                metaVentas.textContent = 'Sin ventas este mes · ' + histTotal + ' en historial';
+            } else {
+                metaVentas.textContent = 'Facturación acumulada del mes actual';
+            }
+        }
+
+        var metaMembresias = document.getElementById('metaMembresias');
+        if (metaMembresias) {
+            var planesActivos = Number(stats.planes_con_activos || 0);
+            var pagos30d = Number(stats.pagos_membresia_30d || 0);
+            if (planesActivos > 0 && pagos30d > 0) {
+                metaMembresias.textContent = planesActivos + (planesActivos === 1 ? ' plan activo' : ' planes activos') + ' · ' + pagos30d + (pagos30d === 1 ? ' pago (30d)' : ' pagos (30d)');
+            } else if (planesActivos > 0) {
+                metaMembresias.textContent = 'Distribuidas en ' + planesActivos + (planesActivos === 1 ? ' plan vigente' : ' planes vigentes');
+            } else {
+                metaMembresias.textContent = 'Suscripciones vigentes de clientes';
+            }
+        }
+
+        var metaEjercicios = document.getElementById('metaEjercicios');
+        if (metaEjercicios) {
+            var grupos = Number(stats.grupos_musculares_cubiertos || 0);
+            metaEjercicios.textContent = grupos > 0
+                ? ('Cobertura en ' + grupos + (grupos === 1 ? ' grupo muscular' : ' grupos musculares'))
+                : 'Biblioteca técnica de entrenamiento';
+        }
+
     } catch (error) {
         console.error('Error cargando dashboard:', error);
-        document.querySelectorAll('.stat-number').forEach(function(el) {
-            if (el.id === 'ventasMes' || el.id === 'ingresosTotales') {
-                el.innerHTML = 'C$0.00';
-            } else {
-                el.innerText = '0';
-            }
+        document.querySelectorAll('[data-stat-card]').forEach(function(card) {
+            card.classList.remove('is-loading');
         });
-    } finally {
-        mostrarLoading(false);
     }
 }
 
-// ========== GRAFICOS CON DATOS REALES ==========
+// ========== ANALITICA DE VENTAS CON DATOS REALES ==========
 function parseFechaVentaJS(fechaStr) {
     if (!fechaStr) return null;
     var s = String(fechaStr).trim();
@@ -2527,153 +2970,258 @@ function parseFechaVentaJS(fechaStr) {
     return null;
 }
 
-async function cargarGraficos() {
+const wgHoverGuidePlugin = {
+    id: 'wgHoverGuide',
+    afterDatasetsDraw: function(chart) {
+        var active = chart.tooltip && chart.tooltip.getActiveElements ? chart.tooltip.getActiveElements() : [];
+        if (!active || active.length === 0) return;
+        var ctx = chart.ctx;
+        var x = active[0].element.x;
+        var topY = chart.scales.y.top;
+        var bottomY = chart.scales.y.bottom;
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, topY);
+        ctx.lineTo(x, bottomY);
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = isDark ? 'rgba(245, 130, 32, 0.45)' : 'rgba(245, 130, 32, 0.38)';
+        ctx.stroke();
+        ctx.restore();
+    }
+};
+
+function sincronizarControlesPeriodoVentas(periodo) {
+    var selectEl = document.getElementById('ventasPeriodoSelect');
+    if (selectEl && selectEl.value !== periodo) {
+        selectEl.value = periodo;
+    }
+    document.querySelectorAll('#ventasPeriodoTabs .period-pill').forEach(function(btn) {
+        var activo = btn.getAttribute('data-periodo') === periodo;
+        btn.classList.toggle('active', activo);
+        btn.setAttribute('aria-selected', activo ? 'true' : 'false');
+    });
+    try {
+        sessionStorage.setItem('ventasPeriodo', periodo);
+    } catch (e) {}
+}
+
+async function cargarGraficos(periodoForzado) {
     var ingresosCanvas = document.getElementById('ingresosChart');
     var periodoSelect = document.getElementById('ventasPeriodoSelect');
-
-    if (periodoSelect && !periodoSelect._listenerAttached) {
-        periodoSelect._listenerAttached = true;
-        periodoSelect.addEventListener('change', function() {
-            graficosCargados = false;
-            cargarGraficos();
-        });
-    }
+    var tabsContainer = document.getElementById('ventasPeriodoTabs');
+    var skeletonEl = document.getElementById('ventasChartSkeleton');
+    var emptyStateEl = document.getElementById('ventasEmptyState');
+    var emptyMsgEl = document.getElementById('ventasEmptyMessage');
+    var btnHistorialAnual = document.getElementById('btnVerHistorialAnual');
+    var errorStateEl = document.getElementById('ventasErrorState');
+    var btnReintentar = document.getElementById('btnReintentarGrafico');
 
     if (!ingresosCanvas || typeof Chart === 'undefined') {
         return;
     }
 
-    if (charts.ingresos) {
-        charts.ingresos.destroy();
-        charts.ingresos = null;
+    // Enlazar selectores de período una sola vez
+    if (periodoSelect && !periodoSelect._listenerAttached) {
+        periodoSelect._listenerAttached = true;
+        periodoSelect.addEventListener('change', function() {
+            cargarGraficos(periodoSelect.value);
+        });
     }
 
-    var periodo = periodoSelect ? periodoSelect.value : 'meses';
-    var labels = [];
-    var valores = [];
+    if (tabsContainer && !tabsContainer._listenerAttached) {
+        tabsContainer._listenerAttached = true;
+        tabsContainer.querySelectorAll('.period-pill').forEach(function(pill) {
+            pill.addEventListener('click', function() {
+                var p = pill.getAttribute('data-periodo');
+                if (p) cargarGraficos(p);
+            });
+        });
+    }
+
+    if (btnHistorialAnual && !btnHistorialAnual._listenerAttached) {
+        btnHistorialAnual._listenerAttached = true;
+        btnHistorialAnual.addEventListener('click', function() {
+            cargarGraficos('1anio');
+        });
+    }
+
+    if (btnReintentar && !btnReintentar._listenerAttached) {
+        btnReintentar._listenerAttached = true;
+        btnReintentar.addEventListener('click', function() {
+            cargarGraficos();
+        });
+    }
+
+    var periodoGuardado = null;
+    try {
+        periodoGuardado = sessionStorage.getItem('ventasPeriodo');
+    } catch (e) {}
+
+    var periodo = periodoForzado || periodoGuardado || (periodoSelect ? periodoSelect.value : '1anio') || '1anio';
+    var periodosValidos = ['7dias', '30dias', '3meses', '6meses', '1anio'];
+    if (periodosValidos.indexOf(periodo) === -1) {
+        periodo = '1anio';
+    }
+    sincronizarControlesPeriodoVentas(periodo);
+
+    if (!charts.ingresos && skeletonEl) {
+        skeletonEl.hidden = false;
+    }
 
     try {
-        var resVentas = await fetch('/api/ventas/listar');
-        var ventas = resVentas.ok ? await resVentas.json() : [];
-        if (!Array.isArray(ventas)) ventas = [];
+        var res = await fetch('/api/dashboard/ventas-resumen?periodo=' + encodeURIComponent(periodo));
+        if (!res.ok) throw new Error('Error HTTP ' + res.status);
+        var resumen = await res.json();
+        ventasResumenCache = resumen;
 
-        var ahora = new Date();
+        if (skeletonEl) skeletonEl.hidden = true;
+        if (errorStateEl) errorStateEl.hidden = true;
 
-        if (periodo === '7dias') {
-            var diasNombres = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-            var mapaDias = {};
-            for (var i = 6; i >= 0; i--) {
-                var fechaDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - i);
-                var clave = fechaDia.getFullYear() + '-' + (fechaDia.getMonth() + 1) + '-' + fechaDia.getDate();
-                var etiqueta = diasNombres[fechaDia.getDay()] + ' ' + fechaDia.getDate();
-                labels.push(etiqueta);
-                mapaDias[clave] = 0;
-            }
-            ventas.forEach(function(v) {
-                var dt = parseFechaVentaJS(v.FechaVenta || v.fechaVenta);
-                if (dt) {
-                    var c = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
-                    if (Object.prototype.hasOwnProperty.call(mapaDias, c)) {
-                        mapaDias[c] += parseFloat(v.Total || v.total || 0) || 0;
-                    }
-                }
-            });
-            valores = Object.values(mapaDias);
-        } else {
-            // Últimos 6 meses a partir de ventas reales y/o reporte de ingresos mensuales
-            var mesesCortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            var mapaMeses = {};
-            var ordenClaves = [];
+        // Actualizar franja superior de KPIs reales del período
+        var elTotal = document.getElementById('ventasPeriodoTotal');
+        var elCantidad = document.getElementById('ventasPeriodoCantidad');
+        var elPromedio = document.getElementById('ventasPeriodoPromedio');
 
-            for (var mIdx = 5; mIdx >= 0; mIdx--) {
-                var dMes = new Date(ahora.getFullYear(), ahora.getMonth() - mIdx, 1);
-                var kMes = dMes.getFullYear() + '-' + (dMes.getMonth() + 1);
-                ordenClaves.push(kMes);
-                labels.push(mesesCortos[dMes.getMonth()] + ' ' + String(dMes.getFullYear()).slice(-2));
-                mapaMeses[kMes] = 0;
-            }
-
-            ventas.forEach(function(v) {
-                var dt = parseFechaVentaJS(v.FechaVenta || v.fechaVenta);
-                if (dt) {
-                    var k = dt.getFullYear() + '-' + (dt.getMonth() + 1);
-                    if (Object.prototype.hasOwnProperty.call(mapaMeses, k)) {
-                        mapaMeses[k] += parseFloat(v.Total || v.total || 0) || 0;
-                    }
-                }
-            });
-
-            // Si no hubo ventas en esos meses pero el reporte de ingresos mensuales tiene registros, respaldar con datos reales
-            var sumaVentas = Object.values(mapaMeses).reduce(function(a, b) { return a + b; }, 0);
-            if (sumaVentas === 0) {
-                var resIngresos = await fetch('/api/reportes/ingresos');
-                var repIngresos = resIngresos.ok ? await resIngresos.json() : [];
-                if (Array.isArray(repIngresos) && repIngresos.length > 0) {
-                    repIngresos.forEach(function(item) {
-                        var anio = item.Anio || item.anio;
-                        var mes = item.Mes || item.mes;
-                        var k = anio + '-' + mes;
-                        if (Object.prototype.hasOwnProperty.call(mapaMeses, k)) {
-                            mapaMeses[k] = parseFloat(item.TotalIngresos || item.total || 0) || 0;
-                        }
-                    });
-                }
-            }
-
-            valores = ordenClaves.map(function(k) {
-                return Math.round((mapaMeses[k] || 0) * 100) / 100;
-            });
+        if (elTotal) elTotal.textContent = wgFormatearMoneda(resumen.total_importe || 0);
+        if (elCantidad) {
+            var nVentas = Number(resumen.total_ventas || 0);
+            elCantidad.textContent = nVentas.toLocaleString('es-NI') + (nVentas === 1 ? ' venta' : ' ventas');
         }
-    } catch (err) {
-        console.error('Error obteniendo datos reales para el gráfico de ventas:', err);
-        labels = ['Sin datos'];
-        valores = [0];
-    }
+        if (elPromedio) elPromedio.textContent = wgFormatearMoneda(resumen.promedio_venta || 0);
+        actualizarTendenciaTarjeta('ventasPeriodoVariacion', resumen.variacion_periodo, 'vs período ant.', null);
 
-    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    var textColor = isDark ? '#94A3B8' : '#7B8491';
-    var gridColor = isDark ? 'rgba(148, 163, 184, 0.1)' : '#F0F2F5';
+        // Si no existen ventas reales en el período seleccionado, mostrar estado vacío profesional
+        if (!resumen.tiene_datos) {
+            ingresosCanvas.style.opacity = '0';
+            ingresosCanvas.style.pointerEvents = 'none';
+            if (emptyStateEl) {
+                emptyStateEl.hidden = false;
+                var nombresPeriodo = {
+                    '7dias': 'los últimos 7 días',
+                    '30dias': 'los últimos 30 días',
+                    '3meses': 'los últimos 3 meses',
+                    '6meses': 'los últimos 6 meses',
+                    '1anio': 'el último año'
+                };
+                if (emptyMsgEl) {
+                    if (resumen.existen_ventas_historicas && periodo !== '1anio') {
+                        emptyMsgEl.textContent = 'No se registraron ventas de productos en ' + (nombresPeriodo[periodo] || 'este período') + '. Puedes consultar el historial anual o registrar una nueva operación.';
+                    } else {
+                        emptyMsgEl.textContent = 'Todavía no hay información suficiente de ventas en ' + (nombresPeriodo[periodo] || 'este período') + ' para proyectar la curva.';
+                    }
+                }
+                if (btnHistorialAnual) {
+                    btnHistorialAnual.hidden = !(resumen.existen_ventas_historicas && periodo !== '1anio');
+                }
+            }
+            graficosCargados = true;
+            return;
+        }
 
-    try {
+        if (emptyStateEl) emptyStateEl.hidden = true;
+        ingresosCanvas.style.opacity = '1';
+        ingresosCanvas.style.pointerEvents = 'auto';
+
+        var labels = Array.isArray(resumen.labels) ? resumen.labels : [];
+        var importes = Array.isArray(resumen.importes) ? resumen.importes : [];
+        var cantidades = Array.isArray(resumen.cantidades) ? resumen.cantidades : [];
+        var fechasCompletas = Array.isArray(resumen.fechas_completas) ? resumen.fechas_completas : labels;
+
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var textColor = isDark ? '#9BA5B7' : '#667085';
+        var gridColor = isDark ? 'rgba(155, 165, 183, 0.09)' : '#EEF1F5';
+        var pointRadius = labels.length > 16 ? 2.5 : 4;
+        var maxTicks = labels.length > 14 ? 8 : 12;
+        var animDuration = wgPrefersReducedMotion() ? 0 : 620;
+
+        if (charts.ingresos) {
+            charts.ingresos.data.labels = labels;
+            charts.ingresos.data.datasets[0].data = importes;
+            charts.ingresos.data.datasets[0].pointRadius = pointRadius;
+            charts.ingresos._fechasCompletas = fechasCompletas;
+            charts.ingresos._cantidades = cantidades;
+            charts.ingresos.options.scales.x.ticks.maxTicksLimit = maxTicks;
+            charts.ingresos.options.animation.duration = wgPrefersReducedMotion() ? 0 : 440;
+            actualizarColoresGraficoVentas();
+            charts.ingresos.update();
+            graficosCargados = true;
+            return;
+        }
+
         var ctx = ingresosCanvas.getContext('2d');
-        var gradient = ctx.createLinearGradient(0, 0, 0, 250);
-        gradient.addColorStop(0, 'rgba(245, 130, 32, 0.22)');
-        gradient.addColorStop(1, 'rgba(245, 130, 32, 0.01)');
+        var gradient = ctx.createLinearGradient(0, 0, 0, ingresosCanvas.clientHeight || 280);
+        gradient.addColorStop(0, isDark ? 'rgba(245, 130, 32, 0.28)' : 'rgba(245, 130, 32, 0.20)');
+        gradient.addColorStop(1, 'rgba(245, 130, 32, 0.00)');
 
-        charts.ingresos = new Chart(ingresosCanvas, {
+        var chartInstance = new Chart(ingresosCanvas, {
             type: 'line',
+            plugins: [wgHoverGuidePlugin],
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Ventas',
-                    data: valores,
+                    label: 'Importe total',
+                    data: importes,
                     borderColor: '#F58220',
                     backgroundColor: gradient,
-                    borderWidth: 2.5,
+                    borderWidth: 2.4,
                     fill: true,
-                    tension: 0.35,
+                    tension: 0.36,
                     pointBackgroundColor: '#F58220',
-                    pointBorderColor: isDark ? '#171E29' : '#FFFFFF',
+                    pointBorderColor: isDark ? '#121721' : '#FFFFFF',
                     pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointRadius: pointRadius,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#F58220',
+                    pointHoverBorderColor: isDark ? '#FFFFFF' : '#181D27',
+                    pointHoverBorderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                animation: {
+                    duration: animDuration,
+                    easing: 'easeOutQuart'
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: isDark ? '#1F2837' : '#252B36',
+                        backgroundColor: isDark ? '#1B2332' : '#181D27',
                         titleColor: '#FFFFFF',
-                        bodyColor: '#FFFFFF',
-                        padding: 10,
-                        cornerRadius: 6,
+                        bodyColor: '#E6E8EC',
+                        borderColor: isDark ? '#2D384D' : 'rgba(255,255,255,0.08)',
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 10,
                         displayColors: false,
+                        titleFont: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        bodyFont: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                        bodySpacing: 5,
                         callbacks: {
-                            label: function(ctx) {
-                                return 'C$' + Number(ctx.raw || 0).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            title: function(items) {
+                                if (!items || !items.length) return '';
+                                var idx = items[0].dataIndex;
+                                var chartRef = items[0].chart;
+                                var fechas = chartRef._fechasCompletas || [];
+                                return 'Fecha: ' + (fechas[idx] || items[0].label || '');
+                            },
+                            label: function(context) {
+                                var idx = context.dataIndex;
+                                var chartRef = context.chart;
+                                var cants = chartRef._cantidades || [];
+                                var cant = Number(cants[idx] || 0);
+                                var imp = Number(context.raw || 0);
+                                return [
+                                    'Cantidad de ventas: ' + cant.toLocaleString('es-NI'),
+                                    'Importe total: ' + wgFormatearMoneda(imp)
+                                ];
                             }
                         }
                     }
@@ -2685,7 +3233,9 @@ async function cargarGraficos() {
                         grid: { color: gridColor, drawBorder: false },
                         ticks: {
                             color: textColor,
-                            font: { family: "'Inter', sans-serif", size: 11 },
+                            padding: 8,
+                            maxTicksLimit: 6,
+                            font: { family: "'Inter', sans-serif", size: 11.5 },
                             callback: function(value) {
                                 return 'C$' + Number(value).toLocaleString('es-NI');
                             }
@@ -2696,59 +3246,152 @@ async function cargarGraficos() {
                         grid: { display: false },
                         ticks: {
                             color: textColor,
-                            font: { family: "'Inter', sans-serif", size: 11 }
+                            padding: 6,
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: maxTicks,
+                            font: { family: "'Inter', sans-serif", size: 11.5 }
                         }
                     }
                 }
             }
         });
-    } catch (error) {
-        console.error('Error creando gráfico de resumen de ventas:', error);
-    }
 
-    graficosCargados = true;
+        chartInstance._fechasCompletas = fechasCompletas;
+        chartInstance._cantidades = cantidades;
+        charts.ingresos = chartInstance;
+        graficosCargados = true;
+
+    } catch (error) {
+        console.error('Error cargando resumen de ventas:', error);
+        if (skeletonEl) skeletonEl.hidden = true;
+        if (emptyStateEl) emptyStateEl.hidden = true;
+        ingresosCanvas.style.opacity = '0';
+        if (errorStateEl) errorStateEl.hidden = false;
+    }
 }
 
-// ========== ACTIVIDAD RECIENTE ==========
-async function cargarActividadReciente() {
+// ========== ACTIVIDAD RECIENTE CRONOLOGICA ==========
+function renderizarActividadReciente() {
     var container = document.getElementById('recentActivity');
     if (!container) return;
-    
+
+    var listaBase = Array.isArray(actividadRecienteCache) ? actividadRecienteCache : [];
+    var filtrada = actividadFiltroActual === 'todos'
+        ? listaBase
+        : listaBase.filter(function(item) { return item.tipo === actividadFiltroActual; });
+
+    if (filtrada.length === 0) {
+        var etiquetasFiltro = {
+            'todos': 'movimientos recientes',
+            'membresia': 'membresías o pagos recientes',
+            'venta': 'ventas recientes',
+            'cliente': 'registros de clientes recientes',
+            'compra': 'compras de inventario recientes'
+        };
+        container.innerHTML = '<div class="empty-state" style="padding:32px 16px;">' +
+            '<i class="fas fa-inbox" style="font-size:1.5rem;margin-bottom:8px;color:var(--text-muted);"></i>' +
+            '<h4 style="margin-bottom:4px;">Sin ' + wgEscapeHtml(etiquetasFiltro[actividadFiltroActual] || 'movimientos') + '</h4>' +
+            '<p style="font-size:12.5px;">Los nuevos registros del gimnasio aparecerán ordenados cronológicamente aquí.</p>' +
+        '</div>';
+        return;
+    }
+
+    var recientes = filtrada.slice(0, 8);
+    container.innerHTML = recientes.map(function(item, idx) {
+        var tipo = item.tipo || 'general';
+        var icono = wgEscapeHtml(item.icono || 'fa-circle-check');
+        var titulo = wgEscapeHtml(item.titulo || item.descripcion || 'Movimiento registrado');
+        var etiqueta = wgEscapeHtml(item.etiqueta || '');
+        var cliente = wgEscapeHtml(item.cliente || '');
+        var fechaHora = wgEscapeHtml(item.fecha_hora || item.hace || 'Reciente');
+        var url = item.url ? wgEscapeHtml(item.url) : '';
+
+        var montoHtml = '';
+        if (item.monto !== '' && item.monto !== null && item.monto !== undefined && !isNaN(item.monto) && Number(item.monto) > 0) {
+            var esIngreso = (tipo === 'venta' || tipo === 'membresia');
+            montoHtml = '<div class="activity-amount' + (esIngreso ? ' is-income' : '') + '">' +
+                wgFormatearMoneda(item.monto) +
+            '</div>';
+        }
+
+        var tagApertura = url
+            ? '<a href="' + url + '" class="activity-item" style="--row-index:' + idx + ';">'
+            : '<div class="activity-item" style="--row-index:' + idx + ';">';
+        var tagCierre = url ? '</a>' : '</div>';
+
+        return tagApertura +
+            '<div class="activity-icon type-' + wgEscapeHtml(tipo) + '">' +
+                '<i class="fas ' + icono + '"></i>' +
+            '</div>' +
+            '<div class="activity-details">' +
+                '<div class="activity-title-row">' +
+                    '<p class="activity-title" title="' + titulo + '">' + titulo + '</p>' +
+                    (etiqueta ? '<span class="activity-type-tag">' + etiqueta + '</span>' : '') +
+                '</div>' +
+                '<div class="activity-subrow">' +
+                    (cliente ? '<span class="activity-client" title="' + cliente + '">' + cliente + '</span><span aria-hidden="true">·</span>' : '') +
+                    '<span class="activity-time"><i class="far fa-clock"></i> ' + fechaHora + '</span>' +
+                '</div>' +
+            '</div>' +
+            montoHtml +
+        tagCierre;
+    }).join('');
+}
+
+async function cargarActividadReciente(esRefrescoManual) {
+    var container = document.getElementById('recentActivity');
+    if (!container) return;
+
+    var filtersWrap = document.getElementById('activityFilters');
+    if (filtersWrap && !filtersWrap._listenerAttached) {
+        filtersWrap._listenerAttached = true;
+        filtersWrap.querySelectorAll('.activity-filter-chip').forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                actividadFiltroActual = chip.getAttribute('data-filter') || 'todos';
+                filtersWrap.querySelectorAll('.activity-filter-chip').forEach(function(c) {
+                    var active = c === chip;
+                    c.classList.toggle('active', active);
+                    c.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+                renderizarActividadReciente();
+            });
+        });
+    }
+
+    var refreshBtn = document.getElementById('btnRefreshActivity');
+    if (refreshBtn && !refreshBtn._listenerAttached) {
+        refreshBtn._listenerAttached = true;
+        refreshBtn.addEventListener('click', function() {
+            cargarActividadReciente(true);
+        });
+    }
+
+    if (esRefrescoManual && refreshBtn) {
+        refreshBtn.classList.add('is-spinning');
+    }
+
     try {
         var response = await fetch('/api/actividad-reciente');
+        if (!response.ok) throw new Error('Error HTTP ' + response.status);
         var data = await response.json();
-        
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="padding:32px 16px;">' +
-                '<i class="fas fa-inbox" style="font-size:1.75rem;margin-bottom:8px;"></i>' +
-                '<h3>Sin movimientos recientes</h3>' +
-                '<p>Los registros de clientes, ventas y membresías aparecerán aquí.</p>' +
-            '</div>';
-            return;
+        actividadRecienteCache = Array.isArray(data) ? data : [];
+        renderizarActividadReciente();
+        if (esRefrescoManual) {
+            mostrarToast('Actividad reciente actualizada', 'info');
         }
-        
-        var recent = data.slice(0, 6);
-        container.innerHTML = recent.map(function(item) {
-            var montoHtml = '';
-            if (item.monto !== '' && item.monto !== null && item.monto !== undefined && Number(item.monto) > 0) {
-                montoHtml = '<div class="activity-amount">C$' + Number(item.monto).toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</div>';
-            }
-            return '<div class="activity-item">' +
-                '<div class="activity-icon"><i class="fas ' + (item.icono || 'fa-circle-check') + '"></i></div>' +
-                '<div class="activity-details">' +
-                    '<p>' + (item.descripcion || 'Movimiento registrado') + '</p>' +
-                    '<span><i class="far fa-clock"></i> ' + (item.hace || 'Reciente') + '</span>' +
-                '</div>' +
-                montoHtml +
-            '</div>';
-        }).join('');
-        
     } catch (error) {
         console.error('Error cargando actividad:', error);
         container.innerHTML = '<div class="empty-state" style="padding:32px 16px;">' +
-            '<i class="fas fa-clock" style="font-size:1.5rem;margin-bottom:8px;"></i>' +
-            '<p>No se pudo cargar la actividad reciente en este momento.</p>' +
+            '<i class="fas fa-triangle-exclamation" style="font-size:1.5rem;margin-bottom:8px;color:var(--danger);"></i>' +
+            '<p style="font-size:12.5px;">No se pudo cargar la actividad reciente en este momento.</p>' +
         '</div>';
+    } finally {
+        if (refreshBtn) {
+            setTimeout(function() {
+                refreshBtn.classList.remove('is-spinning');
+            }, 260);
+        }
     }
 }
 

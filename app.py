@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import sys
 import os
@@ -378,10 +378,72 @@ def api_notificaciones_marcar_todas():
 # ==================================================
 # API DASHBOARD
 # ==================================================
+def _agrupar_ventas_unicas(ventas_list):
+    """Agrupa filas de detalle de ListarVentas() por IdVenta para evitar duplicar montos y conteos."""
+    agrupadas = {}
+    sin_id = []
+    for v in (ventas_list or []):
+        vid = v.get('IdVenta')
+        prod = (v.get('NombreProducto') or '').strip()
+        cli = f"{v.get('PrimerNombre') or ''} {v.get('PrimerApellido') or ''}".strip()
+        fecha_raw = v.get('FechaVenta')
+        dt = _parse_fecha(fecha_raw)
+        if vid is None:
+            sin_id.append({
+                'IdVenta': None,
+                'Total': _safe_float(v.get('Total')),
+                'FechaVenta': fecha_raw,
+                'dt': dt,
+                'Cliente': cli,
+                'Productos': [prod] if prod else []
+            })
+            continue
+        if vid not in agrupadas:
+            agrupadas[vid] = {
+                'IdVenta': vid,
+                'Total': _safe_float(v.get('Total')),
+                'FechaVenta': fecha_raw,
+                'dt': dt,
+                'Cliente': cli,
+                'Productos': []
+            }
+        if prod and prod not in agrupadas[vid]['Productos']:
+            agrupadas[vid]['Productos'].append(prod)
+    resultado = list(agrupadas.values()) + sin_id
+    resultado.sort(key=lambda x: (x['dt'].timestamp() if x['dt'] else 0, int(x['IdVenta'] or 0)), reverse=True)
+    return resultado
+
+
+def _agrupar_compras_unicas(compras_list):
+    """Agrupa filas de ListarCompras() por IdCompra para obtener compras únicas."""
+    agrupadas = {}
+    for c in (compras_list or []):
+        cid = c.get('IdCompra')
+        prod = (c.get('NombreProducto') or '').strip()
+        prov = (c.get('Nombre') or c.get('Proveedor') or '').strip()
+        fecha_raw = c.get('FechaCompra')
+        dt = _parse_fecha(fecha_raw)
+        clave = cid if cid is not None else id(c)
+        if clave not in agrupadas:
+            agrupadas[clave] = {
+                'IdCompra': cid,
+                'Total': _safe_float(c.get('Total')),
+                'FechaCompra': fecha_raw,
+                'dt': dt,
+                'Proveedor': prov,
+                'Estado': c.get('Estado') or 'Registrada',
+                'Productos': []
+            }
+        if prod and prod not in agrupadas[clave]['Productos']:
+            agrupadas[clave]['Productos'].append(prod)
+    resultado = list(agrupadas.values())
+    resultado.sort(key=lambda x: (x['dt'].timestamp() if x['dt'] else 0, int(x['IdCompra'] or 0)), reverse=True)
+    return resultado
+
+
 @app.route('/api/dashboard/stats')
 @login_required
 def api_dashboard_stats():
-    # Obtener totales de la base de datos
     ok_cli, clientes = ListarClientes()
     ok_emp, empleados = ListarEmpleados()
     ok_prod, productos = ListarProductos()
@@ -390,20 +452,28 @@ def api_dashboard_stats():
     ok_com, compras = ListarCompras()
     ok_ven, ventas = ListarVentas()
     ok_mem, membresias_activas = ReporteMembresiasActivas()
+    ok_pag, pagos = ListarPagos()
 
     clientes_list = clientes if (ok_cli and isinstance(clientes, list)) else []
     empleados_list = empleados if (ok_emp and isinstance(empleados, list)) else []
     productos_list = productos if (ok_prod and isinstance(productos, list)) else []
     maquinas_list = maquinas if (ok_maq and isinstance(maquinas, list)) else []
     ejercicios_list = ejercicios if (ok_eje and isinstance(ejercicios, list)) else []
-    compras_list = compras if (ok_com and isinstance(compras, list)) else []
-    ventas_list = ventas if (ok_ven and isinstance(ventas, list)) else []
+    compras_raw = compras if (ok_com and isinstance(compras, list)) else []
+    ventas_raw = ventas if (ok_ven and isinstance(ventas, list)) else []
     membresias_list = membresias_activas if (ok_mem and isinstance(membresias_activas, list)) else []
+    pagos_list = pagos if (ok_pag and isinstance(pagos, list)) else []
+
+    ventas_unicas = _agrupar_ventas_unicas(ventas_raw)
+    compras_unicas = _agrupar_compras_unicas(compras_raw)
 
     cant_membresias_activas = sum(int(m.get('TotalClientesActivos') or 0) for m in membresias_list)
-    ventas_totales = sum(_safe_float(v.get('Total')) for v in ventas_list)
+    planes_con_activos = sum(1 for m in membresias_list if int(m.get('TotalClientesActivos') or 0) > 0)
+    ventas_totales = sum(v['Total'] for v in ventas_unicas)
 
     ahora = datetime.now()
+    hace_30d = ahora - timedelta(days=30)
+    hace_60d = ahora - timedelta(days=60)
     anio_actual, mes_actual = ahora.year, ahora.month
     if mes_actual == 1:
         anio_ant, mes_ant = anio_actual - 1, 12
@@ -414,8 +484,8 @@ def api_dashboard_stats():
     ventas_mes_anterior = []
     ventas_hoy_list = []
 
-    for v in ventas_list:
-        dt = _parse_fecha(v.get('FechaVenta'))
+    for v in ventas_unicas:
+        dt = v['dt']
         if dt:
             if dt.year == anio_actual and dt.month == mes_actual:
                 ventas_mes_actual.append(v)
@@ -424,27 +494,89 @@ def api_dashboard_stats():
             if dt.year == ahora.year and dt.month == ahora.month and dt.day == ahora.day:
                 ventas_hoy_list.append(v)
 
-    monto_ventas_mes = sum(_safe_float(v.get('Total')) for v in ventas_mes_actual)
-    monto_ventas_mes_ant = sum(_safe_float(v.get('Total')) for v in ventas_mes_anterior)
+    monto_ventas_mes = sum(v['Total'] for v in ventas_mes_actual)
+    monto_ventas_mes_ant = sum(v['Total'] for v in ventas_mes_anterior)
 
-    # Variación porcentual de ventas del mes únicamente si existe período anterior comparable (> 0)
     variacion_ventas_mes = None
     if monto_ventas_mes_ant > 0:
         variacion_ventas_mes = round(((monto_ventas_mes - monto_ventas_mes_ant) / monto_ventas_mes_ant) * 100, 1)
 
+    # Clientes: crecimiento real del padrón acumulado en los últimos 30 días
     clientes_nuevos_mes = []
-    clientes_nuevos_mes_ant = []
+    clientes_ultimos_30d = []
+    clientes_base_previa_30d = 0
     for c in clientes_list:
         dt_c = _parse_fecha(c.get('FechaRegistro'))
         if dt_c:
             if dt_c.year == anio_actual and dt_c.month == mes_actual:
                 clientes_nuevos_mes.append(c)
-            elif dt_c.year == anio_ant and dt_c.month == mes_ant:
-                clientes_nuevos_mes_ant.append(c)
+            if dt_c >= hace_30d:
+                clientes_ultimos_30d.append(c)
+            else:
+                clientes_base_previa_30d += 1
+        else:
+            clientes_base_previa_30d += 1
 
     variacion_clientes = None
-    if len(clientes_nuevos_mes_ant) > 0:
-        variacion_clientes = round(((len(clientes_nuevos_mes) - len(clientes_nuevos_mes_ant)) / len(clientes_nuevos_mes_ant)) * 100, 1)
+    if clientes_base_previa_30d > 0 and len(clientes_ultimos_30d) > 0:
+        variacion_clientes = round((len(clientes_ultimos_30d) / clientes_base_previa_30d) * 100, 1)
+
+    # Empleados: variación real últimos 30 días y cargos cubiertos
+    empleados_30d = 0
+    empleados_prev = 0
+    cargos_set = set()
+    for e in empleados_list:
+        cargo = (e.get('NombreCargo') or '').strip()
+        if cargo:
+            cargos_set.add(cargo)
+        dt_e = _parse_fecha(e.get('FechaContratacion'))
+        if dt_e and dt_e >= hace_30d:
+            empleados_30d += 1
+        else:
+            empleados_prev += 1
+    variacion_empleados = None
+    if empleados_prev > 0 and empleados_30d > 0:
+        variacion_empleados = round((empleados_30d / empleados_prev) * 100, 1)
+
+    # Productos: stock disponible real y variación del catálogo últimos 30 días
+    productos_con_stock = 0
+    productos_bajo_stock = 0
+    productos_30d = 0
+    productos_prev = 0
+    for p in productos_list:
+        st = int(p.get('Stock') or 0)
+        if st > 0:
+            productos_con_stock += 1
+        if 0 < st <= 5:
+            productos_bajo_stock += 1
+        dt_p = _parse_fecha(p.get('FechaRegistro'))
+        if dt_p and dt_p >= hace_30d:
+            productos_30d += 1
+        else:
+            productos_prev += 1
+    variacion_productos = None
+    if productos_prev > 0 and productos_30d > 0:
+        variacion_productos = round((productos_30d / productos_prev) * 100, 1)
+
+    # Membresías: pagos en últimos 30 días vs 30 días previos (solo si el período previo tiene registros)
+    pagos_30d = 0
+    pagos_prev_30d = 0
+    for pg in pagos_list:
+        dt_pg = _parse_fecha(pg.get('FechaPago'))
+        if dt_pg:
+            if dt_pg >= hace_30d:
+                pagos_30d += 1
+            elif hace_60d <= dt_pg < hace_30d:
+                pagos_prev_30d += 1
+    variacion_membresias = None
+    if pagos_prev_30d > 0:
+        variacion_membresias = round(((pagos_30d - pagos_prev_30d) / pagos_prev_30d) * 100, 1)
+
+    grupos_set = {
+        str(ej.get('NombreGrupo') or ej.get('IdGrupoMuscular') or '').strip()
+        for ej in ejercicios_list
+        if (ej.get('NombreGrupo') or ej.get('IdGrupoMuscular'))
+    }
 
     return jsonify({
         'total_clientes': len(clientes_list),
@@ -453,29 +585,154 @@ def api_dashboard_stats():
         'ventas_mes': round(monto_ventas_mes, 2),
         'ventas_mes_monto': round(monto_ventas_mes, 2),
         'ventas_mes_cantidad': len(ventas_mes_actual),
+        'ventas_mes_anterior_monto': round(monto_ventas_mes_ant, 2),
         'membresias_activas': cant_membresias_activas,
+        'planes_con_activos': planes_con_activos,
+        'pagos_membresia_30d': pagos_30d,
         'total_ejercicios': len(ejercicios_list),
+        'grupos_musculares_cubiertos': len(grupos_set),
         'total_maquinaria': len(maquinas_list),
-        'total_compras': len(compras_list),
+        'total_compras': len(compras_unicas),
         'ventas_hoy': len(ventas_hoy_list),
         'clientes_nuevos': len(clientes_nuevos_mes),
+        'clientes_ultimos_30d': len(clientes_ultimos_30d),
+        'empleados_cargos': len(cargos_set),
+        'productos_con_stock': productos_con_stock,
+        'productos_bajo_stock': productos_bajo_stock,
         'ingresos_totales': round(ventas_totales, 2),
+        'total_ventas_historicas': len(ventas_unicas),
         'variacion_ventas_mes': variacion_ventas_mes,
-        'variacion_clientes': variacion_clientes
+        'variacion_clientes': variacion_clientes,
+        'variacion_empleados': variacion_empleados,
+        'variacion_productos': variacion_productos,
+        'variacion_membresias': variacion_membresias
     })
+
+
+@app.route('/api/dashboard/ventas-resumen')
+@login_required
+def api_dashboard_ventas_resumen():
+    periodo = (request.args.get('periodo') or '1anio').strip().lower()
+    if periodo not in ('7dias', '30dias', '3meses', '6meses', '1anio'):
+        periodo = '1anio'
+
+    ok_ven, ventas_raw = ListarVentas()
+    ventas_unicas = _agrupar_ventas_unicas(ventas_raw if (ok_ven and isinstance(ventas_raw, list)) else [])
+
+    ahora = datetime.now()
+    hoy = datetime(ahora.year, ahora.month, ahora.day)
+    dias_cortos = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+    dias_largos = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    meses_cortos = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    meses_largos = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+
+    labels = []
+    fechas_completas = []
+    cantidades = []
+    importes = []
+    monto_periodo_anterior = 0.0
+
+    if periodo in ('7dias', '30dias'):
+        num_dias = 7 if periodo == '7dias' else 30
+        inicio = hoy - timedelta(days=num_dias - 1)
+        inicio_prev = inicio - timedelta(days=num_dias)
+
+        buckets = {}
+        orden = []
+        for i in range(num_dias):
+            d = inicio + timedelta(days=i)
+            k = d.strftime('%Y-%m-%d')
+            orden.append(k)
+            lbl = f"{dias_cortos[d.weekday()]} {d.day:02d}" if periodo == '7dias' else f"{d.day:02d} {meses_cortos[d.month - 1]}"
+            labels.append(lbl)
+            fechas_completas.append(f"{dias_largos[d.weekday()]}, {d.strftime('%d/%m/%Y')}")
+            buckets[k] = {'cantidad': 0, 'importe': 0.0}
+
+        for v in ventas_unicas:
+            dt = v['dt']
+            if not dt:
+                continue
+            d_venta = datetime(dt.year, dt.month, dt.day)
+            k = d_venta.strftime('%Y-%m-%d')
+            if k in buckets:
+                buckets[k]['cantidad'] += 1
+                buckets[k]['importe'] += v['Total']
+            elif inicio_prev <= d_venta < inicio:
+                monto_periodo_anterior += v['Total']
+
+        for k in orden:
+            cantidades.append(buckets[k]['cantidad'])
+            importes.append(round(buckets[k]['importe'], 2))
+    else:
+        num_meses = {'3meses': 3, '6meses': 6, '1anio': 12}[periodo]
+        orden = []
+        buckets = {}
+
+        def _shift_month(year, month, delta):
+            total_m = (year * 12 + (month - 1)) + delta
+            return total_m // 12, (total_m % 12) + 1
+
+        for idx in range(num_meses - 1, -1, -1):
+            y_m, m_m = _shift_month(hoy.year, hoy.month, -idx)
+            k = f"{y_m}-{m_m:02d}"
+            orden.append(k)
+            labels.append(f"{meses_cortos[m_m - 1]} {str(y_m)[-2:]}")
+            fechas_completas.append(f"{meses_largos[m_m - 1]} {y_m}")
+            buckets[k] = {'cantidad': 0, 'importe': 0.0}
+
+        claves_prev = set()
+        for idx_prev in range(num_meses, num_meses * 2):
+            y_p, m_p = _shift_month(hoy.year, hoy.month, -idx_prev)
+            claves_prev.add(f"{y_p}-{m_p:02d}")
+
+        for v in ventas_unicas:
+            dt = v['dt']
+            if not dt:
+                continue
+            k = f"{dt.year}-{dt.month:02d}"
+            if k in buckets:
+                buckets[k]['cantidad'] += 1
+                buckets[k]['importe'] += v['Total']
+            elif k in claves_prev:
+                monto_periodo_anterior += v['Total']
+
+        for k in orden:
+            cantidades.append(buckets[k]['cantidad'])
+            importes.append(round(buckets[k]['importe'], 2))
+
+    total_importe = round(sum(importes), 2)
+    total_ventas = sum(cantidades)
+    promedio_venta = round(total_importe / total_ventas, 2) if total_ventas > 0 else 0.0
+    variacion_periodo = None
+    if monto_periodo_anterior > 0:
+        variacion_periodo = round(((total_importe - monto_periodo_anterior) / monto_periodo_anterior) * 100, 1)
+
+    return jsonify({
+        'periodo': periodo,
+        'labels': labels,
+        'fechas_completas': fechas_completas,
+        'cantidades': cantidades,
+        'importes': importes,
+        'total_importe': total_importe,
+        'total_ventas': total_ventas,
+        'promedio_venta': promedio_venta,
+        'variacion_periodo': variacion_periodo,
+        'tiene_datos': total_ventas > 0,
+        'existen_ventas_historicas': len(ventas_unicas) > 0
+    })
+
 
 @app.route('/api/estadisticas-rapidas')
 @login_required
 def api_estadisticas_rapidas():
     ok_ven, ventas = ListarVentas()
-    ventas_list = ventas if (ok_ven and isinstance(ventas, list)) else []
+    ventas_unicas = _agrupar_ventas_unicas(ventas if (ok_ven and isinstance(ventas, list)) else [])
     ahora = datetime.now()
-    ventas_hoy_list = []
-    for v in ventas_list:
-        dt = _parse_fecha(v.get('FechaVenta'))
-        if dt and dt.year == ahora.year and dt.month == ahora.month and dt.day == ahora.day:
-            ventas_hoy_list.append(v)
-    ingresos_hoy = sum(_safe_float(v.get('Total')) for v in ventas_hoy_list)
+    ventas_hoy_list = [
+        v for v in ventas_unicas
+        if v['dt'] and v['dt'].year == ahora.year and v['dt'].month == ahora.month and v['dt'].day == ahora.day
+    ]
+    ingresos_hoy = sum(v['Total'] for v in ventas_hoy_list)
     return jsonify({
         'clientes_hoy': 0,
         'ventas_hoy': len(ventas_hoy_list),
@@ -483,83 +740,134 @@ def api_estadisticas_rapidas():
         'asistencias_hoy': 0
     })
 
+
 @app.route('/api/actividad-reciente')
 @login_required
 def api_actividad_reciente():
     actividades = []
 
-    # 1. Últimas ventas registradas
+    def _formatear_fecha_hora(valor_raw, dt_obj):
+        if hasattr(valor_raw, 'strftime'):
+            if valor_raw.hour or valor_raw.minute:
+                return valor_raw.strftime('%d/%m/%Y · %H:%M')
+            return valor_raw.strftime('%d/%m/%Y')
+        texto = str(valor_raw or '').strip()
+        if dt_obj:
+            if dt_obj.hour or dt_obj.minute:
+                return dt_obj.strftime('%d/%m/%Y · %H:%M')
+            return dt_obj.strftime('%d/%m/%Y')
+        return texto or 'Reciente'
+
+    # 1. Últimas ventas realizadas (agrupadas por factura/venta única)
     ok_ven, ventas = ListarVentas()
     if ok_ven and isinstance(ventas, list):
-        for v in ventas[:6]:
-            prod = v.get('NombreProducto') or 'Producto'
-            cli = f"{v.get('PrimerNombre') or ''} {v.get('PrimerApellido') or ''}".strip()
-            desc = f"Venta: {prod}" + (f" ({cli})" if cli else "")
-            dt = _parse_fecha(v.get('FechaVenta'))
+        ventas_unicas = _agrupar_ventas_unicas(ventas)
+        for v in ventas_unicas[:8]:
+            prods = v['Productos']
+            if not prods:
+                detalle_prod = f"Venta #{v['IdVenta']}" if v['IdVenta'] else "Venta de productos"
+            elif len(prods) == 1:
+                detalle_prod = prods[0]
+            else:
+                detalle_prod = f"{prods[0]} +{len(prods) - 1} más"
+            cli = v['Cliente']
+            dt = v['dt']
+            fh = _formatear_fecha_hora(v['FechaVenta'], dt)
+            desc = f"Venta: {detalle_prod}" + (f" — {cli}" if cli else "")
             actividades.append({
                 'tipo': 'venta',
-                'icono': 'fa-shopping-cart',
+                'etiqueta': 'Venta',
+                'icono': 'fa-bag-shopping',
+                'titulo': detalle_prod,
+                'cliente': cli,
                 'descripcion': desc,
-                'hace': str(v.get('FechaVenta') or 'Reciente'),
-                'monto': _safe_float(v.get('Total')),
-                '_sort': dt.timestamp() if dt else 0
+                'hace': fh,
+                'fecha_hora': fh,
+                'monto': round(v['Total'], 2),
+                'url': '/venta_listar',
+                '_sort': (dt.timestamp() if dt else 0) + (int(v['IdVenta'] or 0) * 0.0001)
             })
 
-    # 2. Últimos pagos de membresías registrados
+    # 2. Últimos pagos y membresías recibidos
     ok_pag, pagos = ListarPagos()
     if ok_pag and isinstance(pagos, list):
-        for p in pagos[:5]:
+        for p in pagos[:8]:
             nom_cli = p.get('NombreCliente') or f"{p.get('PrimerNombre') or ''} {p.get('PrimerApellido') or ''}".strip() or 'Cliente'
-            mem = p.get('NombreMembresia') or p.get('TipoMembresia') or 'Membresía'
+            mem = (p.get('NombreMembresia') or p.get('TipoMembresia') or 'Membresía').strip()
+            mem_norm = mem.replace('Membresia ', 'Membresía ').replace('basica', 'básica')
+            titulo_mem = mem_norm if mem_norm.lower().startswith('membres') else f"Membresía: {mem_norm}"
+            metodo = (p.get('NombreMetodo') or '').strip()
             fecha_p = p.get('FechaPago')
             dt = _parse_fecha(fecha_p)
-            fecha_str = fecha_p.strftime('%d/%m/%Y') if hasattr(fecha_p, 'strftime') else str(fecha_p or 'Reciente')
+            fh = _formatear_fecha_hora(fecha_p, dt)
+            id_pago = int(p.get('IdPagos') or p.get('IdPago') or 0)
             actividades.append({
                 'tipo': 'membresia',
+                'etiqueta': 'Membresía',
                 'icono': 'fa-id-card',
+                'titulo': titulo_mem,
+                'cliente': nom_cli + (f" · {metodo}" if metodo else ""),
                 'descripcion': f"Membresía {mem} - {nom_cli}",
-                'hace': fecha_str,
-                'monto': _safe_float(p.get('Monto') or p.get('Total')),
-                '_sort': dt.timestamp() if dt else 0
+                'hace': fh,
+                'fecha_hora': fh,
+                'monto': round(_safe_float(p.get('Monto') or p.get('Total')), 2),
+                'url': '/pago_historial',
+                '_sort': (dt.timestamp() if dt else 0) + (id_pago * 0.0001)
             })
 
     # 3. Últimos clientes registrados
     ok_cli, clientes = ListarClientes()
     if ok_cli and isinstance(clientes, list):
-        ultimos_clientes = sorted(clientes, key=lambda x: int(x.get('IdCliente') or 0), reverse=True)[:4]
+        ultimos_clientes = sorted(clientes, key=lambda x: int(x.get('IdCliente') or 0), reverse=True)[:6]
         for c in ultimos_clientes:
             nombre = f"{c.get('PrimerNombre') or ''} {c.get('PrimerApellido') or ''}".strip()
             if nombre:
-                dt = _parse_fecha(c.get('FechaRegistro'))
+                id_cli = int(c.get('IdCliente') or 0)
+                fecha_c = c.get('FechaRegistro')
+                dt = _parse_fecha(fecha_c)
+                fh = _formatear_fecha_hora(fecha_c, dt)
                 actividades.append({
                     'tipo': 'cliente',
+                    'etiqueta': 'Nuevo cliente',
                     'icono': 'fa-user-plus',
+                    'titulo': 'Alta de cliente en el gimnasio',
+                    'cliente': nombre,
                     'descripcion': f"Cliente registrado: {nombre}",
-                    'hace': str(c.get('FechaRegistro') or 'Registrado'),
+                    'hace': fh,
+                    'fecha_hora': fh,
                     'monto': '',
-                    '_sort': dt.timestamp() if dt else 0
+                    'url': f'/cliente_perfil/{id_cli}' if id_cli else '/cliente_listar',
+                    '_sort': (dt.timestamp() if dt else 0) + (id_cli * 0.0001)
                 })
 
-    # 4. Últimos productos registrados
-    ok_prod, productos = ListarProductos()
-    if ok_prod and isinstance(productos, list):
-        ultimos_prod = sorted(productos, key=lambda x: int(x.get('IdProducto') or 0), reverse=True)[:3]
-        for pr in ultimos_prod:
-            nom_pr = pr.get('NombreProducto')
-            if nom_pr:
-                dt = _parse_fecha(pr.get('FechaRegistro'))
-                actividades.append({
-                    'tipo': 'producto',
-                    'icono': 'fa-box',
-                    'descripcion': f"Producto en catálogo: {nom_pr}",
-                    'hace': str(pr.get('FechaRegistro') or 'Registrado'),
-                    'monto': '',
-                    '_sort': dt.timestamp() if dt else 0
-                })
+    # 4. Últimas compras de inventario a proveedores
+    ok_com, compras = ListarCompras()
+    if ok_com and isinstance(compras, list):
+        compras_unicas = _agrupar_compras_unicas(compras)
+        for comp in compras_unicas[:5]:
+            prods = comp['Productos']
+            detalle = prods[0] if len(prods) == 1 else (f"{prods[0]} +{len(prods) - 1} más" if prods else "Abastecimiento")
+            prov = comp['Proveedor'] or 'Proveedor'
+            dt = comp['dt']
+            fh = _formatear_fecha_hora(comp['FechaCompra'], dt)
+            id_comp = int(comp['IdCompra'] or 0)
+            actividades.append({
+                'tipo': 'compra',
+                'etiqueta': 'Compra',
+                'icono': 'fa-truck-ramp-box',
+                'titulo': f"Compra: {detalle}",
+                'cliente': prov,
+                'descripcion': f"Compra de inventario: {detalle} — {prov}",
+                'hace': fh,
+                'fecha_hora': fh,
+                'monto': round(comp['Total'], 2),
+                'url': '/compra_listar',
+                '_sort': (dt.timestamp() if dt else 0) + (id_comp * 0.0001)
+            })
 
     actividades.sort(key=lambda x: x.get('_sort', 0), reverse=True)
     resultado = []
-    for item in actividades[:8]:
+    for item in actividades[:28]:
         item.pop('_sort', None)
         resultado.append(item)
 

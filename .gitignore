@@ -21,3 +21,6 @@ ENV/
 *.njsproj
 *.sln
 *.swp
+
+# Datos locales generados en ejecución
+static/data/tienda_pedidos.json

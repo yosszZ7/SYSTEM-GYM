@@ -3,36 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="WORLDGYM - Sistema de Gestión para Gimnasio">
-    
+    <meta name="description" content="WORLDGYM - Sistema Empresarial de Gestión para Gimnasios">
+
     <title>WORLDGYM | {% block title %}Dashboard{% endblock %}</title>
+
+    <!-- Inicialización temprana de tema y estado de sidebar (evita parpadeo visual FOUC) -->
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', savedTheme);
+                }
+                if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                    document.documentElement.classList.add('sidebar-is-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
 
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- CSS Principal -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2.0.0">
-    
-    <!-- Chart.js para gráficos -->
+    <!-- CSS Principal del Sistema de Diseño -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3.1.0">
+
+    <!-- Chart.js para analítica empresarial -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
     <div class="app-container">
-        <!-- Backdrop para menú móvil -->
+        <!-- Backdrop para navegación móvil -->
         <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-        
+
         <!-- BARRA LATERAL IZQUIERDA -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar" id="sidebar" aria-label="Menú principal">
             <div class="sidebar-header">
-                <a href="/dashboard" class="logo">
+                <a href="/dashboard" class="logo" title="WORLDGYM — Ir al Dashboard">
                     <div class="logo-icon">
                         <img src="/static/image/logo.jpeg" alt="WORLDGYM Logo">
                     </div>
@@ -41,15 +56,16 @@
                         <small>Sistema de Gestión</small>
                     </div>
                 </a>
-                <button class="sidebar-toggle" id="sidebarToggle" title="Contraer o expandir menú" aria-label="Contraer menú lateral">
+                <button class="sidebar-toggle" id="sidebarToggle" type="button" title="Contraer o expandir menú" aria-label="Contraer menú lateral">
                     <i class="fas fa-chevron-left"></i>
                 </button>
             </div>
 
-            <!-- Información del usuario autenticado -->
-            <div class="sidebar-user">
+            <!-- Perfil del administrador en Sidebar -->
+            <div class="sidebar-user" data-nav-tooltip="{{ usuario if usuario else 'Administrador' }} ({{ usuario_rol if usuario_rol else 'Administrador' }})">
                 <div class="user-avatar-sidebar">
-                    <i class="fas fa-user"></i>
+                    <i class="fas fa-user-shield"></i>
+                    <span class="user-status-dot" aria-hidden="true"></span>
                 </div>
                 <div class="user-info-sidebar">
                     <span class="user-name-sidebar" id="userNameSidebar">{{ usuario if usuario else 'Usuario' }}</span>
@@ -57,317 +73,367 @@
                 </div>
             </div>
 
-            <!-- Menú de navegación agrupado por categorías -->
-            <nav class="sidebar-nav">
+            <!-- Navegación lateral agrupada por categorías -->
+            <nav class="sidebar-nav" aria-label="Secciones del sistema">
                 <!-- INICIO -->
-                <div class="menu-title">Inicio</div>
-                <a href="/dashboard" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <i class="fas fa-chart-pie"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="/tienda" class="nav-link {% if request.endpoint == 'tienda' %}active{% endif %}">
-                    <i class="fas fa-store"></i>
-                    <span>Tienda de Suplementos</span>
-                </a>
+                <div class="menu-section">
+                    <div class="menu-title">Inicio</div>
+                    <a href="/dashboard"
+                       class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                       data-category="Inicio"
+                       data-nav-tooltip="Dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/tienda"
+                       class="nav-link {% if request.endpoint == 'tienda' %}active{% endif %}"
+                       data-category="Inicio"
+                       data-nav-tooltip="Tienda de Suplementos">
+                        <i class="fas fa-store"></i>
+                        <span>Tienda de Suplementos</span>
+                    </a>
+                </div>
 
                 <!-- GESTIÓN -->
-                <div class="menu-title">Gestión</div>
-                
-                <!-- Clientes -->
-                <div class="nav-dropdown {% if request.endpoint and 'cliente' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-users"></i>
-                        <span>Clientes</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/cliente_listar" class="{% if request.endpoint == 'cliente_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Clientes
+                <div class="menu-section">
+                    <div class="menu-title">Gestión</div>
+
+                    <!-- Clientes -->
+                    <div class="nav-dropdown {% if request.endpoint and 'cliente' in request.endpoint %}open{% endif %}" data-group="clientes">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Gestión" data-nav-tooltip="Clientes" aria-expanded="{% if request.endpoint and 'cliente' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-users"></i>
+                            <span>Clientes</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/cliente_registrar" class="{% if request.endpoint == 'cliente_registrar' %}active{% endif %}">
-                            <i class="fas fa-user-plus"></i> Registrar Cliente
-                        </a>
-                        <a href="/cliente_asistencia" class="{% if request.endpoint == 'cliente_asistencia' %}active{% endif %}">
-                            <i class="fas fa-calendar-check"></i> Registrar Asistencia
-                        </a>
-                        <a href="/cliente_rutina" class="{% if request.endpoint == 'cliente_rutina' %}active{% endif %}">
-                            <i class="fas fa-clipboard-list"></i> Rutinas del Cliente
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/cliente_listar" class="{% if request.endpoint == 'cliente_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Clientes
+                                </a>
+                                <a href="/cliente_registrar" class="{% if request.endpoint == 'cliente_registrar' %}active{% endif %}">
+                                    <i class="fas fa-user-plus"></i> Registrar Cliente
+                                </a>
+                                <a href="/cliente_asistencia" class="{% if request.endpoint == 'cliente_asistencia' %}active{% endif %}">
+                                    <i class="fas fa-calendar-check"></i> Registrar Asistencia
+                                </a>
+                                <a href="/cliente_rutina" class="{% if request.endpoint == 'cliente_rutina' %}active{% endif %}">
+                                    <i class="fas fa-clipboard-list"></i> Rutinas del Cliente
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Empleados -->
-                <div class="nav-dropdown {% if request.endpoint and 'empleado' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-user-tie"></i>
-                        <span>Empleados</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/empleado_listar" class="{% if request.endpoint == 'empleado_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Empleados
+                    <!-- Empleados -->
+                    <div class="nav-dropdown {% if request.endpoint and 'empleado' in request.endpoint %}open{% endif %}" data-group="empleados">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Gestión" data-nav-tooltip="Empleados" aria-expanded="{% if request.endpoint and 'empleado' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Empleados</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/empleado_registrar" class="{% if request.endpoint == 'empleado_registrar' %}active{% endif %}">
-                            <i class="fas fa-user-plus"></i> Registrar Empleado
-                        </a>
-                        <a href="/empleado_asistencias" class="{% if request.endpoint == 'empleado_asistencias' %}active{% endif %}">
-                            <i class="fas fa-clock"></i> Asistencia Empleados
-                        </a>
-                        <a href="/empleado_pago" class="{% if request.endpoint == 'empleado_pago' or request.endpoint == 'empleados_pagos' %}active{% endif %}">
-                            <i class="fas fa-file-invoice-dollar"></i> Pagos y Nómina
-                        </a>
-                        <a href="/empleado_entrenadores" class="{% if request.endpoint == 'empleado_entrenadores' %}active{% endif %}">
-                            <i class="fas fa-chalkboard-user"></i> Entrenadores
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/empleado_listar" class="{% if request.endpoint == 'empleado_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Empleados
+                                </a>
+                                <a href="/empleado_registrar" class="{% if request.endpoint == 'empleado_registrar' %}active{% endif %}">
+                                    <i class="fas fa-user-plus"></i> Registrar Empleado
+                                </a>
+                                <a href="/empleado_asistencias" class="{% if request.endpoint == 'empleado_asistencias' %}active{% endif %}">
+                                    <i class="fas fa-clock"></i> Asistencia Empleados
+                                </a>
+                                <a href="/empleado_pago" class="{% if request.endpoint == 'empleado_pago' or request.endpoint == 'empleados_pagos' %}active{% endif %}">
+                                    <i class="fas fa-file-invoice-dollar"></i> Pagos y Nómina
+                                </a>
+                                <a href="/empleado_entrenadores" class="{% if request.endpoint == 'empleado_entrenadores' %}active{% endif %}">
+                                    <i class="fas fa-chalkboard-user"></i> Entrenadores
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Rutinas -->
-                <div class="nav-dropdown {% if request.endpoint and 'rutina' in request.endpoint and 'cliente_rutina' not in request.endpoint and 'reporte' not in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span>Rutinas</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/rutina_hoy" class="{% if request.endpoint == 'rutina_hoy' %}active{% endif %}">
-                            <i class="fas fa-calendar-day"></i> Rutina de Hoy
+                    <!-- Rutinas -->
+                    <div class="nav-dropdown {% if request.endpoint and 'rutina' in request.endpoint and 'cliente_rutina' not in request.endpoint and 'reporte' not in request.endpoint %}open{% endif %}" data-group="rutinas">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Gestión" data-nav-tooltip="Rutinas" aria-expanded="{% if request.endpoint and 'rutina' in request.endpoint and 'cliente_rutina' not in request.endpoint and 'reporte' not in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Rutinas</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/rutina_hoy" class="{% if request.endpoint == 'rutina_hoy' %}active{% endif %}">
+                                    <i class="fas fa-calendar-day"></i> Rutina de Hoy
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Membresías -->
-                <a href="/membresia_listar" class="nav-link {% if request.endpoint and 'membresia' in request.endpoint and 'reporte' not in request.endpoint %}active{% endif %}">
-                    <i class="fas fa-id-card"></i>
-                    <span>Membresías</span>
-                </a>
-
-                <!-- Ejercicios -->
-                <div class="nav-dropdown {% if request.endpoint and 'ejercicio' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-dumbbell"></i>
-                        <span>Ejercicios</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    <!-- Membresías -->
+                    <a href="/membresia_listar"
+                       class="nav-link {% if request.endpoint and 'membresia' in request.endpoint and 'reporte' not in request.endpoint %}active{% endif %}"
+                       data-category="Gestión"
+                       data-nav-tooltip="Membresías">
+                        <i class="fas fa-id-card"></i>
+                        <span>Membresías</span>
                     </a>
-                    <div class="submenu">
-                        <a href="/ejercicio_listar" class="{% if request.endpoint == 'ejercicio_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Ejercicios
+
+                    <!-- Ejercicios -->
+                    <div class="nav-dropdown {% if request.endpoint and 'ejercicio' in request.endpoint %}open{% endif %}" data-group="ejercicios">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Gestión" data-nav-tooltip="Ejercicios" aria-expanded="{% if request.endpoint and 'ejercicio' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-dumbbell"></i>
+                            <span>Ejercicios</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/ejercicio_registrar" class="{% if request.endpoint == 'ejercicio_registrar' %}active{% endif %}">
-                            <i class="fas fa-plus-circle"></i> Registrar Ejercicio
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/ejercicio_listar" class="{% if request.endpoint == 'ejercicio_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Ejercicios
+                                </a>
+                                <a href="/ejercicio_registrar" class="{% if request.endpoint == 'ejercicio_registrar' %}active{% endif %}">
+                                    <i class="fas fa-plus-circle"></i> Registrar Ejercicio
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Grupos Musculares -->
-                <div class="nav-dropdown {% if request.endpoint and 'grupo_muscular' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-layer-group"></i>
-                        <span>Grupos Musculares</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/grupo_muscular_listar" class="{% if request.endpoint == 'grupo_muscular_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Grupos
+                    <!-- Grupos Musculares -->
+                    <div class="nav-dropdown {% if request.endpoint and 'grupo_muscular' in request.endpoint %}open{% endif %}" data-group="grupos_musculares">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Gestión" data-nav-tooltip="Grupos Musculares" aria-expanded="{% if request.endpoint and 'grupo_muscular' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Grupos Musculares</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/grupo_muscular_listar" class="{% if request.endpoint == 'grupo_muscular_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Grupos
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Maquinaria -->
-                <div class="nav-dropdown {% if request.endpoint and ('maquinaria' in request.endpoint or 'maquina' in request.endpoint) %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-cogs"></i>
-                        <span>Maquinaria</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/maquinaria_listar" class="{% if request.endpoint == 'maquinaria_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Maquinaria
+                    <!-- Maquinaria -->
+                    <div class="nav-dropdown {% if request.endpoint and ('maquinaria' in request.endpoint or 'maquina' in request.endpoint) %}open{% endif %}" data-group="maquinaria">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Gestión" data-nav-tooltip="Maquinaria" aria-expanded="{% if request.endpoint and ('maquinaria' in request.endpoint or 'maquina' in request.endpoint) %}true{% else %}false{% endif %}">
+                            <i class="fas fa-cogs"></i>
+                            <span>Maquinaria</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/maquinaria_registrar" class="{% if request.endpoint == 'maquinaria_registrar' %}active{% endif %}">
-                            <i class="fas fa-plus-circle"></i> Registrar Maquinaria
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/maquinaria_listar" class="{% if request.endpoint == 'maquinaria_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Maquinaria
+                                </a>
+                                <a href="/maquinaria_registrar" class="{% if request.endpoint == 'maquinaria_registrar' %}active{% endif %}">
+                                    <i class="fas fa-plus-circle"></i> Registrar Maquinaria
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- OPERACIONES -->
-                <div class="menu-title">Operaciones</div>
+                <div class="menu-section">
+                    <div class="menu-title">Operaciones</div>
 
-                <!-- Productos -->
-                <div class="nav-dropdown {% if request.endpoint and 'producto' in request.endpoint and 'reporte' not in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-box"></i>
-                        <span>Productos</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/producto_listar" class="{% if request.endpoint == 'producto_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Productos
+                    <!-- Productos -->
+                    <div class="nav-dropdown {% if request.endpoint and 'producto' in request.endpoint and 'reporte' not in request.endpoint %}open{% endif %}" data-group="productos">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Operaciones" data-nav-tooltip="Productos" aria-expanded="{% if request.endpoint and 'producto' in request.endpoint and 'reporte' not in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-box"></i>
+                            <span>Productos</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/producto_registrar" class="{% if request.endpoint == 'producto_registrar' %}active{% endif %}">
-                            <i class="fas fa-plus-circle"></i> Registrar Producto
-                        </a>
-                        <a href="/tienda" class="{% if request.endpoint == 'tienda' %}active{% endif %}">
-                            <i class="fas fa-store"></i> Ver Tienda Cliente
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/producto_listar" class="{% if request.endpoint == 'producto_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Productos
+                                </a>
+                                <a href="/producto_registrar" class="{% if request.endpoint == 'producto_registrar' %}active{% endif %}">
+                                    <i class="fas fa-plus-circle"></i> Registrar Producto
+                                </a>
+                                <a href="/tienda" class="{% if request.endpoint == 'tienda' %}active{% endif %}">
+                                    <i class="fas fa-store"></i> Ver Tienda Cliente
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Ventas -->
-                <div class="nav-dropdown {% if request.endpoint and 'venta' in request.endpoint and 'reporte' not in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Ventas</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/venta_listar" class="{% if request.endpoint == 'venta_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Ventas
+                    <!-- Ventas -->
+                    <div class="nav-dropdown {% if request.endpoint and 'venta' in request.endpoint and 'reporte' not in request.endpoint %}open{% endif %}" data-group="ventas">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Operaciones" data-nav-tooltip="Ventas" aria-expanded="{% if request.endpoint and 'venta' in request.endpoint and 'reporte' not in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Ventas</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/venta_registrar" class="{% if request.endpoint == 'venta_registrar' %}active{% endif %}">
-                            <i class="fas fa-cart-plus"></i> Registrar Venta
-                        </a>
-                        <a href="/venta_registrar_multiple" class="{% if request.endpoint == 'venta_registrar_multiple' %}active{% endif %}">
-                            <i class="fas fa-layer-group"></i> Venta Múltiple
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/venta_listar" class="{% if request.endpoint == 'venta_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Ventas
+                                </a>
+                                <a href="/venta_registrar" class="{% if request.endpoint == 'venta_registrar' %}active{% endif %}">
+                                    <i class="fas fa-cart-plus"></i> Registrar Venta
+                                </a>
+                                <a href="/venta_registrar_multiple" class="{% if request.endpoint == 'venta_registrar_multiple' %}active{% endif %}">
+                                    <i class="fas fa-layer-group"></i> Venta Múltiple
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Historial de Pagos -->
-                <a href="/pago_historial" class="nav-link {% if request.endpoint and ('pago_historial' in request.endpoint or 'pagos_historial' in request.endpoint) %}active{% endif %}">
-                    <i class="fas fa-receipt"></i>
-                    <span>Historial de Pagos</span>
-                </a>
-
-                <!-- Inventario -->
-                <div class="nav-dropdown {% if request.endpoint and 'inventario' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-warehouse"></i>
-                        <span>Inventario</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    <!-- Historial de Pagos -->
+                    <a href="/pago_historial"
+                       class="nav-link {% if request.endpoint and ('pago_historial' in request.endpoint or 'pagos_historial' in request.endpoint) %}active{% endif %}"
+                       data-category="Operaciones"
+                       data-nav-tooltip="Historial de Pagos">
+                        <i class="fas fa-receipt"></i>
+                        <span>Historial de Pagos</span>
                     </a>
-                    <div class="submenu">
-                        <a href="/inventario_lista" class="{% if request.endpoint == 'inventario_lista' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Inventario
+
+                    <!-- Inventario -->
+                    <div class="nav-dropdown {% if request.endpoint and 'inventario' in request.endpoint %}open{% endif %}" data-group="inventario">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Operaciones" data-nav-tooltip="Inventario" aria-expanded="{% if request.endpoint and 'inventario' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Inventario</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/inventario_entrada" class="{% if request.endpoint == 'inventario_entrada' %}active{% endif %}">
-                            <i class="fas fa-arrow-down"></i> Entrada de Stock
-                        </a>
-                        <a href="/inventario_salida" class="{% if request.endpoint == 'inventario_salida' %}active{% endif %}">
-                            <i class="fas fa-arrow-up"></i> Salida de Stock
-                        </a>
-                        <a href="/inventario_movimiento" class="{% if request.endpoint == 'inventario_movimiento' %}active{% endif %}">
-                            <i class="fas fa-history"></i> Movimientos
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/inventario_lista" class="{% if request.endpoint == 'inventario_lista' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Inventario
+                                </a>
+                                <a href="/inventario_entrada" class="{% if request.endpoint == 'inventario_entrada' %}active{% endif %}">
+                                    <i class="fas fa-arrow-down"></i> Entrada de Stock
+                                </a>
+                                <a href="/inventario_salida" class="{% if request.endpoint == 'inventario_salida' %}active{% endif %}">
+                                    <i class="fas fa-arrow-up"></i> Salida de Stock
+                                </a>
+                                <a href="/inventario_movimiento" class="{% if request.endpoint == 'inventario_movimiento' %}active{% endif %}">
+                                    <i class="fas fa-history"></i> Movimientos
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Compras -->
-                <div class="nav-dropdown {% if request.endpoint and 'compra' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-truck"></i>
-                        <span>Compras</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/compra_listar" class="{% if request.endpoint == 'compra_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Compras
+                    <!-- Compras -->
+                    <div class="nav-dropdown {% if request.endpoint and 'compra' in request.endpoint %}open{% endif %}" data-group="compras">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Operaciones" data-nav-tooltip="Compras" aria-expanded="{% if request.endpoint and 'compra' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-truck"></i>
+                            <span>Compras</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/compra_registrar" class="{% if request.endpoint == 'compra_registrar' %}active{% endif %}">
-                            <i class="fas fa-plus-circle"></i> Registrar Compra
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/compra_listar" class="{% if request.endpoint == 'compra_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Compras
+                                </a>
+                                <a href="/compra_registrar" class="{% if request.endpoint == 'compra_registrar' %}active{% endif %}">
+                                    <i class="fas fa-plus-circle"></i> Registrar Compra
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Mantenimiento -->
-                <div class="nav-dropdown {% if request.endpoint and 'mantenimiento' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-tools"></i>
-                        <span>Mantenimiento</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/mantenimiento_registrar" class="{% if request.endpoint == 'mantenimiento_registrar' %}active{% endif %}">
-                            <i class="fas fa-plus"></i> Registrar Mantenimiento
+                    <!-- Mantenimiento -->
+                    <div class="nav-dropdown {% if request.endpoint and 'mantenimiento' in request.endpoint %}open{% endif %}" data-group="mantenimiento">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Operaciones" data-nav-tooltip="Mantenimiento" aria-expanded="{% if request.endpoint and 'mantenimiento' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-tools"></i>
+                            <span>Mantenimiento</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/mantenimiento_ver" class="{% if request.endpoint == 'mantenimiento_ver' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Ver Mantenimientos
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/mantenimiento_registrar" class="{% if request.endpoint == 'mantenimiento_registrar' %}active{% endif %}">
+                                    <i class="fas fa-plus"></i> Registrar Mantenimiento
+                                </a>
+                                <a href="/mantenimiento_ver" class="{% if request.endpoint == 'mantenimiento_ver' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Ver Mantenimientos
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- REPORTES -->
-                <div class="menu-title">Reportes</div>
+                <div class="menu-section">
+                    <div class="menu-title">Reportes</div>
 
-                <div class="nav-dropdown {% if request.endpoint and 'reporte' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Reportes</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/reporte_ingresos" class="{% if request.endpoint == 'reporte_ingresos' %}active{% endif %}">
-                            <i class="fas fa-chart-line"></i> Ingresos Mensuales
+                    <div class="nav-dropdown {% if request.endpoint and 'reporte' in request.endpoint %}open{% endif %}" data-group="reportes">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Reportes" data-nav-tooltip="Reportes" aria-expanded="{% if request.endpoint and 'reporte' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Reportes</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/reporte_ventas_producto" class="{% if request.endpoint == 'reporte_ventas_producto' %}active{% endif %}">
-                            <i class="fas fa-chart-pie"></i> Ventas por Producto
-                        </a>
-                        <a href="/reporte_membresias_activas" class="{% if request.endpoint == 'reporte_membresias_activas' %}active{% endif %}">
-                            <i class="fas fa-chart-bar"></i> Membresías Activas
-                        </a>
-                        <a href="/reporte_rutinas_activas" class="{% if request.endpoint == 'reporte_rutinas_activas' %}active{% endif %}">
-                            <i class="fas fa-chart-simple"></i> Rutinas Activas
-                        </a>
-                        <a href="/reporte_asistencias" class="{% if request.endpoint == 'reporte_asistencias' %}active{% endif %}">
-                            <i class="fas fa-calendar-check"></i> Asistencias
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/reporte_ingresos" class="{% if request.endpoint == 'reporte_ingresos' %}active{% endif %}">
+                                    <i class="fas fa-chart-line"></i> Ingresos Mensuales
+                                </a>
+                                <a href="/reporte_ventas_producto" class="{% if request.endpoint == 'reporte_ventas_producto' %}active{% endif %}">
+                                    <i class="fas fa-chart-pie"></i> Ventas por Producto
+                                </a>
+                                <a href="/reporte_membresias_activas" class="{% if request.endpoint == 'reporte_membresias_activas' %}active{% endif %}">
+                                    <i class="fas fa-chart-bar"></i> Membresías Activas
+                                </a>
+                                <a href="/reporte_rutinas_activas" class="{% if request.endpoint == 'reporte_rutinas_activas' %}active{% endif %}">
+                                    <i class="fas fa-chart-simple"></i> Rutinas Activas
+                                </a>
+                                <a href="/reporte_asistencias" class="{% if request.endpoint == 'reporte_asistencias' %}active{% endif %}">
+                                    <i class="fas fa-calendar-check"></i> Asistencias
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- CONFIGURACIÓN -->
-                <div class="menu-title">Configuración</div>
+                <div class="menu-section">
+                    <div class="menu-title">Configuración</div>
 
-                <!-- Usuarios -->
-                <div class="nav-dropdown {% if request.endpoint and 'usuario' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-users-cog"></i>
-                        <span>Usuarios</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/usuario_listar" class="{% if request.endpoint == 'usuario_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Listar Usuarios
+                    <!-- Usuarios -->
+                    <div class="nav-dropdown {% if request.endpoint and 'usuario' in request.endpoint %}open{% endif %}" data-group="usuarios">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Configuración" data-nav-tooltip="Usuarios" aria-expanded="{% if request.endpoint and 'usuario' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-users-cog"></i>
+                            <span>Usuarios</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/usuario_crear" class="{% if request.endpoint == 'usuario_crear' %}active{% endif %}">
-                            <i class="fas fa-user-plus"></i> Crear Usuario
-                        </a>
-                        <a href="/usuario_eliminar" class="{% if request.endpoint == 'usuario_eliminar' %}active{% endif %}">
-                            <i class="fas fa-user-slash"></i> Eliminar Usuario
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/usuario_listar" class="{% if request.endpoint == 'usuario_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Listar Usuarios
+                                </a>
+                                <a href="/usuario_crear" class="{% if request.endpoint == 'usuario_crear' %}active{% endif %}">
+                                    <i class="fas fa-user-plus"></i> Crear Usuario
+                                </a>
+                                <a href="/usuario_eliminar" class="{% if request.endpoint == 'usuario_eliminar' %}active{% endif %}">
+                                    <i class="fas fa-user-slash"></i> Eliminar Usuario
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Soporte y Errores -->
-                <div class="nav-dropdown {% if request.endpoint and 'error' in request.endpoint %}open{% endif %}">
-                    <a href="#" class="nav-link dropdown-trigger">
-                        <i class="fas fa-headset"></i>
-                        <span>Soporte del Sistema</span>
-                        <i class="fas fa-chevron-down dropdown-icon"></i>
-                    </a>
-                    <div class="submenu">
-                        <a href="/error_reportar" class="{% if request.endpoint == 'error_reportar' %}active{% endif %}">
-                            <i class="fas fa-bug"></i> Reportar Incidencia
+                    <!-- Soporte y Errores -->
+                    <div class="nav-dropdown {% if request.endpoint and 'error' in request.endpoint %}open{% endif %}" data-group="soporte">
+                        <a href="#" class="nav-link dropdown-trigger" data-category="Configuración" data-nav-tooltip="Soporte del Sistema" aria-expanded="{% if request.endpoint and 'error' in request.endpoint %}true{% else %}false{% endif %}">
+                            <i class="fas fa-headset"></i>
+                            <span>Soporte del Sistema</span>
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
                         </a>
-                        <a href="/error_listar" class="{% if request.endpoint == 'error_listar' %}active{% endif %}">
-                            <i class="fas fa-list"></i> Registro de Errores
-                        </a>
+                        <div class="submenu">
+                            <div class="submenu-inner">
+                                <a href="/error_reportar" class="{% if request.endpoint == 'error_reportar' %}active{% endif %}">
+                                    <i class="fas fa-bug"></i> Reportar Incidencia
+                                </a>
+                                <a href="/error_listar" class="{% if request.endpoint == 'error_listar' %}active{% endif %}">
+                                    <i class="fas fa-list"></i> Registro de Errores
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </nav>
 
             <!-- Cerrar sesión -->
             <div class="sidebar-footer">
-                <a href="/logout" class="logout-link">
+                <a href="/logout" class="logout-link" data-nav-tooltip="Cerrar Sesión">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Cerrar Sesión</span>
                 </a>
@@ -379,58 +445,81 @@
             <!-- BARRA SUPERIOR -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir o cerrar menú">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Abrir o cerrar menú">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <div class="breadcrumb">
-                        <a href="/dashboard" title="Ir al Dashboard"><i class="fas fa-home"></i></a>
-                        <span>/</span>
-                        <span class="breadcrumb-current">{% block breadcrumb %}Dashboard{% endblock %}</span>
+
+                    <div class="topbar-context">
+                        <nav class="breadcrumb" id="dynamicBreadcrumb" aria-label="Ruta de navegación">
+                            <a href="/dashboard" class="breadcrumb-home" title="Ir al Dashboard">
+                                <i class="fas fa-house"></i>
+                                <span class="sr-only">Inicio</span>
+                            </a>
+                            <span class="breadcrumb-sep" aria-hidden="true">/</span>
+                            <span class="breadcrumb-trail" id="breadcrumbTrail">
+                                <span class="breadcrumb-current" id="breadcrumbCurrent">{% block breadcrumb %}Dashboard{% endblock %}</span>
+                            </span>
+                        </nav>
+                        <span class="topbar-section-pill" id="topbarSectionName" aria-live="polite">Dashboard</span>
                     </div>
                 </div>
 
                 <div class="topbar-right">
                     {% block topbar_actions %}{% endblock %}
 
-                    <button class="dark-btn" id="themeToggle" title="Cambiar tema claro u oscuro" aria-label="Cambiar tema">
+                    <!-- Selector Modo Claro / Oscuro -->
+                    <button class="dark-btn" id="themeToggle" type="button" title="Cambiar entre modo claro y oscuro" aria-label="Cambiar tema">
                         <i class="fas fa-moon"></i>
                     </button>
-                    
-                    <div class="notification-dropdown">
-                        <button class="notification-btn" id="notificationBtn" title="Notificaciones" aria-label="Notificaciones">
+
+                    <!-- Centro de Notificaciones -->
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <button class="notification-btn" id="notificationBtn" type="button" title="Centro de notificaciones" aria-label="Notificaciones" aria-expanded="false">
                             <i class="fas fa-bell"></i>
                             <span class="notification-badge" id="notificationBadge">0</span>
                         </button>
-                        <div class="notification-panel" id="notificationPanel">
+                        <div class="notification-panel" id="notificationPanel" role="region" aria-label="Panel de notificaciones">
                             <div class="notification-header">
-                                <h4>Notificaciones</h4>
-                                <span class="mark-all">Marcar leídas</span>
+                                <div class="notification-header-title">
+                                    <h4>Notificaciones</h4>
+                                    <span class="notification-count-pill" id="notificationPanelCount">Al día</span>
+                                </div>
+                                <button type="button" class="mark-all">Marcar leídas</button>
                             </div>
                             <div class="notification-list">
-                                <div class="empty-state" style="padding: 24px 16px;">
-                                    <i class="fas fa-bell-slash" style="font-size: 1.5rem; margin-bottom: 6px;"></i>
-                                    <p style="font-size: 12.5px;">No hay notificaciones nuevas</p>
+                                <div class="empty-state" style="padding: 28px 16px;">
+                                    <i class="fas fa-bell-slash" style="font-size: 1.35rem; margin-bottom: 6px;"></i>
+                                    <p style="font-size: 12.5px;">No hay notificaciones pendientes</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="profile-dropdown">
-                        <div class="profile-btn">
+                    <div class="topbar-divider" aria-hidden="true"></div>
+
+                    <!-- Perfil del Administrador + Menú Desplegable -->
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <button type="button" class="profile-btn" id="profileBtn" aria-expanded="false" aria-haspopup="true">
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <div>
+                            <div class="profile-meta">
                                 <strong id="userNameHeader">{{ usuario if usuario else 'Usuario' }}</strong>
                                 <small id="userRoleHeader">{{ usuario_rol if usuario_rol else 'Administrador' }}</small>
                             </div>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="profile-menu" id="profileMenu">
-                            <a href="/usuario_listar"><i class="fas fa-users-cog"></i> Gestión de Usuarios</a>
-                            <a href="/error_reportar"><i class="fas fa-headset"></i> Soporte Técnico</a>
+                            <i class="fas fa-chevron-down profile-chevron"></i>
+                        </button>
+                        <div class="profile-menu" id="profileMenu" role="menu">
+                            <div class="profile-menu-header">
+                                <span class="profile-menu-name">{{ usuario if usuario else 'Usuario' }}</span>
+                                <span class="profile-menu-role">{{ usuario_rol if usuario_rol else 'Administrador' }} · Sesión activa</span>
+                            </div>
                             <hr>
-                            <a href="/logout"><i class="fas fa-right-from-bracket"></i> Cerrar Sesión</a>
+                            <a href="/dashboard" role="menuitem"><i class="fas fa-chart-pie"></i> Panel Principal</a>
+                            <a href="/usuario_listar" role="menuitem"><i class="fas fa-users-cog"></i> Gestión de Usuarios</a>
+                            <a href="/error_reportar" role="menuitem"><i class="fas fa-headset"></i> Soporte Técnico</a>
+                            <hr>
+                            <a href="/logout" class="profile-menu-logout" role="menuitem"><i class="fas fa-right-from-bracket"></i> Cerrar Sesión</a>
                         </div>
                     </div>
                 </div>
@@ -443,10 +532,14 @@
         </main>
     </div>
 
+    <!-- Tooltip flotante para Sidebar contraído -->
+    <div class="sidebar-floating-tooltip" id="sidebarFloatingTooltip" role="tooltip" aria-hidden="true"></div>
+
     <!-- Contenedor de notificaciones Toast -->
-    <div class="toast-container" id="toastContainer"></div>
-    <script src="{{ url_for('static', filename='js/main.js') }}?v=2.0.0"></script>
-    
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=3.1.0"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var sidebarNav = document.querySelector('.sidebar-nav');
@@ -457,7 +550,7 @@
                 }
                 sidebarNav.addEventListener('scroll', function() {
                     localStorage.setItem('sidebarScrollPosition', sidebarNav.scrollTop);
-                });
+                }, { passive: true });
             }
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -471,7 +564,7 @@
             {% endwith %}
         });
     </script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -4,129 +4,318 @@
 {% block breadcrumb %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- Encabezado compacto del Dashboard -->
-<div class="welcome-section">
-    <div class="welcome-content">
-        <h1>Bienvenido, {{ usuario if usuario else 'Administrador' }}</h1>
-        <p>Este es el resumen de tu gimnasio</p>
-    </div>
-    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <div class="welcome-date">
-            <i class="fas fa-calendar-alt"></i>
-            <span id="currentDate"></span>
-        </div>
-        <a href="/cliente_registrar" class="btn btn-secondary btn-sm">
-            <i class="fas fa-user-plus"></i> Nuevo cliente
-        </a>
-        <a href="/venta_registrar" class="btn btn-primary btn-sm">
-            <i class="fas fa-cart-plus"></i> Registrar venta
-        </a>
-    </div>
-</div>
-
-<!-- Tarjetas de Estadísticas Principales (Cuadrícula de 4 columnas en escritorio) -->
-<div class="stats-grid" id="statsContainer">
-    <!-- Clientes registrados -->
-    <div class="stat-card">
-        <div class="stat-card-top">
-            <span class="stat-label">Clientes registrados</span>
-            <div class="stat-icon"><i class="fas fa-users"></i></div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-number" id="totalClientes">0</div>
-            <div class="stat-trend neutral" id="trendClientes" style="display: none;"></div>
-        </div>
-    </div>
-
-    <!-- Empleados -->
-    <div class="stat-card">
-        <div class="stat-card-top">
-            <span class="stat-label">Empleados</span>
-            <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-number" id="totalEmpleados">0</div>
-            <div class="stat-trend neutral" id="trendEmpleados" style="display: none;"></div>
-        </div>
-    </div>
-
-    <!-- Productos -->
-    <div class="stat-card">
-        <div class="stat-card-top">
-            <span class="stat-label">Productos</span>
-            <div class="stat-icon"><i class="fas fa-box"></i></div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-number" id="totalProductos">0</div>
-            <div class="stat-trend neutral" id="trendProductos" style="display: none;"></div>
-        </div>
-    </div>
-
-    <!-- Ventas del mes -->
-    <div class="stat-card">
-        <div class="stat-card-top">
-            <span class="stat-label">Ventas del mes</span>
-            <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-number" id="ventasMes">C$0.00</div>
-            <div class="stat-trend neutral" id="trendVentas" style="display: none;"></div>
-        </div>
-    </div>
-
-    <!-- Membresías activas -->
-    <div class="stat-card">
-        <div class="stat-card-top">
-            <span class="stat-label">Membresías activas</span>
-            <div class="stat-icon"><i class="fas fa-id-card"></i></div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-number" id="membresiasActivas">0</div>
-            <div class="stat-trend neutral" id="trendMembresias" style="display: none;"></div>
-        </div>
-    </div>
-
-    <!-- Ejercicios registrados -->
-    <div class="stat-card">
-        <div class="stat-card-top">
-            <span class="stat-label">Ejercicios registrados</span>
-            <div class="stat-icon"><i class="fas fa-dumbbell"></i></div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-number" id="totalEjercicios">0</div>
-            <div class="stat-trend neutral" id="trendEjercicios" style="display: none;"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Sección de Dos Columnas: Resumen de Ventas + Actividad Reciente -->
-<div class="dashboard-main-grid">
-    <!-- Columna Izquierda: Resumen de Ventas -->
-    <div class="chart-card">
-        <div class="chart-header">
-            <h3><i class="fas fa-chart-bar"></i> Resumen de Ventas</h3>
-            <select id="ventasPeriodoSelect" class="chart-period-select" aria-label="Seleccionar período de ventas">
-                <option value="7dias">Últimos 7 días</option>
-                <option value="meses" selected>Últimos meses</option>
-            </select>
-        </div>
-        <div class="chart-container" id="ventasChartWrapper">
-            <canvas id="ingresosChart"></canvas>
-        </div>
-    </div>
-
-    <!-- Columna Derecha: Actividad Reciente -->
-    <div class="recent-activity">
-        <div class="section-header">
-            <h2><i class="fas fa-clock-rotate-left"></i> Actividad Reciente</h2>
-            <a href="/venta_listar" class="btn-link">Ver ventas →</a>
-        </div>
-        <div id="recentActivity" class="activity-list">
-            <div class="empty-state" style="padding: 32px 16px;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
-                <p>Cargando movimientos recientes...</p>
+<div class="dashboard-shell">
+    <!-- Encabezado de Bienvenida -->
+    <header class="welcome-section wg-reveal" style="--stagger: 0;">
+        <div class="welcome-content">
+            <div class="welcome-eyebrow">
+                <span class="status-live-dot" aria-hidden="true"></span>
+                <span>Panel Ejecutivo · Tiempo real</span>
             </div>
+            <h1>Bienvenido, {{ usuario if usuario else 'admin_roberto' }}</h1>
+            <p>Este es el resumen de tu gimnasio.</p>
         </div>
+
+        <div class="welcome-actions">
+            <div class="welcome-date" title="Fecha actual del sistema">
+                <i class="far fa-calendar"></i>
+                <span id="currentDate"></span>
+            </div>
+            <a href="/cliente_registrar" class="btn btn-secondary dashboard-cta" data-loading-text="Abriendo...">
+                <i class="fas fa-user-plus"></i>
+                <span>Nuevo cliente</span>
+            </a>
+            <a href="/venta_registrar" class="btn btn-primary dashboard-cta" data-loading-text="Abriendo...">
+                <i class="fas fa-cart-plus"></i>
+                <span>Registrar venta</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Cuadrícula de Tarjetas Estadísticas (6 métricas reales) -->
+    <section class="stats-grid" id="statsContainer" aria-label="Métricas principales del gimnasio">
+        <!-- 1. Clientes registrados -->
+        <article class="stat-card is-loading wg-reveal" style="--stagger: 1;" data-stat-card>
+            <div class="stat-card-top">
+                <span class="stat-label">Clientes registrados</span>
+                <a href="/cliente_listar" class="stat-icon" title="Ver listado de clientes" aria-label="Ver clientes">
+                    <i class="fas fa-users"></i>
+                </a>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value-row">
+                    <div class="stat-number" id="totalClientes" data-target="0">0</div>
+                    <div class="stat-trend neutral" id="trendClientes" style="display: none;"></div>
+                </div>
+                <div class="stat-meta" id="metaClientes">Padrón general registrado</div>
+            </div>
+        </article>
+
+        <!-- 2. Empleados -->
+        <article class="stat-card is-loading wg-reveal" style="--stagger: 2;" data-stat-card>
+            <div class="stat-card-top">
+                <span class="stat-label">Empleados</span>
+                <a href="/empleado_listar" class="stat-icon" title="Ver equipo de empleados" aria-label="Ver empleados">
+                    <i class="fas fa-user-tie"></i>
+                </a>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value-row">
+                    <div class="stat-number" id="totalEmpleados" data-target="0">0</div>
+                    <div class="stat-trend neutral" id="trendEmpleados" style="display: none;"></div>
+                </div>
+                <div class="stat-meta" id="metaEmpleados">Personal operativo activo</div>
+            </div>
+        </article>
+
+        <!-- 3. Productos -->
+        <article class="stat-card is-loading wg-reveal" style="--stagger: 3;" data-stat-card>
+            <div class="stat-card-top">
+                <span class="stat-label">Productos</span>
+                <a href="/producto_listar" class="stat-icon" title="Ver catálogo de productos" aria-label="Ver productos">
+                    <i class="fas fa-box-open"></i>
+                </a>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value-row">
+                    <div class="stat-number" id="totalProductos" data-target="0">0</div>
+                    <div class="stat-trend neutral" id="trendProductos" style="display: none;"></div>
+                </div>
+                <div class="stat-meta" id="metaProductos">Catálogo e inventario</div>
+            </div>
+        </article>
+
+        <!-- 4. Ventas del mes -->
+        <article class="stat-card stat-card--highlight is-loading wg-reveal" style="--stagger: 4;" data-stat-card>
+            <div class="stat-card-top">
+                <span class="stat-label">Ventas del mes</span>
+                <a href="/venta_listar" class="stat-icon" title="Ver registro de ventas" aria-label="Ver ventas">
+                    <i class="fas fa-bag-shopping"></i>
+                </a>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value-row">
+                    <div class="stat-number" id="ventasMes" data-currency="true" data-target="0">C$0.00</div>
+                    <div class="stat-trend neutral" id="trendVentas" style="display: none;"></div>
+                </div>
+                <div class="stat-meta" id="metaVentas">Facturación del mes en curso</div>
+            </div>
+        </article>
+
+        <!-- 5. Membresías activas -->
+        <article class="stat-card is-loading wg-reveal" style="--stagger: 5;" data-stat-card>
+            <div class="stat-card-top">
+                <span class="stat-label">Membresías activas</span>
+                <a href="/membresia_listar" class="stat-icon" title="Ver planes de membresía" aria-label="Ver membresías">
+                    <i class="fas fa-id-card"></i>
+                </a>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value-row">
+                    <div class="stat-number" id="membresiasActivas" data-target="0">0</div>
+                    <div class="stat-trend neutral" id="trendMembresias" style="display: none;"></div>
+                </div>
+                <div class="stat-meta" id="metaMembresias">Suscripciones vigentes</div>
+            </div>
+        </article>
+
+        <!-- 6. Ejercicios registrados -->
+        <article class="stat-card is-loading wg-reveal" style="--stagger: 6;" data-stat-card>
+            <div class="stat-card-top">
+                <span class="stat-label">Ejercicios registrados</span>
+                <a href="/ejercicio_listar" class="stat-icon" title="Ver biblioteca de ejercicios" aria-label="Ver ejercicios">
+                    <i class="fas fa-dumbbell"></i>
+                </a>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value-row">
+                    <div class="stat-number" id="totalEjercicios" data-target="0">0</div>
+                    <div class="stat-trend neutral" id="trendEjercicios" style="display: none;"></div>
+                </div>
+                <div class="stat-meta" id="metaEjercicios">Biblioteca de entrenamiento</div>
+            </div>
+        </article>
+    </section>
+
+    <!-- Sección Principal de Analítica y Actividad -->
+    <div class="dashboard-main-grid">
+        <!-- Columna Izquierda: Resumen de Ventas -->
+        <section class="chart-card wg-reveal" style="--stagger: 7;" aria-labelledby="chartTitle">
+            <div class="chart-header">
+                <div class="chart-title-group">
+                    <h3 id="chartTitle">
+                        <span class="section-icon-box"><i class="fas fa-chart-line"></i></span>
+                        Resumen de Ventas
+                    </h3>
+                    <p class="chart-subtitle">Ingresos reales y volumen de operaciones por período</p>
+                </div>
+
+                <div class="chart-controls">
+                    <div class="period-segmented" id="ventasPeriodoTabs" role="tablist" aria-label="Período de ventas">
+                        <button type="button" class="period-pill" data-periodo="7dias" role="tab" aria-selected="false" title="Últimos 7 días">7D</button>
+                        <button type="button" class="period-pill" data-periodo="30dias" role="tab" aria-selected="false" title="Últimos 30 días">30D</button>
+                        <button type="button" class="period-pill" data-periodo="3meses" role="tab" aria-selected="false" title="Últimos 3 meses">3M</button>
+                        <button type="button" class="period-pill" data-periodo="6meses" role="tab" aria-selected="false" title="Últimos 6 meses">6M</button>
+                        <button type="button" class="period-pill active" data-periodo="1anio" role="tab" aria-selected="true" title="Último año">1A</button>
+                    </div>
+
+                    <select id="ventasPeriodoSelect" class="chart-period-select" aria-label="Seleccionar período de ventas">
+                        <option value="7dias">Últimos 7 días</option>
+                        <option value="30dias">Últimos 30 días</option>
+                        <option value="3meses">Últimos 3 meses</option>
+                        <option value="6meses">Últimos 6 meses</option>
+                        <option value="1anio" selected>Último año</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Indicadores rápidos del período seleccionado -->
+            <div class="chart-kpi-strip" id="chartKpiStrip">
+                <div class="chart-kpi-item">
+                    <span class="chart-kpi-label">Importe del período</span>
+                    <div class="chart-kpi-value-wrap">
+                        <strong class="chart-kpi-value" id="ventasPeriodoTotal">C$0.00</strong>
+                        <span class="stat-trend neutral" id="ventasPeriodoVariacion" style="display: none;"></span>
+                    </div>
+                </div>
+                <div class="chart-kpi-divider" aria-hidden="true"></div>
+                <div class="chart-kpi-item">
+                    <span class="chart-kpi-label">Transacciones</span>
+                    <strong class="chart-kpi-value" id="ventasPeriodoCantidad">0 ventas</strong>
+                </div>
+                <div class="chart-kpi-divider" aria-hidden="true"></div>
+                <div class="chart-kpi-item">
+                    <span class="chart-kpi-label">Ticket promedio</span>
+                    <strong class="chart-kpi-value" id="ventasPeriodoPromedio">C$0.00</strong>
+                </div>
+            </div>
+
+            <!-- Lienzo del Gráfico + Estados de Carga / Vacío / Error -->
+            <div class="chart-container" id="ventasChartWrapper">
+                <div class="chart-skeleton" id="ventasChartSkeleton" aria-hidden="true">
+                    <div class="skeleton-bar" style="height: 38%;"></div>
+                    <div class="skeleton-bar" style="height: 62%;"></div>
+                    <div class="skeleton-bar" style="height: 48%;"></div>
+                    <div class="skeleton-bar" style="height: 82%;"></div>
+                    <div class="skeleton-bar" style="height: 55%;"></div>
+                    <div class="skeleton-bar" style="height: 70%;"></div>
+                    <div class="skeleton-bar" style="height: 44%;"></div>
+                    <div class="skeleton-bar" style="height: 60%;"></div>
+                </div>
+
+                <canvas id="ingresosChart"></canvas>
+
+                <!-- Estado vacío profesional cuando no hay ventas en el rango elegido -->
+                <div class="chart-state-overlay" id="ventasEmptyState" hidden>
+                    <div class="chart-state-icon">
+                        <i class="fas fa-chart-area"></i>
+                    </div>
+                    <h4>Sin ventas en este período</h4>
+                    <p id="ventasEmptyMessage">Todavía no existen ventas registradas dentro del rango seleccionado.</p>
+                    <div class="chart-state-actions">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnVerHistorialAnual">
+                            <i class="fas fa-calendar-alt"></i> Ver último año
+                        </button>
+                        <a href="/venta_registrar" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Registrar venta
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Estado de error -->
+                <div class="chart-state-overlay is-error" id="ventasErrorState" hidden>
+                    <div class="chart-state-icon">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <h4>No se pudo cargar la analítica</h4>
+                    <p>Verifica la conexión e intenta actualizar nuevamente el gráfico.</p>
+                    <div class="chart-state-actions">
+                        <button type="button" class="btn btn-secondary btn-sm" id="btnReintentarGrafico">
+                            <i class="fas fa-rotate-right"></i> Reintentar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Columna Derecha: Actividad Reciente -->
+        <section class="recent-activity wg-reveal" style="--stagger: 8;" aria-labelledby="activityTitle">
+            <div class="section-header">
+                <div class="activity-header-left">
+                    <h2 id="activityTitle">
+                        <span class="section-icon-box"><i class="fas fa-bolt"></i></span>
+                        Actividad Reciente
+                    </h2>
+                </div>
+                <div class="activity-header-actions">
+                    <button type="button" class="icon-action-btn" id="btnRefreshActivity" title="Actualizar movimientos" aria-label="Actualizar actividad reciente">
+                        <i class="fas fa-arrows-rotate"></i>
+                    </button>
+                    <a href="/venta_listar" class="btn-link">
+                        <span>Ver ventas</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtros rápidos de tipo de actividad -->
+            <div class="activity-filters" id="activityFilters" role="tablist" aria-label="Filtrar movimientos recientes">
+                <button type="button" class="activity-filter-chip active" data-filter="todos" role="tab" aria-selected="true">Todos</button>
+                <button type="button" class="activity-filter-chip" data-filter="membresia" role="tab" aria-selected="false">Membresías</button>
+                <button type="button" class="activity-filter-chip" data-filter="venta" role="tab" aria-selected="false">Ventas</button>
+                <button type="button" class="activity-filter-chip" data-filter="cliente" role="tab" aria-selected="false">Clientes</button>
+                <button type="button" class="activity-filter-chip" data-filter="compra" role="tab" aria-selected="false">Compras</button>
+            </div>
+
+            <!-- Lista cronológica de actividad -->
+            <div id="recentActivity" class="activity-list" aria-live="polite">
+                <div class="activity-skeleton-list" aria-hidden="true">
+                    <div class="activity-skeleton-row">
+                        <span class="sk-circle"></span>
+                        <div class="sk-lines">
+                            <span class="sk-line sk-w75"></span>
+                            <span class="sk-line sk-w45"></span>
+                        </div>
+                        <span class="sk-pill"></span>
+                    </div>
+                    <div class="activity-skeleton-row">
+                        <span class="sk-circle"></span>
+                        <div class="sk-lines">
+                            <span class="sk-line sk-w65"></span>
+                            <span class="sk-line sk-w40"></span>
+                        </div>
+                        <span class="sk-pill"></span>
+                    </div>
+                    <div class="activity-skeleton-row">
+                        <span class="sk-circle"></span>
+                        <div class="sk-lines">
+                            <span class="sk-line sk-w80"></span>
+                            <span class="sk-line sk-w50"></span>
+                        </div>
+                        <span class="sk-pill"></span>
+                    </div>
+                    <div class="activity-skeleton-row">
+                        <span class="sk-circle"></span>
+                        <div class="sk-lines">
+                            <span class="sk-line sk-w60"></span>
+                            <span class="sk-line sk-w35"></span>
+                        </div>
+                        <span class="sk-pill"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie de Actividad Reciente -->
+            <div class="activity-footer">
+                <a href="/pago_historial" class="activity-footer-link">
+                    <i class="fas fa-receipt"></i> Historial de pagos
+                </a>
+                <span class="activity-footer-dot" aria-hidden="true">·</span>
+                <a href="/venta_listar" class="activity-footer-link">
+                    <i class="fas fa-bag-shopping"></i> Todas las ventas
+                </a>
+            </div>
+        </section>
     </div>
 </div>
 
@@ -134,9 +323,10 @@
     (function() {
         var dateEl = document.getElementById('currentDate');
         if (dateEl) {
-            dateEl.innerText = new Date().toLocaleDateString('es-ES', {
+            var formatted = new Date().toLocaleDateString('es-ES', {
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
             });
+            dateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
         }
     })();
 </script>
