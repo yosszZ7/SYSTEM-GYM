@@ -505,6 +505,47 @@
             display: none !important;
         }
 
+        body.modo-imprimir-recibo .topbar,
+        body.modo-imprimir-recibo .sidebar-floating-tooltip {
+            display: none !important;
+        }
+
+        /* Neutralizar el fondo oscuro/blur del modal (evita el recuadro gris al imprimir) */
+        body.modo-imprimir-recibo #modalReciboOverlay,
+        body.modo-imprimir-recibo #modalReciboOverlay.active {
+            display: block !important;
+            position: static !important;
+            visibility: hidden !important;
+            opacity: 1 !important;
+            background: transparent !important;
+            -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+            transition: none !important;
+        }
+        body.modo-imprimir-recibo #modalReciboOverlay > .custom-modal-box {
+            visibility: hidden !important;
+            transform: none !important;
+            transition: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: transparent !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            overflow: visible !important;
+        }
+        body.modo-imprimir-recibo #areaReciboImpresion {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 100000;
+        }
+        body.modo-imprimir-recibo #areaReciboImpresion * {
+            visibility: visible !important;
+        }
+
         /* ============================================================== */
         /* MODO 2: IMPRESIÓN DE REPORTE GENERAL TABULAR (POR DEFECTO)     */
         /* ============================================================== */
