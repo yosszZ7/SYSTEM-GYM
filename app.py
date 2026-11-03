@@ -102,6 +102,8 @@ from backend.servicios.VerificarTokenRecuperacion import VerificarTokenRecuperac
 from backend.servicios.RestablecerContrasena import RestablecerContrasenaConToken
 from backend.servicios.TiendaServicio import (
     ObtenerCatalogoTienda,
+    ObtenerResumenTienda,
+    EnriquecerMembresiasTienda,
     GuardarMetaProducto,
     EnriquecerProducto,
     ObtenerMapaMetaProductos,
@@ -1691,8 +1693,10 @@ def empleado_entrenadores():
 @app.route('/tienda')
 @tienda_login_required
 def tienda():
-    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=True)
-    _, membresias = ListarMembresias()
+    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=False)
+    resumen_tienda = ObtenerResumenTienda(catalogo)
+    _, membresias_raw = ListarMembresias()
+    membresias_enriquecidas = EnriquecerMembresiasTienda(membresias_raw)
     rol_actual = str(session.get('rol') or 'Cliente')
     es_admin_o_staff = rol_actual.strip().lower() != 'cliente'
     return render_template(
@@ -1701,14 +1705,16 @@ def tienda():
         usuario_rol=rol_actual,
         es_admin_o_staff=es_admin_o_staff,
         catalogo=catalogo,
-        membresias=membresias or []
+        resumen_tienda=resumen_tienda,
+        membresias=membresias_enriquecidas
     )
 
 @app.route('/api/tienda/productos', methods=['GET'])
 @tienda_login_required
 def api_tienda_productos():
-    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=True)
-    return jsonify({'success': True, 'productos': catalogo})
+    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=False)
+    resumen_tienda = ObtenerResumenTienda(catalogo)
+    return jsonify({'success': True, 'productos': catalogo, 'resumen': resumen_tienda})
 
 @app.route('/api/tienda/checkout', methods=['POST'])
 @tienda_login_required
@@ -1718,12 +1724,14 @@ def api_tienda_checkout():
     notas = data.get('notas', '')
     ok, msg, comprobante = ProcesarPedidoTienda(items, usuario_sesion=session, notas=notas)
     if ok:
-        catalogo_actualizado = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=True)
+        catalogo_actualizado = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=False)
+        resumen_actualizado = ObtenerResumenTienda(catalogo_actualizado)
         return jsonify({
             'success': True,
             'mensaje': msg,
             'comprobante': comprobante,
-            'catalogo': catalogo_actualizado
+            'catalogo': catalogo_actualizado,
+            'resumen': resumen_actualizado
         })
     return jsonify({'success': False, 'error': msg}), 400
 

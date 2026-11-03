@@ -15,20 +15,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- Estilos de la Tienda y de la Sección de Membresías -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=2.4.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/membresias.css') }}?v=2.1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=3.0.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/membresias.css') }}?v=3.0.0">
 </head>
 <body class="tienda-body">
 
     <!-- ==================================================================
-         1. ENCABEZADO PRINCIPAL
+         1. ENCABEZADO PRINCIPAL (INTACTO EN ESTRUCTURA, ÍCONOS Y ESTILO)
          ================================================================== -->
     <header class="store-header">
         <div class="store-topbar">
             <!-- Izquierda: Identidad WORLDGYM -->
-            <a href="/tienda" class="store-brand" onclick="restablecerFiltrosTienda()">
+            <a href="#inicio" class="store-brand" onclick="return navegarVistaTienda('inicio', event)">
                 <div class="store-brand-logo">
-                    <img src="/static/image/logo.jpeg" alt="WORLDGYM Logo">
+                    <img src="/static/image/logo.jpeg" alt="WORLDGYM Logo" width="46" height="46">
                 </div>
                 <div class="store-brand-text">
                     <h1 class="store-brand-wordmark">WORLD<span>GYM</span></h1>
@@ -38,77 +38,69 @@
 
             <!-- Centro: Menú de Navegación Alineado -->
             <nav class="store-nav-links" aria-label="Navegación principal de tienda">
-                <a href="#inicio" class="store-nav-link active" onclick="restablecerFiltrosTienda()">
+                <a href="#inicio" class="store-nav-link active" data-nav-view="inicio" onclick="return navegarVistaTienda('inicio', event)">
                     Inicio
                 </a>
-                <a href="#membresiasSection" class="store-nav-link">
+                <a href="#membresias" class="store-nav-link" data-nav-view="membresias" onclick="return navegarVistaTienda('membresias', event)">
                     Membresías
                 </a>
-                <a href="#catalogoSection" class="store-nav-link" onclick="restablecerFiltrosTienda()">
+                <a href="#productos" class="store-nav-link" data-nav-view="productos" onclick="return navegarVistaProductosLimpia(event)">
                     Productos
                 </a>
 
                 <!-- Desplegable Por Categoría -->
                 <div class="store-nav-item">
-                    <button type="button" class="store-nav-link">
+                    <button type="button" class="store-nav-link" data-nav-dropdown="categoria">
                         Por Categoría <i class="fas fa-chevron-down chevron"></i>
                     </button>
                     <div class="store-nav-dropdown">
-                        <button type="button" onclick="seleccionarCategoriaTienda('Todos'); irACatalogo();">
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Todos')">
                             <span>Todas las categorías</span> <i class="fas fa-arrow-right" style="font-size: 11px;"></i>
                         </button>
-                        <button type="button" onclick="seleccionarCategoriaTienda('Proteínas'); irACatalogo();">
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Proteínas')">
                             <span>Proteínas</span> <i class="fas fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
                         </button>
-                        <button type="button" onclick="seleccionarCategoriaTienda('Creatina'); irACatalogo();">
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Creatina')">
                             <span>Creatinas</span> <i class="fas fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
                         </button>
-                        <button type="button" onclick="seleccionarCategoriaTienda('Preentrenos'); irACatalogo();">
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Preentrenos')">
                             <span>Pre Entreno</span> <i class="fas fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
                         </button>
-                        <button type="button" onclick="seleccionarCategoriaTienda('Ganadores de masa'); irACatalogo();">
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Ganadores de masa')">
                             <span>Mass Gainer</span> <i class="fas fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
                         </button>
-                        <button type="button" onclick="seleccionarCategoriaTienda('Bebidas energéticas'); irACatalogo();">
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Bebidas energéticas')">
                             <span>Bebidas &amp; Energía</span> <i class="fas fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
                         </button>
-                        <button type="button" onclick="seleccionarCategoriaTienda('Accesorios'); irACatalogo();">
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Accesorios')">
                             <span>Accesorios de Gym</span> <i class="fas fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
                         </button>
+                        {% if resumen_tienda is defined and resumen_tienda.otros_suplementos_totales > 0 %}
+                        <button type="button" onclick="abrirCategoriaDesdeMenu('Suplementos')">
+                            <span>Aminoácidos y vitaminas</span> <i class="fas fa-arrow-up-right-from-square" style="font-size: 11px;"></i>
+                        </button>
+                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Desplegable Por Marca -->
                 <div class="store-nav-item">
-                    <button type="button" class="store-nav-link">
+                    <button type="button" class="store-nav-link" data-nav-dropdown="marca">
                         Por Marca <i class="fas fa-chevron-down chevron"></i>
                     </button>
-                    <div class="store-nav-dropdown">
-                        <button type="button" onclick="filtrarPorMarca(''); irACatalogo();">
+                    <div class="store-nav-dropdown" id="storeNavBrandsDropdown">
+                        <button type="button" data-marca="" onclick="abrirMarcaDesdeMenu('')">
                             <span>Todas las marcas</span>
                         </button>
-                        <button type="button" onclick="filtrarPorMarca('RAPTOR'); irACatalogo();">
-                            <span>Raptor / Applied Nutrition</span>
+                        {% for marca in (resumen_tienda.marcas if resumen_tienda is defined and resumen_tienda.marcas else []) %}
+                        <button type="button" data-marca="{{ marca }}" onclick="abrirMarcaDesdeMenu(this.getAttribute('data-marca'))">
+                            <span>{{ marca }}</span>
                         </button>
-                        <button type="button" onclick="filtrarPorMarca('POWER'); irACatalogo();">
-                            <span>Power Series / Rule 1</span>
-                        </button>
-                        <button type="button" onclick="filtrarPorMarca('OPTIMUM'); irACatalogo();">
-                            <span>Optimum Nutrition</span>
-                        </button>
-                        <button type="button" onclick="filtrarPorMarca('SASCHA'); irACatalogo();">
-                            <span>Sascha Fitness</span>
-                        </button>
-                        <button type="button" onclick="filtrarPorMarca('MUSCLETECH'); irACatalogo();">
-                            <span>MuscleTech</span>
-                        </button>
-                        <button type="button" onclick="filtrarPorMarca('GAT'); irACatalogo();">
-                            <span>GAT Sport</span>
-                        </button>
+                        {% endfor %}
                     </div>
                 </div>
 
-                <a href="#catalogoSection" class="store-nav-link" onclick="filtrarSoloOfertas()">
+                <a href="#ofertas" class="store-nav-link" data-nav-view="ofertas" onclick="return navegarVistaTienda('ofertas', event)">
                     Ofertas
                 </a>
             </nav>
@@ -140,7 +132,7 @@
                     <div class="store-user-dropdown" id="storeUserDropdown">
                         <div style="padding: 10px 12px; border-bottom: 1px solid #E5E7EB; margin-bottom: 6px;">
                             <strong style="display: block; font-size: 13.5px; color: #111827;">{{ usuario or 'Cliente' }}</strong>
-                            <small style="color: #6B7280; font-size: 11.5px; font-weight: 600;">Rol: {{ usuario_rol or 'Cliente' }}</small>
+                            <small style="color: #6B7280; font-size: 12px; font-weight: 600;">Rol: {{ usuario_rol or 'Cliente' }}</small>
                         </div>
                         <button type="button" onclick="abrirCarrito()">
                             <i class="fas fa-bag-shopping"></i> Ver Carrito de Compras
@@ -164,9 +156,9 @@
                 </div>
 
                 <!-- Icono Favoritos / Ofertas -->
-                <button type="button" class="store-icon-btn" onclick="filtrarSoloOfertas()" title="Ver ofertas especiales" aria-label="Ver ofertas">
+                <button type="button" class="store-icon-btn" onclick="navegarVistaTienda('ofertas')" title="Ver ofertas especiales" aria-label="Ver ofertas">
                     <i class="far fa-heart"></i>
-                    <span class="store-icon-badge" id="storeOffersBadge">{{ catalogo | selectattr('EnOferta') | list | length }}</span>
+                    <span class="store-icon-badge" id="storeOffersBadge">{{ resumen_tienda.ofertas_count if resumen_tienda is defined else (catalogo | selectattr('EnOferta') | list | length) }}</span>
                 </button>
 
                 <!-- Icono Carrito con Contador Circular Naranja -->
@@ -183,10 +175,10 @@
                 <input type="text" id="storeSearchInput" class="store-search-input"
                        placeholder="Buscar suplementos por nombre, marca o categoría (ej: Raptor, Power, Whey, Creatina, Pre Entreno)..."
                        aria-label="Buscar productos por nombre, marca o categoría">
-                <button type="button" id="storeSearchClear" class="store-search-clear" title="Limpiar búsqueda">
+                <button type="button" id="storeSearchClear" class="store-search-clear" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">
                     <i class="fas fa-circle-xmark"></i>
                 </button>
-                <button type="button" class="store-search-btn" onclick="irACatalogo()" title="Buscar">
+                <button type="button" class="store-search-btn" onclick="ejecutarBusquedaHeader()" title="Buscar" aria-label="Ejecutar búsqueda">
                     <i class="fas fa-magnifying-glass"></i>
                 </button>
             </div>
@@ -194,289 +186,364 @@
     </header>
 
     <!-- ==================================================================
-         3. CONTENIDO PRINCIPAL DE LA TIENDA Y MEMBRESÍAS
+         DATOS REALES DE MEMBRESÍAS Y CATEGORÍAS DESDE EL SERVIDOR
          ================================================================== -->
-    <main class="store-main" id="inicio">
+    {% set planes_respaldo = [
+        {
+            'IdMembresia': 1, 'NombreMembresia': 'Pase de un día', 'TituloPlan': 'PLAN DIARIO',
+            'Precio': 50.00, 'PrecioFormateado': '50.00', 'DuracionDias': 1, 'DuracionMeses': 0,
+            'DuracionTexto': '1 DÍA', 'Tipo': 'Diario', 'ImagenPlan': url_for('static', filename='image/membresias/plan_diario.png'),
+            'EsPopular': false, 'Disponibilidad': 'Disponible • Activación inmediata',
+            'Beneficios': ['Acceso general al área de pesas y maquinaria durante el día contratado.', 'Registro de ingreso y asistencia diaria en recepción.'],
+            'Condiciones': 'Vigencia de 1 día calendario en la fecha de activación • Uso personal e intransferible • Pago único en recepción.',
+            'SociosActivos': 0
+        },
+        {
+            'IdMembresia': 2, 'NombreMembresia': 'Membresía basica semanal', 'TituloPlan': 'PLAN SEMANAL',
+            'Precio': 150.00, 'PrecioFormateado': '150.00', 'DuracionDias': 7, 'DuracionMeses': 0,
+            'DuracionTexto': '7 DÍAS', 'Tipo': 'Semanal', 'ImagenPlan': url_for('static', filename='image/membresias/plan_semanal.png'),
+            'EsPopular': false, 'Disponibilidad': 'Disponible • Activación inmediata',
+            'Beneficios': ['Acceso continuo a instalaciones y maquinaria durante 7 días calendario.', 'Control de asistencias y seguimiento de rutinas asignadas en sistema.'],
+            'Condiciones': 'Vigencia de 7 días consecutivos desde la activación • Modalidad básica individual • Pago en efectivo, tarjeta o transferencia.',
+            'SociosActivos': 0
+        },
+        {
+            'IdMembresia': 3, 'NombreMembresia': 'Membresia basica quincenal', 'TituloPlan': 'PLAN QUINCENAL',
+            'Precio': 300.00, 'PrecioFormateado': '300.00', 'DuracionDias': 15, 'DuracionMeses': 0,
+            'DuracionTexto': '15 DÍAS', 'Tipo': 'Quincenal', 'ImagenPlan': url_for('static', filename='image/membresias/plan_quincenal.png'),
+            'EsPopular': false, 'Disponibilidad': 'Disponible • Activación inmediata',
+            'Beneficios': ['Acceso continuo a zonas de entrenamiento y maquinaria por 15 días.', 'Registro de asistencias y programación de rutina en el sistema.'],
+            'Condiciones': 'Vigencia de 15 días calendario consecutivos desde el registro del pago • Modalidad básica individual renovable.',
+            'SociosActivos': 0
+        },
+        {
+            'IdMembresia': 4, 'NombreMembresia': 'Membresia basica mensual', 'TituloPlan': 'PLAN MENSUAL',
+            'Precio': 500.00, 'PrecioFormateado': '500.00', 'DuracionDias': 30, 'DuracionMeses': 1,
+            'DuracionTexto': '30 DÍAS (1 MES)', 'Tipo': 'Mensual', 'ImagenPlan': url_for('static', filename='image/membresias/plan_mensual.png'),
+            'EsPopular': true, 'Disponibilidad': 'Disponible • Activación inmediata',
+            'Beneficios': ['Acceso completo a instalaciones y maquinaria durante 30 días continuos.', 'Asignación de rutina semanal por grupo muscular y control de asistencias.'],
+            'Condiciones': 'Vigencia de 30 días calendario continuos desde la fecha de pago • Modalidad básica mensual personal • Renovación directa en recepción.',
+            'SociosActivos': 0
+        }
+    ] %}
+    {% set lista_planes = membresias if (membresias is defined and membresias and membresias|length > 0) else planes_respaldo %}
 
-        <!-- BANNER PROMOCIONAL PRINCIPAL -->
-        <section class="store-hero">
-            <div class="store-hero-content">
-                <div class="store-hero-badge">
-                    <i class="fas fa-bolt"></i> TIENDA OFICIAL &amp; MEMBRESÍAS • WORLDGYM
-                </div>
-                <h2>ENTRENA CON <span>MÁXIMA FUERZA</span> Y RESULTADOS</h2>
-                <p>
-                    Planes de membresía flexibles adaptados a tu ritmo y suplementación deportiva de alto rendimiento:
-                    proteínas, creatina monohidratada, pre-entrenos y ganadores de masa muscular.
-                </p>
-                <div class="store-hero-actions">
-                    <a href="#membresiasSection" class="store-btn-cta">
-                        Ver Planes de Membresía <i class="fas fa-arrow-right"></i>
-                    </a>
-                    <a href="#catalogoSection" class="store-btn-outline">
-                        Explorar Suplementos
-                    </a>
-                </div>
-            </div>
+    {% set categorias_respaldo = [
+        {'clave': 'Proteínas', 'nombre': 'Proteínas', 'imagen': '/static/image/productos/cat_proteinas.png', 'totales': 0},
+        {'clave': 'Creatina', 'nombre': 'Creatinas', 'imagen': '/static/image/productos/cat_creatinas.png', 'totales': 0},
+        {'clave': 'Preentrenos', 'nombre': 'Pre-entrenos', 'imagen': '/static/image/productos/cat_preentreno.png', 'totales': 0},
+        {'clave': 'Ganadores de masa', 'nombre': 'Mass Gainer', 'imagen': '/static/image/productos/cat_massgainer.png', 'totales': 0},
+        {'clave': 'Bebidas energéticas', 'nombre': 'Bebidas y energía', 'imagen': '/static/image/productos/cat_aminoacidos.png', 'totales': 0},
+        {'clave': 'Accesorios', 'nombre': 'Accesorios', 'imagen': '/static/image/productos/cat_accesorios.webp', 'totales': 0}
+    ] %}
+    {% set lista_categorias_visuales = resumen_tienda.categorias if (resumen_tienda is defined and resumen_tienda.categorias) else categorias_respaldo %}
 
-            <div class="store-hero-visual">
-                <img src="/static/image/productos/cat_proteinas.png"
-                     alt="Suplementos Deportivos WORLDGYM"
-                     class="store-hero-main-img">
-            </div>
-        </section>
+    {% macro render_planes_cerrados(planes) -%}
+        <div class="wg-plans-grid">
+            {% for membresia in planes %}
+                {% set titulo_plan = membresia.TituloPlan or (membresia.NombreMembresia|upper) %}
+                {% set duracion_completa = membresia.DuracionTexto or ((membresia.DuracionDias ~ ' DÍAS') if membresia.DuracionDias else (membresia.DuracionMeses ~ ' MESES')) %}
+                {% set duracion_corta = '30 DÍAS' if (membresia.DuracionDias == 30 or membresia.DuracionMeses == 1) else duracion_completa %}
+                {% set imagen_plan = membresia.ImagenPlan or url_for('static', filename='image/membresias/plan_mensual.png') %}
+                {% set es_destacado = true if membresia.EsPopular else false %}
+                {% set precio_formateado = membresia.PrecioFormateado or ("%.2f"|format(membresia.Precio|float)) %}
+                {% set disponibilidad_plan = membresia.Disponibilidad or 'Disponible • Activación inmediata' %}
+                {% set beneficios_plan = membresia.Beneficios or [] %}
+                {% set condiciones_plan = membresia.Condiciones or 'Uso personal e intransferible • Activación directa en recepción.' %}
 
-        <!-- ==============================================================
-             4. SECCIÓN DE PLANES DE MEMBRESÍA WORLD GYM (DARK & GOLD)
-             ============================================================== -->
-        {% set planes_respaldo = [
-            {'IdMembresia': 1, 'NombreMembresia': 'Pase de un día', 'Precio': 50.00, 'DuracionDias': 1, 'DuracionMeses': 0, 'Tipo': 'Diario'},
-            {'IdMembresia': 2, 'NombreMembresia': 'Membresía basica semanal', 'Precio': 150.00, 'DuracionDias': 7, 'DuracionMeses': 0, 'Tipo': 'Semanal'},
-            {'IdMembresia': 3, 'NombreMembresia': 'Membresia basica quincenal', 'Precio': 300.00, 'DuracionDias': 15, 'DuracionMeses': 0, 'Tipo': 'Quincenal'},
-            {'IdMembresia': 4, 'NombreMembresia': 'Membresia basica mensual', 'Precio': 500.00, 'DuracionDias': 30, 'DuracionMeses': 1, 'Tipo': 'Mensual'}
-        ] %}
-        {% set lista_planes = membresias if (membresias is defined and membresias and membresias|length > 0) else planes_respaldo %}
+                <article class="wg-plan-card wg-plan-closed {% if es_destacado %}is-featured{% endif %}"
+                         role="button"
+                         tabindex="0"
+                         aria-label="{{ titulo_plan }} — {{ duracion_corta }} — C${{ precio_formateado }}"
+                         onclick="abrirDetalleMembresiaTienda(this)"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirDetalleMembresiaTienda(this);}"
+                         data-id="{{ membresia.IdMembresia }}"
+                         data-titulo="{{ titulo_plan }}"
+                         data-nombre-db="{{ membresia.NombreMembresia }}"
+                         data-duracion="{{ duracion_completa }}"
+                         data-precio="{{ precio_formateado }}"
+                         data-tipo="{{ membresia.Tipo or 'Estándar' }}"
+                         data-disponibilidad="{{ disponibilidad_plan }}"
+                         data-condiciones="{{ condiciones_plan }}"
+                         data-popular="{{ '1' if es_destacado else '0' }}"
+                         data-socios="{{ membresia.SociosActivos or 0 }}"
+                         data-beneficios='{{ beneficios_plan | tojson }}'>
 
-        <section class="wg-membresias-showcase" id="membresiasSection" style="margin-bottom: 58px;" aria-label="Planes de Membresía World Gym">
-            <header class="wg-membresias-header">
-                <div class="wg-membresias-eyebrow-row">
-                    <span class="wg-membresias-eyebrow">MEMBRESÍAS</span>
-                    {% if es_admin_o_staff %}
-                    <a href="/cliente_membresia" class="wg-membresias-quick-link" title="Asignar membresía a un cliente">
-                        <i class="fas fa-user-check"></i> Asignar Plan
-                    </a>
-                    {% endif %}
-                </div>
-
-                <div class="wg-membresias-headline-row">
-                    <h2 class="wg-membresias-title">ELIGE TU PLAN Y EMPIEZA HOY</h2>
-                    <div class="wg-membresias-header-line" aria-hidden="true"></div>
-                    <p class="wg-membresias-subtitle">
-                        Entrena a tu ritmo, con la flexibilidad que necesitas. Nuestros planes se adaptan a tu estilo de vida.
-                    </p>
-                </div>
-            </header>
-
-            <div class="wg-plans-grid">
-                {% for membresia in lista_planes|sort(attribute='DuracionDias') %}
-                    {% set dias = membresia.DuracionDias|int if membresia.DuracionDias is not none else 0 %}
-                    {% set meses = membresia.DuracionMeses|int if membresia.DuracionMeses is not none else 0 %}
-                    {% set tipo_lower = (membresia.Tipo or '')|lower %}
-                    {% set nombre_lower = (membresia.NombreMembresia or '')|lower %}
-
-                    {% if dias == 1 or 'diario' in tipo_lower or 'día' in nombre_lower or 'dia' in nombre_lower %}
-                        {% set titulo_plan = 'PLAN DIARIO' %}
-                        {% set duracion_plan = '1 DÍA' %}
-                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_diario.png') %}
-                        {% set es_destacado = false %}
-                    {% elif dias == 7 or 'semanal' in tipo_lower %}
-                        {% set titulo_plan = 'PLAN SEMANAL' %}
-                        {% set duracion_plan = '7 DÍAS' %}
-                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_semanal.png') %}
-                        {% set es_destacado = false %}
-                    {% elif dias == 15 or 'quincenal' in tipo_lower %}
-                        {% set titulo_plan = 'PLAN QUINCENAL' %}
-                        {% set duracion_plan = '15 DÍAS' %}
-                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_quincenal.png') %}
-                        {% set es_destacado = false %}
-                    {% elif dias >= 28 or meses >= 1 or 'mensual' in tipo_lower %}
-                        {% set titulo_plan = 'PLAN MENSUAL' %}
-                        {% set duracion_plan = (dias if dias > 0 else 30) ~ ' DÍAS' %}
-                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_mensual.png') %}
-                        {% set es_destacado = true %}
-                    {% else %}
-                        {% set titulo_plan = membresia.NombreMembresia|upper %}
-                        {% set duracion_plan = (dias ~ ' DÍAS') if dias > 0 else (meses ~ ' MESES') %}
-                        {% set imagen_plan = url_for('static', filename='image/membresias/plan_mensual.png') %}
-                        {% set es_destacado = false %}
+                    {% if es_destacado %}
+                        <span class="wg-plan-badge">MÁS POPULAR</span>
                     {% endif %}
 
-                    {% set precio_formateado = "%.2f"|format(membresia.Precio|float) %}
-
-                    <article class="wg-plan-card {% if es_destacado %}is-featured{% endif %}"
-                             onclick="abrirDetalleMembresiaTienda(this)"
-                             data-id="{{ membresia.IdMembresia }}"
-                             data-titulo="{{ titulo_plan }}"
-                             data-nombre-db="{{ membresia.NombreMembresia }}"
-                             data-duracion="{{ duracion_plan }}"
-                             data-precio="{{ precio_formateado }}"
-                             data-tipo="{{ membresia.Tipo or 'Estándar' }}">
-
-                        {% if es_destacado %}
-                            <span class="wg-plan-badge">MÁS POPULAR</span>
-                        {% endif %}
-
-                        <div class="wg-plan-top">
-                            <h3 class="wg-plan-name">{{ titulo_plan }}</h3>
-                            <div class="wg-plan-duration">{{ duracion_plan }}</div>
-
-                            <div class="wg-plan-price-wrap">
-                                <span class="wg-plan-currency">C$</span>
-                                <span class="wg-plan-amount">{{ precio_formateado }}</span>
-                            </div>
-
-                            <div class="wg-plan-divider" aria-hidden="true"></div>
-                            <div class="wg-plan-gold-dash" aria-hidden="true"></div>
+                    <div class="wg-plan-top">
+                        <div class="wg-plan-duration">{{ duracion_corta }}</div>
+                        <h3 class="wg-plan-name">{{ titulo_plan }}</h3>
+                        <div class="wg-plan-price-wrap">
+                            <span class="wg-plan-currency">C$</span>
+                            <span class="wg-plan-amount">{{ precio_formateado }}</span>
                         </div>
-
-                        <div class="wg-plan-media">
-                            <img src="{{ imagen_plan }}" alt="{{ titulo_plan }} - World Gym" class="wg-plan-img" loading="lazy">
-                        </div>
-
-                        <footer class="wg-plan-footer">
-                            <button type="button" class="wg-plan-btn-details" onclick="event.stopPropagation(); abrirDetalleMembresiaTienda(this.closest('.wg-plan-card'));">
-                                <span>VER DETALLES</span>
-                                <span class="wg-arrow" aria-hidden="true">&rarr;</span>
-                            </button>
-
-                            {% if es_admin_o_staff %}
-                            <div class="wg-plan-admin-actions" onclick="event.stopPropagation();">
-                                <a href="/cliente_membresia?id_membresia={{ membresia.IdMembresia }}" class="wg-plan-icon-link" title="Asignar este plan">
-                                    <i class="fas fa-check-circle"></i>
-                                </a>
-                                <a href="/membresia_actualizar?id={{ membresia.IdMembresia }}" class="wg-plan-icon-link" title="Editar membresía">
-                                    <i class="fas fa-pen"></i>
-                                </a>
-                            </div>
-                            {% endif %}
-                        </footer>
-                    </article>
-                {% endfor %}
-            </div>
-        </section>
-
-        <!-- ==============================================================
-             5. SECCIÓN VISUAL DE CATEGORÍAS
-             ============================================================== -->
-        <section class="store-categories-showcase" id="categoriasVisualSection">
-            <h2 class="store-display-heading">CATEGORÍAS DE SUPLEMENTOS</h2>
-            <p class="store-display-subtitle">
-                Explora nuestras categorías de suplementos y encuentra el aliado ideal para tu meta fitness.
-            </p>
-
-            <div class="store-cat-visual-grid">
-                <button type="button" class="store-cat-visual-card" onclick="seleccionarCategoriaTienda('Proteínas'); irACatalogo();">
-                    <div class="store-cat-visual-img-wrap">
-                        <img src="/static/image/productos/cat_proteinas.png" alt="Proteínas">
                     </div>
-                    <span class="store-cat-visual-name">Proteínas</span>
-                    <span class="store-cat-visual-arrow">↗</span>
-                </button>
 
-                <button type="button" class="store-cat-visual-card" onclick="seleccionarCategoriaTienda('Creatina'); irACatalogo();">
-                    <div class="store-cat-visual-img-wrap">
-                        <img src="/static/image/productos/cat_creatinas.png" alt="Creatinas">
+                    <div class="wg-plan-media" aria-hidden="true">
+                        <img src="{{ imagen_plan }}" alt="" class="wg-plan-img" width="300" height="128" loading="lazy">
                     </div>
-                    <span class="store-cat-visual-name">Creatinas</span>
-                    <span class="store-cat-visual-arrow">↗</span>
-                </button>
 
-                <button type="button" class="store-cat-visual-card" onclick="seleccionarCategoriaTienda('Preentrenos'); irACatalogo();">
-                    <div class="store-cat-visual-img-wrap">
-                        <img src="/static/image/productos/cat_preentreno.png" alt="Pre Entreno">
-                    </div>
-                    <span class="store-cat-visual-name">Pre Entreno</span>
-                    <span class="store-cat-visual-arrow">↗</span>
-                </button>
-
-                <button type="button" class="store-cat-visual-card" onclick="seleccionarCategoriaTienda('Ganadores de masa'); irACatalogo();">
-                    <div class="store-cat-visual-img-wrap">
-                        <img src="/static/image/productos/cat_massgainer.png" alt="Mass Gainer">
-                    </div>
-                    <span class="store-cat-visual-name">Mass Gainer</span>
-                    <span class="store-cat-visual-arrow">↗</span>
-                </button>
-
-                <button type="button" class="store-cat-visual-card" onclick="seleccionarCategoriaTienda('Bebidas energéticas'); irACatalogo();">
-                    <div class="store-cat-visual-img-wrap">
-                        <img src="/static/image/productos/cat_aminoacidos.png" alt="Bebidas y Aminoácidos">
-                    </div>
-                    <span class="store-cat-visual-name">Bebidas &amp; Energía</span>
-                    <span class="store-cat-visual-arrow">↗</span>
-                </button>
-
-                <button type="button" class="store-cat-visual-card" onclick="seleccionarCategoriaTienda('Accesorios'); irACatalogo();">
-                    <div class="store-cat-visual-img-wrap">
-                        <img src="/static/image/productos/cat_accesorios.webp" alt="Accesorios">
-                    </div>
-                    <span class="store-cat-visual-name">Accesorios</span>
-                    <span class="store-cat-visual-arrow">↗</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- ==============================================================
-             6. SECCIÓN "POTENCIA TU RENDIMIENTO" — CATÁLOGO DE PRODUCTOS
-             ============================================================== -->
-        <section class="store-catalog-section" id="catalogoSection">
-            <div class="store-catalog-header-center">
-                <h2 class="store-display-heading">POTENCIA TU RENDIMIENTO</h2>
-            </div>
-
-            <!-- Píldoras Centradas de Categorías -->
-            <div class="store-pill-tabs" role="tablist" aria-label="Filtrar suplementos por categoría">
-                <button type="button" class="store-cat-pill active" data-cat="Todos" onclick="seleccionarCategoriaTienda('Todos')">
-                    Todos
-                </button>
-                <button type="button" class="store-cat-pill" data-cat="Proteínas" onclick="seleccionarCategoriaTienda('Proteínas')">
-                    Proteínas
-                </button>
-                <button type="button" class="store-cat-pill" data-cat="Creatina" onclick="seleccionarCategoriaTienda('Creatina')">
-                    Creatinas
-                </button>
-                <button type="button" class="store-cat-pill" data-cat="Preentrenos" onclick="seleccionarCategoriaTienda('Preentrenos')">
-                    Pre Entreno
-                </button>
-                <button type="button" class="store-cat-pill" data-cat="Ganadores de masa" onclick="seleccionarCategoriaTienda('Ganadores de masa')">
-                    Mass Gainer
-                </button>
-                <button type="button" class="store-cat-pill" data-cat="Bebidas energéticas" onclick="seleccionarCategoriaTienda('Bebidas energéticas')">
-                    Bebidas Energéticas
-                </button>
-                <button type="button" class="store-cat-pill" data-cat="Accesorios" onclick="seleccionarCategoriaTienda('Accesorios')">
-                    Accesorios
-                </button>
-            </div>
-
-            <!-- Barra de Controles de Ordenamiento y Filtros -->
-            <div class="store-toolbar">
-                <div class="store-toolbar-left">
-                    <span class="store-results-counter" id="storeResultsCounter">Cargando productos...</span>
-                </div>
-
-                <div class="store-toolbar-right">
-                    <select id="storeFilterOrigin" class="store-select" aria-label="Filtrar por tipo de catálogo">
-                        <option value="todos">Catálogo: Todos (Oficial + Demo)</option>
-                        <option value="oficial">Solo Catálogo Oficial (BD)</option>
-                        <option value="demo">Solo Productos de Demostración</option>
-                    </select>
-
-                    <select id="storeFilterAvailability" class="store-select" aria-label="Filtrar por disponibilidad">
-                        <option value="todos">Disponibilidad: Todos</option>
-                        <option value="disponibles">Solo disponibles en stock</option>
-                        <option value="ofertas">Solo en oferta especial</option>
-                    </select>
-
-                    <select id="storeSortSelect" class="store-select" aria-label="Ordenar productos por precio">
-                        <option value="destacados">Ordenar: Destacados</option>
-                        <option value="precio_asc">Precio: Menor a Mayor (C$)</option>
-                        <option value="precio_desc">Precio: Mayor a Menor (C$)</option>
-                        <option value="descuento_desc">Mayor Descuento (%)</option>
-                        <option value="nombre_asc">Nombre: A - Z</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Grilla Uniforme de Tarjetas de Productos -->
-            <div class="store-products-grid" id="storeCatalogGrid">
-                <!-- Renderizado dinámicamente por tienda.js -->
-            </div>
-        </section>
-
-    </main>
+                    <footer class="wg-plan-footer">
+                        <span class="wg-plan-btn-choose">
+                            <span>Elegir plan</span>
+                            <span class="wg-arrow" aria-hidden="true">&rarr;</span>
+                        </span>
+                    </footer>
+                </article>
+            {% endfor %}
+        </div>
+    {%- endmacro %}
 
     <!-- ==================================================================
-         7. MODAL DE DETALLES DEL PLAN DE MEMBRESÍA (DARK & GOLD)
+         3. CONTENEDOR ÚNICO DE VISTA ACTIVA
+         (Solo UNA vista se renderiza en el DOM en cada momento)
+         ================================================================== -->
+    <main class="store-main" id="storeViewRoot"></main>
+
+    <!-- ==================================================================
+         PLANTILLA VISTA 1: INICIO (#inicio)
+         ================================================================== -->
+    <template id="tplVistaInicio">
+        <div class="store-view-panel" data-view="inicio">
+            <!-- Hero actual sin texto nuevo -->
+            <section class="store-hero">
+                <div class="store-hero-content">
+                    <div class="store-hero-badge">
+                        <i class="fas fa-bolt"></i> TIENDA OFICIAL &amp; MEMBRESÍAS • WORLDGYM
+                    </div>
+                    <h2>ENTRENA CON <span>MÁXIMA FUERZA</span> Y RESULTADOS</h2>
+                    <p>
+                        Planes de membresía flexibles adaptados a tu ritmo y suplementación deportiva de alto rendimiento:
+                        proteínas, creatina monohidratada, pre-entrenos y ganadores de masa muscular.
+                    </p>
+                    <div class="store-hero-actions">
+                        <a href="#membresias" class="store-btn-cta" onclick="return navegarVistaTienda('membresias', event)">
+                            Ver Planes de Membresía <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="#productos" class="store-btn-outline" onclick="return navegarVistaProductosLimpia(event)">
+                            Explorar Suplementos
+                        </a>
+                    </div>
+                </div>
+
+                <div class="store-hero-visual">
+                    <img src="/static/image/productos/cat_proteinas.png"
+                         alt="Suplementos Deportivos WORLDGYM"
+                         class="store-hero-main-img"
+                         width="440"
+                         height="250">
+                </div>
+            </section>
+
+            <!-- Bloque a) Membresías (versión cerrada + enlace Ver todo) -->
+            <section class="store-home-block" aria-labelledby="homeMembresiasHeading">
+                <div class="store-section-head">
+                    <h2 class="store-display-heading" id="homeMembresiasHeading">MEMBRESÍAS</h2>
+                    <a href="#membresias" class="store-view-all-link" onclick="return navegarVistaTienda('membresias', event)">
+                        Ver todo <span aria-hidden="true">&rarr;</span>
+                    </a>
+                </div>
+                <div class="wg-membresias-showcase wg-membresias-compact">
+                    {{ render_planes_cerrados(lista_planes) }}
+                </div>
+            </section>
+
+            <!-- Bloque b) Categorías (6 tarjetas con conteo real; abren Productos filtrado) -->
+            <section class="store-home-block" aria-labelledby="homeCategoriasHeading">
+                <div class="store-section-head">
+                    <h2 class="store-display-heading" id="homeCategoriasHeading">CATEGORÍAS</h2>
+                    <a href="#productos" class="store-view-all-link" onclick="return navegarVistaProductosLimpia(event)">
+                        Ver todo <span aria-hidden="true">&rarr;</span>
+                    </a>
+                </div>
+
+                <div class="store-cat-visual-grid store-cat-visual-grid-6">
+                    {% for cat in lista_categorias_visuales %}
+                    {% set total_cat = cat.totales if cat.totales is defined else (cat.disponibles or 0) %}
+                    <button type="button"
+                            class="store-cat-visual-card"
+                            data-cat-card="{{ cat.clave }}"
+                            onclick="abrirCategoriaDesdeMenu(this.getAttribute('data-cat-card'))">
+                        <div class="store-cat-visual-img-wrap">
+                            <img src="{{ cat.imagen }}" alt="{{ cat.nombre }}" width="136" height="112" loading="lazy">
+                        </div>
+                        <span class="store-cat-visual-name">{{ cat.nombre }}</span>
+                        <span class="store-cat-visual-count {% if total_cat == 0 %}is-empty{% endif %}" data-cat-count="{{ cat.clave }}">
+                            {{ total_cat }} producto{{ '' if total_cat == 1 else 's' }}
+                        </span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Bloque c) Destacados (5-6 productos reales; si no hay datos se oculta la sección completa) -->
+            <section class="store-home-block" id="homeFeaturedSection" aria-labelledby="homeDestacadosHeading">
+                <div class="store-section-head">
+                    <h2 class="store-display-heading" id="homeDestacadosHeading">DESTACADOS</h2>
+                    <a href="#productos" class="store-view-all-link" onclick="return navegarVistaProductosLimpia(event)">
+                        Ver todo <span aria-hidden="true">&rarr;</span>
+                    </a>
+                </div>
+                <div class="store-featured-grid" id="homeFeaturedGrid"></div>
+            </section>
+        </div>
+    </template>
+
+    <!-- ==================================================================
+         PLANTILLA VISTA 2: MEMBRESÍAS (#membresias)
+         ================================================================== -->
+    <template id="tplVistaMembresias">
+        <div class="store-view-panel" data-view="membresias">
+            <nav class="store-breadcrumbs" aria-label="Migas de pan">
+                <a href="#inicio" onclick="return navegarVistaTienda('inicio', event)">Inicio</a>
+                <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
+                <span class="store-breadcrumbs-current">Membresías</span>
+            </nav>
+
+            <section class="wg-membresias-showcase wg-membresias-standalone" aria-labelledby="vistaMembresiasHeading">
+                <header class="wg-membresias-header">
+                    <div class="wg-membresias-headline-row">
+                        <h2 class="wg-membresias-title" id="vistaMembresiasHeading">PLANES DE MEMBRESÍA</h2>
+                        <div class="wg-membresias-header-line" aria-hidden="true"></div>
+                        {% if es_admin_o_staff %}
+                        <a href="/cliente_membresia" class="wg-membresias-quick-link" title="Asignar membresía a un cliente">
+                            <i class="fas fa-user-check"></i> Asignar Plan
+                        </a>
+                        {% endif %}
+                    </div>
+                </header>
+
+                {{ render_planes_cerrados(lista_planes) }}
+            </section>
+        </div>
+    </template>
+
+    <!-- ==================================================================
+         PLANTILLA VISTA 3: PRODUCTOS / CATÁLOGO (#productos)
+         ================================================================== -->
+    <template id="tplVistaProductos">
+        <div class="store-view-panel" data-view="productos">
+            <nav class="store-breadcrumbs" id="storeBreadcrumbs" aria-label="Migas de pan"></nav>
+            <h2 class="store-display-heading store-page-heading" id="storeCatalogTitle">PRODUCTOS</h2>
+
+            <div class="store-mobile-filters-bar">
+                <button type="button" class="store-mobile-filters-btn" id="storeMobileFiltersBtn" onclick="abrirSidebarFiltrosMovil()">
+                    <i class="fas fa-sliders"></i>
+                    <span>Filtros</span>
+                    <span class="store-mobile-filters-badge" id="storeMobileFiltersBadge" style="display: none;">0</span>
+                </button>
+            </div>
+
+            <div class="store-filters-backdrop" id="storeFiltersBackdrop" onclick="cerrarSidebarFiltrosMovil()"></div>
+
+            <div class="store-catalog-layout">
+                <!-- Barra lateral izquierda fija en escritorio / panel desplegable en móvil -->
+                <aside class="store-filters-sidebar" id="storeFiltersSidebar" aria-label="Filtros del catálogo">
+                    <div class="store-sidebar-mobile-head">
+                        <strong>Filtros</strong>
+                        <button type="button" class="store-cart-close" onclick="cerrarSidebarFiltrosMovil()" aria-label="Cerrar filtros">
+                            <i class="fas fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="store-filter-block">
+                        <h3 class="store-filter-block-title">Categorías</h3>
+                        <div class="store-sidebar-list" id="sidebarCategoryList"></div>
+                    </div>
+
+                    <div class="store-filter-block">
+                        <h3 class="store-filter-block-title">Marca</h3>
+                        <label for="sidebarBrandSearch" class="sr-only">Buscar marca</label>
+                        <input type="search"
+                               id="sidebarBrandSearch"
+                               class="store-sidebar-brand-search"
+                               placeholder="Buscar marca..."
+                               aria-label="Buscar marca en el listado">
+                        <div class="store-sidebar-list is-scrollable" id="sidebarBrandList"></div>
+                    </div>
+
+                    <div class="store-filter-block">
+                        <h3 class="store-filter-block-title">Precio (C$)</h3>
+                        <div class="store-sidebar-price-grid">
+                            <label for="storePriceMin" class="sr-only">Precio mínimo en córdobas</label>
+                            <input type="number" id="storePriceMin" class="store-sidebar-price-input" min="0" step="1" placeholder="Mín" aria-label="Precio mínimo en córdobas">
+                            <span style="color: #9CA3AF; font-weight: 700;">–</span>
+                            <label for="storePriceMax" class="sr-only">Precio máximo en córdobas</label>
+                            <input type="number" id="storePriceMax" class="store-sidebar-price-input" min="0" step="1" placeholder="Máx" aria-label="Precio máximo en córdobas">
+                        </div>
+                    </div>
+
+                    <div class="store-filter-block">
+                        <h3 class="store-filter-block-title">Disponibilidad</h3>
+                        <div class="store-sidebar-list" id="sidebarAvailabilityList"></div>
+                    </div>
+
+                    <div class="store-filter-block">
+                        <h3 class="store-filter-block-title">Condición</h3>
+                        <label class="store-sidebar-check">
+                            <input type="checkbox" id="storeFilterOffers">
+                            <span>Ofertas</span>
+                        </label>
+                        <label class="store-sidebar-check">
+                            <input type="checkbox" id="storeFilterNew">
+                            <span>Nuevos ingresos</span>
+                        </label>
+                    </div>
+
+                    <button type="button" class="store-clear-filters-btn" id="storeClearFiltersBtn" onclick="limpiarFiltrosCatalogo()">
+                        <i class="fas fa-rotate-left"></i>
+                        <span>Limpiar filtros</span>
+                    </button>
+                </aside>
+
+                <!-- Área derecha del catálogo: barra superior, chips, rejilla de 4 columnas y paginación -->
+                <div class="store-catalog-main">
+                    <div class="store-grid-topbar">
+                        <span class="store-results-counter" id="storeResultsCounter">Cargando productos...</span>
+                        <div>
+                            <label for="storeSortSelect" class="sr-only">Ordenar productos</label>
+                            <select id="storeSortSelect" class="store-select" aria-label="Ordenar productos"></select>
+                        </div>
+                    </div>
+
+                    <div class="store-active-chips" id="storeActiveChips" aria-label="Filtros aplicados"></div>
+
+                    <div class="store-products-grid store-grid-4col" id="storeCatalogGrid"></div>
+
+                    <nav class="store-pagination" id="storePagination" aria-label="Paginación de productos"></nav>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ==================================================================
+         PLANTILLA VISTA 4: OFERTAS (#ofertas)
+         ================================================================== -->
+    <template id="tplVistaOfertas">
+        <div class="store-view-panel" data-view="ofertas">
+            <nav class="store-breadcrumbs" aria-label="Migas de pan">
+                <a href="#inicio" onclick="return navegarVistaTienda('inicio', event)">Inicio</a>
+                <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
+                <span class="store-breadcrumbs-current">Ofertas</span>
+            </nav>
+
+            <h2 class="store-display-heading store-page-heading">OFERTAS</h2>
+
+            <div class="store-grid-topbar" id="ofertasTopbarWrap" style="display: none;">
+                <span class="store-results-counter" id="ofertasResultsCounter"></span>
+            </div>
+
+            <div class="store-products-grid store-grid-4col" id="storeOffersGrid"></div>
+
+            <nav class="store-pagination" id="storeOffersPagination" aria-label="Paginación de ofertas"></nav>
+        </div>
+    </template>
+
+    <!-- ==================================================================
+         MODAL DE DETALLES COMPLETOS DEL PLAN DE MEMBRESÍA (DARK & GOLD)
          ================================================================== -->
     <div id="wgModalPlan" class="wg-modal-overlay" onclick="if(event.target === this) cerrarDetalleMembresiaTienda();">
         <div class="wg-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="wgModalTitulo">
@@ -484,8 +551,11 @@
                 <div>
                     <span class="wg-modal-eyebrow" id="wgModalDuracion">DURACIÓN</span>
                     <h3 class="wg-modal-title" id="wgModalTitulo">PLAN DE MEMBRESÍA</h3>
+                    <div class="wg-modal-popular-tag" id="wgModalPopularTag" style="display: none;">
+                        <i class="fas fa-star"></i> MÁS POPULAR • PLAN RECOMENDADO
+                    </div>
                 </div>
-                <button type="button" class="wg-modal-close" onclick="cerrarDetalleMembresiaTienda()" title="Cerrar">
+                <button type="button" class="wg-modal-close" id="wgModalCloseBtn" onclick="cerrarDetalleMembresiaTienda()" title="Cerrar" aria-label="Cerrar detalles del plan">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -504,12 +574,24 @@
                         <div class="wg-modal-spec-val" id="wgModalNombreDb">—</div>
                     </div>
                     <div class="wg-modal-spec-item">
-                        <span class="wg-modal-spec-label">Vigencia</span>
+                        <span class="wg-modal-spec-label">Duración / Vigencia</span>
                         <div class="wg-modal-spec-val" id="wgModalVigenciaSpec">—</div>
                     </div>
                     <div class="wg-modal-spec-item">
                         <span class="wg-modal-spec-label">Modalidad / Código</span>
                         <div class="wg-modal-spec-val" id="wgModalTipoId">—</div>
+                    </div>
+                    <div class="wg-modal-spec-item full-width">
+                        <span class="wg-modal-spec-label">Disponibilidad</span>
+                        <div class="wg-modal-spec-val" id="wgModalDisponibilidad" style="color: #34D399;">—</div>
+                    </div>
+                    <div class="wg-modal-spec-item full-width">
+                        <span class="wg-modal-spec-label">Beneficios incluidos</span>
+                        <ul class="wg-modal-list" id="wgModalBeneficios"></ul>
+                    </div>
+                    <div class="wg-modal-spec-item full-width">
+                        <span class="wg-modal-spec-label">Condiciones de contratación</span>
+                        <p class="wg-modal-conditions-text" id="wgModalCondiciones">—</p>
                     </div>
                 </div>
             </div>
@@ -525,8 +607,8 @@
                     </a>
                 </div>
                 <a href="#" id="wgModalBtnSeleccionar" class="wg-btn-gold-select">
-                    <span>SELECCIONAR PLAN</span>
-                    <span>&rarr;</span>
+                    <span>Continuar con la contratación</span>
+                    <span aria-hidden="true">&rarr;</span>
                 </a>
                 {% else %}
                 <div class="wg-modal-admin-links">
@@ -535,8 +617,8 @@
                     </button>
                 </div>
                 <button type="button" id="wgModalBtnSeleccionarCliente" class="wg-btn-gold-select" onclick="seleccionarPlanComoCliente()">
-                    <span>SELECCIONAR PLAN</span>
-                    <span>&rarr;</span>
+                    <span>Continuar con la contratación</span>
+                    <span aria-hidden="true">&rarr;</span>
                 </button>
                 {% endif %}
             </div>
@@ -544,23 +626,27 @@
     </div>
 
     <!-- ==================================================================
-         8. CARRITO DE COMPRAS LATERAL (SLIDE-OVER DRAWER)
+         CARRITO DE COMPRAS LATERAL (SLIDE-OVER DRAWER)
          ================================================================== -->
     <div class="store-cart-backdrop" id="storeCartBackdrop" onclick="cerrarCarrito()"></div>
-    <aside class="store-cart-drawer" id="storeCartDrawer" aria-label="Carrito de compras">
+    <aside class="store-cart-drawer" id="storeCartDrawer" role="dialog" aria-modal="true" aria-labelledby="storeCartTitle">
         <div class="store-cart-header">
-            <h3>
+            <h3 id="storeCartTitle">
                 <i class="fas fa-cart-shopping" style="color: #F58220;"></i>
                 Tu Carrito de Compras
             </h3>
-            <button type="button" class="store-cart-close" onclick="cerrarCarrito()" aria-label="Cerrar carrito">
-                <i class="fas fa-xmark"></i>
-            </button>
+            <div style="display: inline-flex; align-items: center; gap: 8px;">
+                <button type="button" id="storeCartClearBtn" onclick="vaciarCarrito()" title="Vaciar carrito"
+                        style="display: none; background: none; border: 1px solid #E5E7EB; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: #6B7280; cursor: pointer;">
+                    Vaciar
+                </button>
+                <button type="button" class="store-cart-close" id="storeCartCloseBtn" onclick="cerrarCarrito()" aria-label="Cerrar carrito">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
         </div>
 
-        <div class="store-cart-items" id="storeCartItems">
-            <!-- Productos del carrito -->
-        </div>
+        <div class="store-cart-items" id="storeCartItems"></div>
 
         <div class="store-cart-footer">
             <div class="store-cart-summary-row">
@@ -577,26 +663,27 @@
             </div>
 
             <div style="margin-bottom: 10px;">
+                <label for="storeOrderNotes" class="sr-only">Nota opcional del pedido</label>
                 <input type="text" id="storeOrderNotes"
                        placeholder="Nota opcional (ej: retirar hoy al finalizar mi entrenamiento)"
-                       style="width: 100%; height: 38px; padding: 0 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 12.5px; font-family: inherit;">
+                       style="width: 100%; height: 38px; padding: 0 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 13px; font-family: inherit;">
             </div>
 
             <button type="button" class="store-checkout-btn" id="storeCheckoutBtn" onclick="confirmarCompraTienda()" disabled>
                 <i class="fas fa-check-circle"></i> Confirmar Pedido en Gimnasio
             </button>
-            <small style="display: block; text-align: center; margin-top: 8px; font-size: 11px; color: #6B7280;">
+            <small style="display: block; text-align: center; margin-top: 8px; font-size: 12px; color: #6B7280;">
                 <i class="fas fa-shield-halved"></i> Se verifica la existencia real en inventario antes de confirmar tu compra.
             </small>
         </div>
     </aside>
 
     <!-- ==================================================================
-         9. MODAL DE VISTA DETALLADA DE PRODUCTO
+         MODAL DE VISTA DETALLADA DE PRODUCTO
          ================================================================== -->
     <div class="store-modal-overlay" id="storeProductModal" onclick="if(event.target===this) cerrarModalProducto()">
-        <div class="store-modal-card">
-            <button type="button" class="store-cart-close" onclick="cerrarModalProducto()" style="position: absolute; top: 18px; right: 18px;">
+        <div class="store-modal-card" role="dialog" aria-modal="true" aria-labelledby="storeProductModalHeading">
+            <button type="button" class="store-cart-close" id="storeProductModalCloseBtn" onclick="cerrarModalProducto()" style="position: absolute; top: 18px; right: 18px;" aria-label="Cerrar detalles del producto">
                 <i class="fas fa-xmark"></i>
             </button>
             <div id="storeProductModalContent"></div>
@@ -604,16 +691,16 @@
     </div>
 
     <!-- ==================================================================
-         10. MODAL DE COMPROBANTE DE PEDIDO / COMPRA
+         MODAL DE COMPROBANTE DE PEDIDO / COMPRA
          ================================================================== -->
     <div class="store-modal-overlay" id="storeReceiptModal" onclick="if(event.target===this) cerrarModalComprobante()">
-        <div class="store-modal-card" style="max-width: 500px;">
+        <div class="store-modal-card" role="dialog" aria-modal="true" aria-labelledby="storeReceiptHeading" style="max-width: 500px;">
             <div id="storeReceiptContent"></div>
         </div>
     </div>
 
     <!-- Contenedor de notificaciones Toast -->
-    <div class="store-toast-container" id="storeToastContainer"></div>
+    <div class="store-toast-container" id="storeToastContainer" aria-live="polite"></div>
 
     <!-- Pie de página -->
     <footer class="store-footer">
@@ -631,73 +718,9 @@
     <!-- Datos iniciales del catálogo inyectados desde el servidor -->
     <script>
         window.CATALOGO_INICIAL = {{ catalogo | tojson | safe }};
-
-        var planTiendaActual = { id: '', titulo: '', precio: '', duracion: '' };
-
-        function abrirDetalleMembresiaTienda(cardEl) {
-            if (!cardEl) return;
-
-            var id = cardEl.getAttribute('data-id');
-            var titulo = cardEl.getAttribute('data-titulo');
-            var nombreDb = cardEl.getAttribute('data-nombre-db');
-            var duracion = cardEl.getAttribute('data-duracion');
-            var precio = cardEl.getAttribute('data-precio');
-            var tipo = cardEl.getAttribute('data-tipo');
-
-            planTiendaActual = { id: id, titulo: titulo, precio: precio, duracion: duracion };
-
-            document.getElementById('wgModalTitulo').textContent = titulo;
-            document.getElementById('wgModalDuracion').textContent = 'MEMBRESÍA WORLD GYM • ' + duracion;
-            document.getElementById('wgModalPrecio').textContent = precio;
-            document.getElementById('wgModalNombreDb').textContent = nombreDb;
-            document.getElementById('wgModalVigenciaSpec').textContent = duracion;
-            document.getElementById('wgModalTipoId').textContent = tipo + ' (#' + id + ')';
-
-            var btnSel = document.getElementById('wgModalBtnSeleccionar');
-            if (btnSel) {
-                btnSel.href = '/cliente_membresia?id_membresia=' + encodeURIComponent(id);
-            }
-            var btnEd = document.getElementById('wgModalBtnEditar');
-            if (btnEd) {
-                btnEd.href = '/membresia_actualizar?id=' + encodeURIComponent(id);
-            }
-            var btnEl = document.getElementById('wgModalBtnEliminar');
-            if (btnEl) {
-                btnEl.href = '/membresia_eliminar?id=' + encodeURIComponent(id);
-            }
-
-            var overlay = document.getElementById('wgModalPlan');
-            overlay.style.display = 'flex';
-            setTimeout(function() {
-                overlay.classList.add('active');
-            }, 10);
-        }
-
-        function cerrarDetalleMembresiaTienda() {
-            var overlay = document.getElementById('wgModalPlan');
-            if (!overlay) return;
-            overlay.classList.remove('active');
-            setTimeout(function() {
-                overlay.style.display = 'none';
-            }, 200);
-        }
-
-        function seleccionarPlanComoCliente() {
-            cerrarDetalleMembresiaTienda();
-            var msg = 'Plan seleccionado: ' + planTiendaActual.titulo + ' (' + planTiendaActual.duracion + ' — C$' + planTiendaActual.precio + '). Solicita tu activación en recepción de World Gym.';
-            if (typeof mostrarToastTienda === 'function') {
-                mostrarToastTienda(msg, 'success');
-            } else {
-                alert(msg);
-            }
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                cerrarDetalleMembresiaTienda();
-            }
-        });
+        window.RESUMEN_TIENDA_INICIAL = {{ (resumen_tienda if resumen_tienda is defined else {}) | tojson | safe }};
+        window.ES_ADMIN_TIENDA = {{ 'true' if es_admin_o_staff else 'false' }};
     </script>
-    <script src="{{ url_for('static', filename='js/tienda.js') }}?v=2.1.0"></script>
+    <script src="{{ url_for('static', filename='js/tienda.js') }}?v=3.0.0"></script>
 </body>
 </html>

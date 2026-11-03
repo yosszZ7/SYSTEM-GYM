@@ -706,3 +706,202 @@
         justify-content: space-between;
     }
 }
+
+
+/* ==========================================================================
+   TARJETAS DE MEMBRESÍA CERRADAS Y MODAL COMPLETO DE CONTRATACIÓN
+   (Conserva 100% la identidad visual Dark & Gold existente)
+   ========================================================================== */
+.wg-membresias-showcase.wg-membresias-compact {
+    padding: 28px 28px 30px 28px;
+    border-radius: 14px;
+}
+
+.wg-membresias-showcase.wg-membresias-standalone {
+    padding: 38px 36px 42px 36px;
+    border-radius: 14px;
+}
+
+.wg-membresias-standalone .wg-membresias-header {
+    margin-bottom: 28px;
+}
+
+.wg-membresias-standalone .wg-membresias-headline-row {
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+}
+
+/* Tarjeta cerrada: solo duración, nombre, precio, etiqueta Más popular, imagen limpia y botón Elegir plan */
+.wg-plan-card.wg-plan-closed {
+    min-height: 340px;
+    border-radius: 10px;
+    outline: none;
+}
+
+.wg-plan-card.wg-plan-closed:focus-visible {
+    outline: 2px solid var(--wg-gold-bright);
+    outline-offset: 3px;
+}
+
+.wg-plan-card.wg-plan-closed .wg-plan-top {
+    padding: 22px 22px 14px 22px;
+}
+
+.wg-plan-card.wg-plan-closed .wg-plan-duration {
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding-right: 92px;
+}
+
+.wg-plan-card.wg-plan-closed:not(.is-featured) .wg-plan-duration {
+    padding-right: 0;
+}
+
+.wg-plan-card.wg-plan-closed .wg-plan-name {
+    font-size: 1.12rem;
+    padding-right: 0;
+}
+
+.wg-plan-card.wg-plan-closed .wg-plan-price-wrap {
+    margin-top: 14px;
+}
+
+.wg-plan-card.wg-plan-closed .wg-plan-media {
+    height: 128px;
+    margin-top: auto;
+}
+
+.wg-plan-card.wg-plan-closed .wg-plan-badge {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    top: 16px;
+    right: 16px;
+}
+
+.wg-plan-card.wg-plan-closed .wg-plan-footer {
+    padding: 14px 20px 18px 20px;
+    background: rgba(12, 14, 18, 0.96);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.wg-plan-btn-choose {
+    width: 100%;
+    height: 40px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--wg-white);
+    font-family: var(--wg-font-body);
+    font-size: 0.84rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.wg-plan-btn-choose .wg-arrow {
+    color: var(--wg-gold);
+    transition: transform 0.2s ease;
+}
+
+.wg-plan-card.wg-plan-closed.is-featured .wg-plan-btn-choose,
+.wg-plan-card.wg-plan-closed:hover .wg-plan-btn-choose {
+    border-color: var(--wg-gold-border);
+    background: rgba(201, 168, 106, 0.10);
+}
+
+.wg-plan-card.wg-plan-closed:hover .wg-plan-btn-choose .wg-arrow {
+    transform: translateX(3px);
+}
+
+/* Modal con toda la información registrada del plan */
+.wg-modal-dialog {
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.wg-modal-popular-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(201, 168, 106, 0.16);
+    border: 1px solid rgba(201, 168, 106, 0.45);
+    color: var(--wg-gold-bright);
+    font-family: var(--wg-font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.wg-modal-list {
+    list-style: none;
+    margin: 6px 0 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.wg-modal-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-family: var(--wg-font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.48;
+    color: var(--wg-text-light);
+}
+
+.wg-modal-list li i {
+    color: var(--wg-gold);
+    font-size: 0.76rem;
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.wg-modal-conditions-text {
+    margin: 4px 0 0 0;
+    font-family: var(--wg-font-body);
+    font-size: 0.82rem;
+    font-weight: 400;
+    line-height: 1.52;
+    color: var(--wg-text-light);
+}
+
+@media (max-width: 768px) {
+    .wg-membresias-showcase.wg-membresias-compact,
+    .wg-membresias-showcase.wg-membresias-standalone {
+        padding: 20px 16px 24px 16px;
+    }
+
+    .wg-membresias-standalone .wg-membresias-headline-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wg-plan-card,
+    .wg-plan-img,
+    .wg-plan-btn-choose,
+    .wg-plan-btn-choose .wg-arrow,
+    .wg-modal-overlay {
+        transition: none !important;
+    }
+    .wg-plan-card:hover,
+    .wg-plan-card:hover .wg-plan-img,
+    .wg-plan-card:hover .wg-plan-btn-choose .wg-arrow {
+        transform: none !important;
+    }
+}
