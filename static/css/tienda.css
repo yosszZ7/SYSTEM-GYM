@@ -66,6 +66,8 @@ body.tienda-body {
     position: sticky;
     top: 0;
     z-index: 100;
+    width: 100%;
+    max-width: 100%;
     background: #FFFFFF;
     border-bottom: 1px solid #EFEFEF;
     box-shadow: 0 2px 14px rgba(0, 0, 0, 0.03);
@@ -73,53 +75,60 @@ body.tienda-body {
 
 .store-topbar {
     max-width: 1360px;
+    width: 100%;
     margin: 0 auto;
-    height: 86px;
+    min-height: 84px;
     padding: 0 28px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
     align-items: center;
-    gap: 24px;
+    justify-content: space-between;
+    gap: clamp(14px, 1.4vw, 24px);
 }
 
 /* Logo Izquierdo estilo FitShop + Identidad WORLDGYM */
 .store-brand {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     text-decoration: none;
     flex-shrink: 0;
 }
 
 .store-brand-logo {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
     overflow: hidden;
     border: 1.5px solid #FFE4CC;
     background: #111111;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .store-brand-logo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 .store-brand-text {
     display: flex;
     flex-direction: column;
+    justify-content: center;
 }
 
 .store-brand-wordmark {
     margin: 0;
     font-family: 'Montserrat', 'League Spartan', 'Inter', sans-serif;
-    font-size: 27px;
+    font-size: 22.5px;
     font-weight: 900;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     color: #111111;
     line-height: 1;
+    white-space: nowrap;
 }
 
 .store-brand-wordmark span {
@@ -128,11 +137,13 @@ body.tienda-body {
 
 .store-brand-tagline {
     margin-top: 4px;
-    font-size: 9.5px;
+    font-size: 8px;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.035em;
+    line-height: 1;
     text-transform: uppercase;
     color: var(--store-primary);
+    white-space: nowrap;
 }
 
 /* Menú Central Limpio y Alineado */
@@ -140,26 +151,31 @@ body.tienda-body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 32px;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: clamp(11px, 1.1vw, 18px);
 }
 
 .store-nav-item {
     position: relative;
+    display: inline-flex;
+    align-items: center;
 }
 
 .store-nav-link {
     text-decoration: none;
     color: #111827;
-    font-size: 15.5px;
+    font-size: 13.8px;
     font-weight: 700;
-    padding: 10px 4px;
+    line-height: 1;
+    padding: 9px 2px;
     background: none;
     border: none;
     cursor: pointer;
     font-family: inherit;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     transition: color 0.18s ease;
     white-space: nowrap;
 }
@@ -170,7 +186,7 @@ body.tienda-body {
 }
 
 .store-nav-link i.chevron {
-    font-size: 11px;
+    font-size: 10.5px;
     color: #6B7280;
     transition: transform 0.2s ease;
 }
@@ -234,21 +250,28 @@ body.tienda-body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 18px;
+    gap: 6px;
+    flex-shrink: 0;
+    padding-right: 4px;
 }
 
 .store-admin-pill {
     text-decoration: none;
     background: #111827;
     color: #FFFFFF;
-    font-size: 12.5px;
+    border: 1.5px solid transparent;
+    font-size: 12px;
     font-weight: 700;
-    padding: 8px 14px;
+    line-height: 1;
+    height: 35px;
+    padding: 0 12px;
+    margin-right: 3px;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    transition: background 0.18s ease;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.18s ease, border-color 0.18s ease;
     white-space: nowrap;
 }
 
@@ -262,13 +285,16 @@ body.tienda-body {
     background: var(--store-primary-soft);
     color: var(--store-primary);
     border: 1.5px solid #FED7AA;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 700;
-    padding: 7px 14px;
+    line-height: 1;
+    height: 35px;
+    padding: 0 12px;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    justify-content: center;
+    gap: 6px;
     white-space: nowrap;
     transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
@@ -284,14 +310,15 @@ body.tienda-body {
     background: none;
     border: none;
     color: #111827;
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 19px;
+    font-size: 17px;
     cursor: pointer;
+    flex-shrink: 0;
     transition: background 0.18s ease, color 0.18s ease;
 }
 
@@ -302,15 +329,15 @@ body.tienda-body {
 
 .store-icon-badge {
     position: absolute;
-    top: 1px;
-    right: 0px;
+    top: 0;
+    right: -2px;
     background: var(--store-primary);
     color: #FFFFFF;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 800;
-    min-width: 19px;
-    height: 19px;
-    padding: 0 5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
@@ -322,6 +349,8 @@ body.tienda-body {
 /* Dropdown de Perfil */
 .store-user-wrapper {
     position: relative;
+    display: inline-flex;
+    align-items: center;
 }
 
 .store-user-dropdown {
@@ -1408,34 +1437,36 @@ body.tienda-body {
 /* ==========================================================================
    8. DISEÑO RESPONSIVO (COMPUTADORAS, TABLETS Y CELULARES)
    ========================================================================== */
-@media (max-width: 1280px) {
+@media (max-width: 1320px) {
+    .store-topbar {
+        padding: 0 20px;
+        gap: 12px;
+    }
     .store-nav-links {
-        gap: 18px;
+        gap: 12px;
     }
     .store-nav-link {
-        font-size: 14px;
+        font-size: 13.2px;
     }
-    .store-header-actions {
-        gap: 10px;
+    .store-admin-pill {
+        width: 35px;
+        padding: 0;
+        margin-right: 0;
     }
     .store-admin-pill span {
         display: none;
     }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1120px) {
     .store-nav-links {
         display: none;
-    }
-    .store-topbar {
-        grid-template-columns: 1fr auto;
     }
 }
 
 @media (max-width: 900px) {
     .store-topbar {
-        grid-template-columns: 1fr auto;
-        height: 74px;
+        min-height: 74px;
         padding: 0 18px;
     }
     .store-hero {
@@ -1495,6 +1526,12 @@ body.tienda-body {
     .store-detail-grid {
         grid-template-columns: 1fr;
     }
+    .store-admin-pill,
+    .store-back-dashboard {
+        width: 35px;
+        padding: 0;
+        margin-right: 0;
+    }
     .store-admin-pill span,
     .store-back-dashboard span {
         display: none;
@@ -1509,21 +1546,6 @@ body.tienda-body {
 
 html:has(body.tienda-body) {
     overflow-x: clip;
-}
-
-/* Evita que los iconos derechos del header (perfil, ofertas, carrito) se recorten en pantallas <= 1640px cuando están visibles los botones administrativos */
-@media (max-width: 1640px) {
-    .store-topbar {
-        max-width: 100%;
-        gap: 16px;
-        padding: 0 22px;
-    }
-    .store-nav-links {
-        gap: 18px;
-    }
-    .store-header-actions {
-        gap: 10px;
-    }
 }
 
 body.tienda-body > .store-cart-drawer {

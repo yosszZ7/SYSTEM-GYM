@@ -18,23 +18,32 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 META_JSON_PATH = os.path.join(BASE_DIR, "static", "data", "tienda_meta.json")
 PEDIDOS_JSON_PATH = os.path.join(BASE_DIR, "static", "data", "tienda_pedidos.json")
 
-# Catálogo de imágenes reales de estudio de suplementos y productos deportivos (sin imágenes de computadoras/tecnología)
+# Catálogo de imágenes reales oficiales de suplementos y productos deportivos
 IMAGENES_SUPLEMENTOS = [
+    {"id": "monster_energy_473ml", "nombre": "Monster Energy Clásica Negra/Verde (473 ml / 16 oz)", "url": "/static/image/productos/monster_energy_473ml.webp"},
+    {"id": "redbull_250ml", "nombre": "Red Bull Bebida Energizante Slim Can (250 ml)", "url": "/static/image/productos/redbull_250ml.webp"},
+    {"id": "raptor_energy_600ml", "nombre": "Raptor Bebida Energizante Botella PET (600 ml)", "url": "/static/image/productos/raptor_energy_600ml.webp"},
+    {"id": "powerade_600ml", "nombre": "Powerade Bebida Isotónica (600 ml)", "url": "/static/image/productos/powerade_600ml.webp"},
+    {"id": "gatorade_600ml", "nombre": "Gatorade Bebida Isotónica (600 ml)", "url": "/static/image/productos/gatorade_600ml.webp"},
+    {"id": "electrolit_coco", "nombre": "Electrolit Suero Rehidratante Sabor Coco (625 ml)", "url": "/static/image/productos/electrolit_coco.webp"},
+    {"id": "electrolit_fresa", "nombre": "Electrolit Suero Rehidratante Sabor Fresa (625 ml)", "url": "/static/image/productos/electrolit_fresa.webp"},
+    {"id": "fuente_pura_1l", "nombre": "Fuente Pura Agua Purificada (1 Litro)", "url": "/static/image/productos/fuente_pura_1l.webp"},
+    {"id": "fuente_pura_600ml", "nombre": "Fuente Pura Agua Purificada (600 ml)", "url": "/static/image/productos/fuente_pura_600ml.webp"},
+    {"id": "scoop_proteina", "nombre": "Varias - Scoop de Proteína (1 servicio)", "url": "/static/image/productos/scoop_proteina.webp"},
+    {"id": "scoop_preentreno", "nombre": "Varias - Scoop de Pre-entreno (1 servicio)", "url": "/static/image/productos/scoop_preentreno.webp"},
+    {"id": "quest_bar_chocolate", "nombre": "Quest Nutrition Barra de Proteína Sabor Chocolate", "url": "/static/image/productos/quest_bar_chocolate.webp"},
+    {"id": "xtend_bcaa", "nombre": "Xtend BCAA en Polvo Cilíndrico Azul/Gris (30 serv)", "url": "/static/image/productos/xtend_bcaa.webp"},
+    {"id": "universal_glutamina", "nombre": "Universal Nutrition Glutamina Bote Blanco (300 g)", "url": "/static/image/productos/universal_glutamina.webp"},
+    {"id": "musclepharm_fish_oil", "nombre": "MusclePharm Omega 3 Fish Oil Blanco/Verde (100 caps)", "url": "/static/image/productos/musclepharm_fish_oil.webp"},
+    {"id": "gnc_megamen_sport", "nombre": "GNC Mega Men Sport Multivitamínico Frasco Negro (60 caps)", "url": "/static/image/productos/gnc_megamen_sport.webp"},
+    {"id": "muscletech_platinum_creatina", "nombre": "MuscleTech Platinum Creatina Monohidratada 100% (300 g)", "url": "/static/image/productos/muscletech_platinum_creatina.webp"},
+    {"id": "optimum_creatina", "nombre": "Optimum Nutrition Micronized Creatine Powder", "url": "/static/image/productos/optimum_creatina.webp"},
+    {"id": "cellucor_c4_original", "nombre": "Cellucor Pre-Entreno C4 Original Amarillo/Cromado (30 serv)", "url": "/static/image/productos/cellucor_c4_original.webp"},
+    {"id": "isopure_zero_carb", "nombre": "Isopure Proteína Isolatada Zero Carb Bote Negro (3 lbs)", "url": "/static/image/productos/isopure_zero_carb.webp"},
+    {"id": "dymatize_super_mass", "nombre": "Dymatize Super Mass Gainer Negro/Verde (5-6 lbs)", "url": "/static/image/productos/dymatize_super_mass.webp"},
+    {"id": "optimum_gold_standard_whey", "nombre": "Optimum Nutrition 100% Whey Gold Standard Negro/Rojo/Dorado", "url": "/static/image/productos/optimum_gold_standard_whey.webp"},
     {"id": "real_beef_xp", "nombre": "Proteína Raptor / Beef-XP Clear Isolate (3.96 lb)", "url": "/static/image/productos/real_beef_xp.avif"},
     {"id": "real_beef_citrus", "nombre": "Proteína Raptor / Beef-XP Citrus Twist (3.96 lb)", "url": "/static/image/productos/real_beef_citrus.avif"},
-    {"id": "real_iso_whey", "nombre": "Hydrolyzed Whey Protein Isolate (2.11 lb)", "url": "/static/image/productos/real_iso_whey.webp"},
-    {"id": "real_whey_gold", "nombre": "Proteína 100% Whey Gold Standard (5 lbs)", "url": "/static/image/productos/real_whey_gold.webp"},
-    {"id": "real_raptor_whey", "nombre": "Proteína Critical Whey Advanced (4.4 lbs)", "url": "/static/image/productos/real_raptor_whey.webp"},
-    {"id": "real_rule1_whey", "nombre": "Proteína Rule 1 Whey Isolate (5 lbs)", "url": "/static/image/productos/real_rule1_whey.webp"},
-    {"id": "real_power_creatina", "nombre": "Suplemento Power / Applied Creatine Monohydrate (500g)", "url": "/static/image/productos/real_power_creatina.webp"},
-    {"id": "real_creatina_mono", "nombre": "Creatina Monohidratada Platinum 100% (450g)", "url": "/static/image/productos/real_creatina_mono.png"},
-    {"id": "real_power_preworkout", "nombre": "Pre-Entreno Power Roar Fruit Punch (30 serv)", "url": "/static/image/productos/real_power_preworkout.webp"},
-    {"id": "real_nitraflex_pre", "nombre": "Pre-Entreno Nitraflex Ultra High Intensity (30 serv)", "url": "/static/image/productos/real_nitraflex_pre.webp"},
-    {"id": "real_mass_gainer", "nombre": "Ganador de Masa Muscular Mass Gainer (5.73 lbs)", "url": "/static/image/productos/real_mass_gainer.webp"},
-    {"id": "real_bebida_energetica", "nombre": "Bebida Energética Sparkling Citrus (355 ml)", "url": "/static/image/productos/real_bebida_energetica.webp"},
-    {"id": "real_protein_water", "nombre": "Bebida Hidratante / Agua Deportiva (330 ml)", "url": "/static/image/productos/real_protein_water.webp"},
-    {"id": "cat_aminoacidos", "nombre": "Aminoácidos BCAA y Glutamina", "url": "/static/image/productos/cat_aminoacidos.png"},
-    {"id": "cat_vitaminas", "nombre": "Multivitamínicos y Omega 3 Deportivo", "url": "/static/image/productos/cat_vitaminas.png"},
     {"id": "real_accesorio_gym", "nombre": "Accesorio Deportivo / Magnesio y Agarre Gym", "url": "/static/image/productos/real_accesorio_gym.webp"},
 ]
 
@@ -551,55 +560,92 @@ def EtiquetaCategoriaTienda(categoria_tienda):
 
 def InferirImagenSuplemento(nombre="", marca="", categoria=""):
     """
-    Asigna una fotografía de estudio acorde al tipo real de producto,
-    respetando primero la categoría funcional para evitar imágenes cruzadas.
+    Asigna la fotografía comercial oficial correspondiente a cada producto del catálogo,
+    respetando empaques de marca, sabores y presentaciones reales con fondo blanco/transparente.
     """
-    cat_tienda = InferirCategoriaTienda(nombre, marca, categoria)
     nombre_norm = _sin_acentos(nombre)
     marca_norm = _sin_acentos(marca)
     texto = f"{nombre_norm} {marca_norm}".strip()
 
-    if cat_tienda == "Bebidas energéticas":
-        if any(k in texto for k in ("energizante", "energetica", "red bull", "monster", "raptor", "sparkling energy")):
-            return "/static/image/productos/real_bebida_energetica.webp"
-        return "/static/image/productos/real_protein_water.webp"
+    # 1. Bebidas energéticas y comerciales específicas
+    if "monster" in texto:
+        return "/static/image/productos/monster_energy_473ml.webp"
+    if "red bull" in texto:
+        return "/static/image/productos/redbull_250ml.webp"
+    if "raptor" in texto and any(k in texto for k in ("bebida", "energ", "600")):
+        return "/static/image/productos/raptor_energy_600ml.webp"
 
-    if cat_tienda == "Ganadores de masa":
-        return "/static/image/productos/real_mass_gainer.webp"
+    # 2. Bebidas isotónicas y de hidratación
+    if "powerade" in texto:
+        return "/static/image/productos/powerade_600ml.webp"
+    if "gatorade" in texto:
+        return "/static/image/productos/gatorade_600ml.webp"
+    if "electrolit" in texto:
+        if "fresa" in texto:
+            return "/static/image/productos/electrolit_fresa.webp"
+        return "/static/image/productos/electrolit_coco.webp"
 
-    if cat_tienda == "Creatina":
-        if "muscletech" in texto or "platinum" in texto or "300g" in texto:
-            return "/static/image/productos/real_creatina_mono.png"
-        return "/static/image/productos/real_power_creatina.webp"
+    # 3. Aguas purificadas (Fuente Pura)
+    if "fuente pura" in texto or ("agua" in texto and "purificada" in texto):
+        if any(k in texto for k in ("1 litro", "1l", "1 l", "1000", "litro")):
+            return "/static/image/productos/fuente_pura_1l.webp"
+        return "/static/image/productos/fuente_pura_600ml.webp"
 
-    if cat_tienda == "Preentrenos":
-        if "scoop" in nombre_norm or "nitraflex" in texto or "gat" in texto:
-            return "/static/image/productos/real_nitraflex_pre.webp"
-        return "/static/image/productos/real_power_preworkout.webp"
+    # 4. Servicios individuales (Scoops)
+    if "scoop" in nombre_norm:
+        if any(k in texto for k in ("pre", "entreno", "workout", "c4")):
+            return "/static/image/productos/scoop_preentreno.webp"
+        return "/static/image/productos/scoop_proteina.webp"
 
-    if cat_tienda == "Proteínas":
-        if "beef" in texto or ("raptor" in texto and "citrus" in texto):
-            return "/static/image/productos/real_beef_citrus.avif"
-        if "beef" in texto or "raptor" in texto or "carnivor" in texto:
-            return "/static/image/productos/real_beef_xp.avif"
-        if "isolat" in texto or "isopure" in texto or "sascha" in texto:
-            return "/static/image/productos/real_iso_whey.webp"
-        if "barra" in nombre_norm or "rule" in texto:
-            return "/static/image/productos/real_rule1_whey.webp"
-        if "scoop" in nombre_norm:
-            return "/static/image/productos/real_raptor_whey.webp"
-        return "/static/image/productos/real_whey_gold.webp"
+    # 5. Barras de proteína
+    if "quest" in texto or "barra" in nombre_norm:
+        return "/static/image/productos/quest_bar_chocolate.webp"
 
-    if cat_tienda == "Accesorios":
+    # 6. Aminoácidos y Glutamina
+    if "xtend" in texto or "bcaa" in texto:
+        return "/static/image/productos/xtend_bcaa.webp"
+    if "universal" in texto or "glutamin" in texto:
+        return "/static/image/productos/universal_glutamina.webp"
+
+    # 7. Vitaminas, Multivitamínicos y Omega 3
+    if "musclepharm" in texto or "fish oil" in texto or "omega" in texto:
+        return "/static/image/productos/musclepharm_fish_oil.webp"
+    if "gnc" in texto or "mega men" in texto or "multivitam" in texto:
+        return "/static/image/productos/gnc_megamen_sport.webp"
+
+    # 8. Creatinas
+    if "muscletech" in texto or "platinum" in texto or ("creatina" in texto and "monohidratada" in texto and "opti" not in texto):
+        return "/static/image/productos/muscletech_platinum_creatina.webp"
+    if "creatin" in texto:
+        return "/static/image/productos/optimum_creatina.webp"
+
+    # 9. Pre-entrenos
+    if "c4" in texto or "cellucor" in texto:
+        return "/static/image/productos/cellucor_c4_original.webp"
+    if "nitraflex" in texto:
+        return "/static/image/productos/real_nitraflex_pre.webp"
+
+    # 10. Ganadores de masa (Mass Gainer)
+    if any(k in texto for k in ("dymatize", "mass gainer", "ganador", "gainer", "hipercalorico")):
+        return "/static/image/productos/dymatize_super_mass.webp"
+
+    # 11. Proteínas
+    if "isopure" in texto or "zero carb" in texto:
+        return "/static/image/productos/isopure_zero_carb.webp"
+    if "beef" in texto or ("raptor" in texto and "citrus" in texto):
+        return "/static/image/productos/real_beef_citrus.avif"
+    if "beef" in texto or ("raptor" in texto and "whey" not in texto):
+        return "/static/image/productos/real_beef_xp.avif"
+    if "rule" in texto:
+        return "/static/image/productos/real_rule1_whey.webp"
+    if any(k in texto for k in ("optimum", "gold standard", "whey", "proteina")):
+        return "/static/image/productos/optimum_gold_standard_whey.webp"
+
+    # 12. Accesorios
+    if any(k in texto for k in ("shaker", "guante", "strap", "cinturon", "magnesio", "chalk", "accesorio")):
         return "/static/image/productos/real_accesorio_gym.webp"
 
-    # Otros suplementos: distinguir aminoácidos/glutamina vs vitaminas/omega
-    if any(k in texto for k in ("amino", "bcaa", "glutamin")):
-        return "/static/image/productos/cat_aminoacidos.png"
-    if any(k in texto for k in ("multivitam", "vitamin", "omega", "fish oil", "caps")):
-        return "/static/image/productos/cat_vitaminas.png"
-
-    return "/static/image/productos/real_whey_gold.webp"
+    return "/static/image/productos/optimum_gold_standard_whey.webp"
 
 
 def _extraer_presentacion_y_tamano(nombre="", categoria_bd="", categoria_tienda="", presentacion_meta=""):
@@ -793,21 +839,29 @@ def EnriquecerProducto(prod, mapa_meta=None, unidades_vendidas=0):
         precio_anterior = None
 
     stock = int(prod.get("Stock") if prod.get("Stock") is not None else 0)
-    imagen_url = meta.get("ImagenUrl") or prod.get("ImagenUrl") or InferirImagenSuplemento(nombre, marca, categoria_bd)
-    mapa_upgrade_svg = {
-        "/static/image/productos/raptor_whey.svg": "/static/image/productos/real_beef_xp.avif",
-        "/static/image/productos/power_creatina.svg": "/static/image/productos/real_power_creatina.webp",
-        "/static/image/productos/power_preworkout.svg": "/static/image/productos/real_power_preworkout.webp",
-        "/static/image/productos/whey_gold.svg": "/static/image/productos/real_whey_gold.webp",
-        "/static/image/productos/creatina_mono.svg": "/static/image/productos/real_creatina_mono.png",
-        "/static/image/productos/mass_gainer.svg": "/static/image/productos/real_mass_gainer.webp",
-        "/static/image/productos/bebida_energetica.svg": "/static/image/productos/real_bebida_energetica.webp",
-        "/static/image/productos/shaker_pro.svg": "/static/image/productos/real_protein_water.webp",
-        "/static/image/productos/guantes_pro.svg": "/static/image/productos/real_accesorio_gym.webp",
-        "/static/image/productos/default_suplemento.svg": "/static/image/productos/real_whey_gold.webp",
+    imagen_url = meta.get("ImagenUrl") or prod.get("ImagenUrl")
+    placeholders_obsoletos = {
+        "/static/image/productos/real_protein_water.webp",
+        "/static/image/productos/real_bebida_energetica.webp",
+        "/static/image/productos/cat_aminoacidos.png",
+        "/static/image/productos/cat_vitaminas.png",
+        "/static/image/productos/cat_proteinas.png",
+        "/static/image/productos/cat_creatinas.png",
+        "/static/image/productos/cat_preentreno.png",
+        "/static/image/productos/cat_massgainer.png",
+        "/static/image/productos/default_suplemento.svg",
+        "/static/image/productos/raptor_whey.svg",
+        "/static/image/productos/power_creatina.svg",
+        "/static/image/productos/power_preworkout.svg",
+        "/static/image/productos/whey_gold.svg",
+        "/static/image/productos/creatina_mono.svg",
+        "/static/image/productos/mass_gainer.svg",
+        "/static/image/productos/bebida_energetica.svg",
+        "/static/image/productos/shaker_pro.svg",
+        "/static/image/productos/guantes_pro.svg"
     }
-    if imagen_url in mapa_upgrade_svg:
-        imagen_url = mapa_upgrade_svg[imagen_url]
+    if not imagen_url or imagen_url in placeholders_obsoletos:
+        imagen_url = InferirImagenSuplemento(nombre, marca, categoria_bd)
 
     presentacion_raw = meta.get("Presentacion") or prod.get("Presentacion") or ""
     presentacion, contenido_tamano = _extraer_presentacion_y_tamano(

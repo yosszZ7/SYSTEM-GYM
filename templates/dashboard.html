@@ -12,7 +12,7 @@
                 <span class="status-live-dot" aria-hidden="true"></span>
                 <span>Panel Ejecutivo · Tiempo real</span>
             </div>
-            <h1>Bienvenido, {{ usuario if usuario else 'admin_roberto' }}</h1>
+            <h1>Bienvenido, <span class="welcome-username">{{ usuario if usuario else 'admin_roberto' }}</span></h1>
             <p>Este es el resumen de tu gimnasio.</p>
         </div>
 

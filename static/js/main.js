@@ -2229,17 +2229,17 @@ function actualizarColoresGraficoVentas() {
     var chart = charts.ingresos;
     if (!chart || !chart.options) return;
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    var textColor = isDark ? '#9BA5B7' : '#667085';
-    var gridColor = isDark ? 'rgba(155, 165, 183, 0.09)' : '#EEF1F5';
+    var textColor = isDark ? '#7E889A' : '#667085';
+    var gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : '#EEF1F5';
 
     if (chart.data && chart.data.datasets && chart.data.datasets[0]) {
         var ds = chart.data.datasets[0];
-        ds.pointBorderColor = isDark ? '#121721' : '#FFFFFF';
+        ds.pointBorderColor = isDark ? '#0B0E14' : '#FFFFFF';
         var canvas = chart.canvas;
         if (canvas) {
             var ctx = canvas.getContext('2d');
             var grad = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 280);
-            grad.addColorStop(0, isDark ? 'rgba(245, 130, 32, 0.28)' : 'rgba(245, 130, 32, 0.20)');
+            grad.addColorStop(0, isDark ? 'rgba(245, 130, 32, 0.32)' : 'rgba(245, 130, 32, 0.20)');
             grad.addColorStop(1, 'rgba(245, 130, 32, 0.00)');
             ds.backgroundColor = grad;
         }
@@ -2253,8 +2253,8 @@ function actualizarColoresGraficoVentas() {
         chart.options.scales.y.grid.color = gridColor;
     }
     if (chart.options.plugins && chart.options.plugins.tooltip) {
-        chart.options.plugins.tooltip.backgroundColor = isDark ? '#1B2332' : '#181D27';
-        chart.options.plugins.tooltip.borderColor = isDark ? '#2D384D' : 'rgba(255,255,255,0.08)';
+        chart.options.plugins.tooltip.backgroundColor = isDark ? '#11151E' : '#181D27';
+        chart.options.plugins.tooltip.borderColor = isDark ? '#242B39' : 'rgba(255,255,255,0.08)';
     }
     chart.update('none');
 }
@@ -3131,8 +3131,8 @@ async function cargarGraficos(periodoForzado) {
         var fechasCompletas = Array.isArray(resumen.fechas_completas) ? resumen.fechas_completas : labels;
 
         var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        var textColor = isDark ? '#9BA5B7' : '#667085';
-        var gridColor = isDark ? 'rgba(155, 165, 183, 0.09)' : '#EEF1F5';
+        var textColor = isDark ? '#7E889A' : '#667085';
+        var gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : '#EEF1F5';
         var pointRadius = labels.length > 16 ? 2.5 : 4;
         var maxTicks = labels.length > 14 ? 8 : 12;
         var animDuration = wgPrefersReducedMotion() ? 0 : 620;
@@ -3153,7 +3153,7 @@ async function cargarGraficos(periodoForzado) {
 
         var ctx = ingresosCanvas.getContext('2d');
         var gradient = ctx.createLinearGradient(0, 0, 0, ingresosCanvas.clientHeight || 280);
-        gradient.addColorStop(0, isDark ? 'rgba(245, 130, 32, 0.28)' : 'rgba(245, 130, 32, 0.20)');
+        gradient.addColorStop(0, isDark ? 'rgba(245, 130, 32, 0.32)' : 'rgba(245, 130, 32, 0.20)');
         gradient.addColorStop(1, 'rgba(245, 130, 32, 0.00)');
 
         var chartInstance = new Chart(ingresosCanvas, {
@@ -3170,7 +3170,7 @@ async function cargarGraficos(periodoForzado) {
                     fill: true,
                     tension: 0.36,
                     pointBackgroundColor: '#F58220',
-                    pointBorderColor: isDark ? '#121721' : '#FFFFFF',
+                    pointBorderColor: isDark ? '#0B0E14' : '#FFFFFF',
                     pointBorderWidth: 2,
                     pointRadius: pointRadius,
                     pointHoverRadius: 6,
@@ -3193,10 +3193,10 @@ async function cargarGraficos(periodoForzado) {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: isDark ? '#1B2332' : '#181D27',
+                        backgroundColor: isDark ? '#11151E' : '#181D27',
                         titleColor: '#FFFFFF',
                         bodyColor: '#E6E8EC',
-                        borderColor: isDark ? '#2D384D' : 'rgba(255,255,255,0.08)',
+                        borderColor: isDark ? '#242B39' : 'rgba(255,255,255,0.08)',
                         borderWidth: 1,
                         padding: 12,
                         cornerRadius: 10,
@@ -3534,30 +3534,84 @@ async function cargarEmpleados() {
     }
 }
 
-async function cargarProductos() {
-    mostrarLoading(true);
-    var tbody = document.querySelector('#productosBody, #productosTable tbody, .data-table tbody');
+function renderizarFilaProductoAdmin(p) {
+    var id = p.IdProducto || p.id || '';
+    var nombre = wgEscapeHtml(p.NombreProducto || p.nombre || '');
+    var presentacion = p.Presentacion ? '<small style="display:block;color:var(--text-muted);font-size:11.5px;margin-top:2px;">' + wgEscapeHtml(p.Presentacion) + '</small>' : '';
+    var demoTag = p.EsDemo ? '<span style="background:var(--info-light);color:var(--info);font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:4px;">DEMO</span>' : '';
+    var marca = wgEscapeHtml(p.Marca || p.marca || '—');
+    var categoria = wgEscapeHtml(p.CategoriaTienda || p.Categoria || p.categoria || 'General');
+    var precioNum = Number(p.Precio !== undefined ? p.Precio : (p.precio || 0));
+    var precio = precioNum.toFixed(2);
+    var descuento = Number(p.Descuento || 0);
+    var precioAnterior = p.PrecioAnterior ? Number(p.PrecioAnterior).toFixed(2) : '';
+    var precioAnteriorHtml = (descuento > 0 && precioAnterior)
+        ? '<small style="display:block;color:var(--text-muted);text-decoration:line-through;font-size:11px;font-weight:500;">C$' + precioAnterior + '</small>'
+        : '';
+    var ofertaHtml = descuento > 0
+        ? '<span style="background:#FACC15;color:#18181B;font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;">-' + descuento + '%</span>'
+        : '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+    var stock = Number(p.Stock !== undefined ? p.Stock : (p.stock || 0));
+    var badgeClass = stock > 5 ? 'badge-success' : (stock > 0 ? 'badge-warning' : 'badge-danger');
+    var img = wgEscapeHtml(p.ImagenUrl || '/static/image/productos/default_suplemento.svg');
+    var visible = p.VisibleTienda !== false;
+
+    return '<tr class="fila-producto-inicial">' +
+        '<td style="text-align:center;padding:10px;font-size:13px;font-weight:700;color:var(--text-secondary);">' + id + '</td>' +
+        '<td style="text-align:center;padding:8px;">' +
+            '<img src="' + img + '" alt="' + nombre + '" style="width:42px;height:42px;object-fit:contain;border-radius:8px;border:1px solid var(--border-color);background:#FFFFFF;padding:3px;display:block;margin:0 auto;" onerror="this.src=\'/static/image/productos/default_suplemento.svg\'">' +
+        '</td>' +
+        '<td style="padding:10px 12px;font-size:13px;"><strong style="color:var(--text);font-weight:600;">' + nombre + '</strong>' + demoTag + presentacion + '</td>' +
+        '<td style="padding:10px 12px;font-size:13px;color:var(--text-secondary);font-weight:500;white-space:nowrap;">' + marca + '</td>' +
+        '<td style="padding:10px 12px;white-space:nowrap;"><span class="badge badge-primary" style="padding:3px 9px;border-radius:6px;font-weight:600;font-size:11.5px;">' + categoria + '</span></td>' +
+        '<td style="text-align:center;padding:10px 12px;font-size:13px;font-weight:700;color:var(--success-text, #10B981);white-space:nowrap;">C$' + precio + precioAnteriorHtml + '</td>' +
+        '<td style="text-align:center;padding:10px 8px;white-space:nowrap;">' + ofertaHtml + '</td>' +
+        '<td style="text-align:center;padding:10px 8px;font-size:13px;white-space:nowrap;"><span class="badge ' + badgeClass + '" style="font-size:11.5px;min-width:34px;justify-content:center;padding:2px 9px;border-radius:999px;">' + stock + '</span></td>' +
+        '<td style="text-align:center;padding:10px 8px;white-space:nowrap;">' +
+            '<button type="button" onclick="alternarVisibilidadTienda(' + id + ', this)" class="badge ' + (visible ? 'badge-success' : 'badge-danger') + '" style="cursor:pointer;font-size:11px;padding:4px 10px;border-radius:999px;" title="Clic para activar o desactivar en la tienda del cliente">' +
+                '<i class="fas ' + (visible ? 'fa-eye' : 'fa-eye-slash') + '"></i> ' + (visible ? 'Visible' : 'Oculto') +
+            '</button>' +
+        '</td>' +
+        '<td class="table-actions" style="text-align:center;padding:10px;">' +
+            '<a href="/producto_actualizar/' + id + '" class="btn-edit" title="Editar producto, imagen y oferta"><i class="fas fa-pen-to-square"></i></a>' +
+            '<button type="button" onclick="eliminarProducto(' + id + ')" class="btn-delete" title="Eliminar producto"><i class="fas fa-trash"></i></button>' +
+        '</td>' +
+    '</tr>';
+}
+window.renderizarFilaProductoAdmin = renderizarFilaProductoAdmin;
+
+async function cargarProductos(forzarRecarga) {
+    var tbody = document.querySelector('#cuerpoTablaProductos, #productosBody, #productosTable tbody, .data-table tbody');
     if (!tbody) {
-        mostrarLoading(false);
         return;
     }
-    
+
+    if (!forzarRecarga && tbody.id === 'cuerpoTablaProductos' && tbody.querySelector('.fila-producto-inicial')) {
+        return;
+    }
+
+    mostrarLoading(true);
     try {
         var response = await fetch('/api/productos/listar');
         var productos = await response.json();
-        
+
         if (!productos || productos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div style="padding:30px 20px;text-align:center;color:var(--text-muted);"><i class="fas fa-box" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="margin-top:8px;">No hay productos registrados</p><a href="/producto_registrar" class="btn btn-primary btn-sm" style="display:inline-block;margin-top:10px;padding:6px 16px;background:#F58220;color:white;border-radius:6px;text-decoration:none;"><i class="fas fa-plus-circle"></i> Registrar Producto</a></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center" style="padding:2.5rem 1rem;color:var(--text-secondary);"><i class="fas fa-box-open" style="font-size:2rem;color:var(--text-muted);display:block;margin-bottom:0.5rem;"></i>No hay productos registrados en la base de datos.</td></tr>';
         } else {
-            tbody.innerHTML = productos.map(function(p) {
-                var stock = p.Stock || p.stock || 0;
-                var badgeClass = stock > 10 ? 'badge-success' : (stock > 5 ? 'badge-warning' : 'badge-danger');
-                return '<tr><td><strong>' + (p.IdProducto || p.id || '') + '</strong></td><td>' + (p.NombreProducto || p.nombre || '') + '</td><td>' + (p.Marca || p.marca || '') + '</td><td>' + (p.Categoria || p.categoria || '') + '</td><td>$' + Number(p.Precio || p.precio || 0).toLocaleString() + '</td><td><span class="badge ' + badgeClass + '">' + stock + '</span></td><td>' + (p.FechaRegistro || p.fechaRegistro || '') + '</td><td class="table-actions"><a href="/producto_actualizar?id=' + (p.IdProducto || p.id) + '" class="btn-edit" title="Editar"><i class="fas fa-edit"></i></a><button onclick="eliminarProducto(' + (p.IdProducto || p.id) + ')" class="btn-delete" title="Eliminar"><i class="fas fa-trash"></i></button></td></tr>';
-            }).join('');
+            tbody.innerHTML = productos.map(renderizarFilaProductoAdmin).join('');
+        }
+
+        var badgeCount = document.getElementById('productoCountBadge');
+        if (badgeCount && Array.isArray(productos)) {
+            badgeCount.textContent = productos.length + (productos.length === 1 ? ' registro' : ' registros');
+            badgeCount.className = 'badge badge-info';
+        }
+        if (typeof window.__actualizarCacheTablaProductos === 'function' && Array.isArray(productos)) {
+            window.__actualizarCacheTablaProductos(tbody.innerHTML, productos.length);
         }
     } catch (error) {
         console.error('Error cargando productos:', error);
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:40px;color:#ef4444;"><i class="fas fa-exclamation-circle" style="font-size:24px;display:block;margin-bottom:8px;"></i> Error al cargar productos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center" style="padding:40px;color:#ef4444;"><i class="fas fa-exclamation-circle" style="font-size:24px;display:block;margin-bottom:8px;"></i> Error al cargar productos</td></tr>';
     } finally {
         mostrarLoading(false);
     }
@@ -4231,19 +4285,24 @@ window.eliminarEmpleado = function(id) {
 };
 
 window.eliminarProducto = function(id) {
-    confirmarEliminacion('Esta seguro de eliminar este producto? Esta accion no se puede deshacer.', async function() {
+    confirmarEliminacion('¿Está seguro de eliminar este producto? Esta acción no se puede deshacer.', async function() {
         mostrarLoading(true);
         try {
-            await fetch('/api/productos/eliminar', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ IdProducto: id }) 
+            var res = await fetch('/api/productos/eliminar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ IdProducto: id })
             });
+            var data = await res.json();
+            if (!res.ok || data.success === false) {
+                mostrarToast(data.error || 'No se pudo eliminar el producto', 'error');
+                return;
+            }
             mostrarToast('Producto eliminado correctamente', 'success');
-            await cargarProductos();
-        } catch (error) { 
+            await cargarProductos(true);
+        } catch (error) {
             mostrarToast('Error al eliminar el producto', 'error');
-        } finally { 
+        } finally {
             mostrarLoading(false);
         }
     });

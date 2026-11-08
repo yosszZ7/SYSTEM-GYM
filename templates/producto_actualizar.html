@@ -7,7 +7,7 @@
 <div class="page-container">
     <div class="page-header">
         <div class="page-header-left">
-            <h1><i class="fas fa-box-edit"></i> Actualizar Producto</h1>
+            <h1><i class="fas fa-pen-to-square"></i> Actualizar Producto</h1>
             <p>Modifique precios, existencias, descuentos, imagen o visibilidad en la Tienda del Cliente</p>
         </div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -23,9 +23,9 @@
     <div class="card">
         <div class="card-header">
             <h2><i class="fas fa-box"></i> Datos del Producto</h2>
-            <span class="badge badge-warning"><i class="fas fa-edit"></i> ID: {{ producto.IdProducto }}</span>
+            <span class="badge badge-primary"><i class="fas fa-hashtag"></i> ID {{ producto.IdProducto }}</span>
         </div>
-        
+
         <div class="card-body">
             <form method="POST" action="/producto_actualizar/{{ producto.IdProducto }}" enctype="multipart/form-data">
                 <div class="form-grid">
@@ -33,20 +33,20 @@
                         <label for="NombreProducto">
                             <i class="fas fa-tag"></i> Nombre del Producto <span class="required">*</span>
                         </label>
-                        <input type="text" id="NombreProducto" name="NombreProducto" 
+                        <input type="text" id="NombreProducto" name="NombreProducto"
                                value="{{ producto.NombreProducto }}" maxlength="100" required>
                         <small class="help-text">Máximo 100 caracteres</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="Marca">
                             <i class="fas fa-trademark"></i> Marca <span class="required">*</span>
                         </label>
-                        <input type="text" id="Marca" name="Marca" 
+                        <input type="text" id="Marca" name="Marca"
                                value="{{ producto.Marca }}" maxlength="100" required>
                         <small class="help-text">Marca del producto</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="Categoria">
                             <i class="fas fa-tags"></i> Categoría <span class="required">*</span>
@@ -76,12 +76,12 @@
                                placeholder="Ej: Bote 5 lbs • 71 servicios • Sabor Chocolate" maxlength="180">
                         <small class="help-text">Peso, servicios, sabor o presentación</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="Precio">
                             <i class="fas fa-coins"></i> Precio Actual (C$) <span class="required">*</span>
                         </label>
-                        <input type="number" id="Precio" name="Precio" 
+                        <input type="number" id="Precio" name="Precio"
                                value="{{ producto.Precio }}" step="0.01" min="0" required>
                         <small class="help-text">Precio vigente en córdobas nicaragüenses (C$)</small>
                     </div>
@@ -90,7 +90,7 @@
                         <label for="Stock">
                             <i class="fas fa-boxes"></i> Stock Actual <span class="required">*</span>
                         </label>
-                        <input type="number" id="Stock" name="Stock" 
+                        <input type="number" id="Stock" name="Stock"
                                value="{{ producto.Stock }}" step="1" min="0" required>
                         <small class="help-text">Existencias disponibles en inventario</small>
                     </div>
@@ -106,7 +106,7 @@
 
                     <div class="form-group">
                         <label for="PrecioAnterior">
-                            <i class="fas fa-tag"></i> Precio Anterior (C$) <small style="font-weight: 400;">(Opcional)</small>
+                            <i class="fas fa-tag"></i> Precio Anterior (C$) <small style="font-weight: 400; color: var(--text-muted);">(Opcional)</small>
                         </label>
                         <input type="number" id="PrecioAnterior" name="PrecioAnterior"
                                value="{{ producto.PrecioAnterior if producto.Descuento and producto.Descuento > 0 else '' }}"
@@ -115,7 +115,7 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 12px;">
+                <div class="form-group" style="margin-top: 14px;">
                     <label for="Descripcion">
                         <i class="fas fa-align-left"></i> Descripción del Producto
                     </label>
@@ -123,49 +123,90 @@
                               placeholder="Descripción detallada del producto...">{{ producto.Descripcion or '' }}</textarea>
                 </div>
 
-                <!-- SECCIÓN DE IMAGEN DEL PRODUCTO -->
-                <div style="margin-top: 18px; padding: 16px; border: 1px solid var(--border-color, #E8EBEF); border-radius: 12px; background: #F8FAFC;">
-                    <h3 style="margin: 0 0 12px 0; font-size: 14.5px; font-weight: 700; color: var(--text, #252B36);">
-                        <i class="fas fa-image" style="color: #F58220;"></i> Imagen del Producto en la Tienda
-                    </h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: center;">
+                <!-- SECCIÓN DE IMAGEN DEL PRODUCTO ACOPLADA AL SISTEMA DE DISEÑO -->
+                <div class="wg-media-panel">
+                    <div class="wg-media-header">
+                        <h3 class="wg-media-title">
+                            <span class="section-icon-box"><i class="fas fa-image"></i></span>
+                            Imagen del Producto en la Tienda
+                        </h3>
+                        <span class="wg-media-badge">
+                            <i class="fas fa-circle-check" style="color: var(--success);"></i> Vista previa en tiempo real
+                        </span>
+                    </div>
+
+                    <div class="wg-media-grid">
                         <div class="form-group" style="margin: 0;">
                             <label for="ImagenArchivo"><i class="fas fa-upload"></i> Subir nueva fotografía</label>
-                            <input type="file" id="ImagenArchivo" name="ImagenArchivo" accept="image/*" onchange="previsualizarArchivoImagen(this)">
-                            <small class="help-text">Suba una imagen si desea reemplazar la actual</small>
+                            <div class="wg-file-picker">
+                                <input type="file" id="ImagenArchivo" name="ImagenArchivo" class="sr-only" accept="image/*" onchange="previsualizarArchivoImagen(this)">
+                                <button type="button" class="wg-file-trigger" onclick="document.getElementById('ImagenArchivo').click()">
+                                    <i class="fas fa-folder-open"></i> Elegir archivo
+                                </button>
+                                <span id="nombreArchivoImagen" class="wg-file-name" onclick="document.getElementById('ImagenArchivo').click()" style="cursor: pointer;">Ningún archivo seleccionado</span>
+                                <button type="button" id="btnLimpiarArchivoImagen" class="wg-file-clear" onclick="limpiarArchivoImagen()" title="Quitar archivo seleccionado">
+                                    <i class="fas fa-xmark"></i>
+                                </button>
+                            </div>
+                            <small class="help-text">Suba una imagen (JPG, PNG, WEBP, SVG) si desea reemplazar la actual</small>
                         </div>
 
                         <div class="form-group" style="margin: 0;">
-                            <label for="ImagenPredefinida"><i class="fas fa-images"></i> O elegir ilustración deportiva del catálogo</label>
+                            <label for="ImagenPredefinida"><i class="fas fa-images"></i> O elegir presentación oficial del catálogo</label>
                             <select id="ImagenPredefinida" name="ImagenPredefinida" onchange="previsualizarSelectorImagen(this.value)">
                                 <option value="{{ producto.ImagenUrl or '' }}">Conservar imagen actual</option>
                                 {% for img in imagenes_suplementos %}
                                 <option value="{{ img.url }}" {% if producto.ImagenUrl == img.url %}selected{% endif %}>{{ img.nombre }}</option>
                                 {% endfor %}
                             </select>
-                            <small class="help-text">Imágenes de suplementos y accesorios deportivos</small>
+                            <small class="help-text">Empaques oficiales de suplementos, bebidas y accesorios</small>
                         </div>
 
-                        <div style="width: 96px; height: 96px; border-radius: 12px; border: 1px solid #E8EBEF; background: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 8px;">
-                            <img id="previewImagenProducto" src="{{ producto.ImagenUrl or '/static/image/productos/real_whey_gold.webp' }}" alt="Vista previa" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        <div class="wg-media-preview-box" title="Vista previa del empaque en la tienda">
+                            <img id="previewImagenProducto"
+                                 data-default-src="{{ producto.ImagenUrl or '/static/image/productos/real_whey_gold.webp' }}"
+                                 src="{{ producto.ImagenUrl or '/static/image/productos/real_whey_gold.webp' }}"
+                                 alt="Vista previa">
                         </div>
                     </div>
                 </div>
 
                 <!-- OPCIONES DE VISIBILIDAD Y DESTACADO EN TIENDA -->
-                <div style="margin-top: 16px; display: flex; gap: 24px; flex-wrap: wrap; padding: 12px 16px; border-radius: 10px; background: #FFF7ED; border: 1px solid #FED7AA;">
-                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin: 0;">
-                        <input type="checkbox" name="VisibleTienda" value="1" {% if producto.VisibleTienda is not defined or producto.VisibleTienda %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #F58220;">
-                        <span><i class="fas fa-eye" style="color: #F58220;"></i> Mostrar producto en la Tienda del Cliente</span>
+                <div class="wg-store-options-grid">
+                    <label class="wg-option-card">
+                        <span class="wg-option-left">
+                            <span class="wg-option-icon">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                            <span class="wg-option-text">
+                                <span class="wg-option-title">Mostrar producto en la Tienda del Cliente</span>
+                                <span class="wg-option-desc">Habilita la visualización y compra pública en el catálogo</span>
+                            </span>
+                        </span>
+                        <span class="wg-switch">
+                            <input type="checkbox" name="VisibleTienda" value="1" {% if producto.VisibleTienda is not defined or producto.VisibleTienda %}checked{% endif %}>
+                            <span class="wg-switch-slider"></span>
+                        </span>
                     </label>
 
-                    <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; margin: 0;">
-                        <input type="checkbox" name="Destacado" value="1" {% if producto.Destacado %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #F58220;">
-                        <span><i class="fas fa-bolt" style="color: #F59E0B;"></i> Destacar en la sección principal de Ofertas / Destacados</span>
+                    <label class="wg-option-card">
+                        <span class="wg-option-left">
+                            <span class="wg-option-icon is-amber">
+                                <i class="fas fa-bolt"></i>
+                            </span>
+                            <span class="wg-option-text">
+                                <span class="wg-option-title">Destacar en Ofertas / Destacados</span>
+                                <span class="wg-option-desc">Muestra el producto en la sección principal de promociones</span>
+                            </span>
+                        </span>
+                        <span class="wg-switch">
+                            <input type="checkbox" name="Destacado" value="1" {% if producto.Destacado %}checked{% endif %}>
+                            <span class="wg-switch-slider"></span>
+                        </span>
                     </label>
                 </div>
 
-                <div class="card-footer" style="margin-top: 20px;">
+                <div class="card-footer" style="margin-top: 22px;">
                     <a href="/producto_listar" class="btn btn-secondary">
                         <i class="fas fa-times"></i> Cancelar
                     </a>
@@ -181,14 +222,48 @@
 <script>
 function previsualizarArchivoImagen(input) {
     const preview = document.getElementById('previewImagenProducto');
-    if (input.files && input.files[0] && preview) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
+    const fileNameEl = document.getElementById('nombreArchivoImagen');
+    const clearBtn = document.getElementById('btnLimpiarArchivoImagen');
+
+    if (input.files && input.files[0]) {
+        if (fileNameEl) {
+            fileNameEl.textContent = input.files[0].name;
+            fileNameEl.classList.add('has-file');
+        }
+        if (clearBtn) {
+            clearBtn.style.display = 'inline-flex';
+        }
+        if (preview) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    } else {
+        limpiarArchivoImagen();
     }
 }
+
+function limpiarArchivoImagen() {
+    const fileInput = document.getElementById('ImagenArchivo');
+    const fileNameEl = document.getElementById('nombreArchivoImagen');
+    const clearBtn = document.getElementById('btnLimpiarArchivoImagen');
+    const selector = document.getElementById('ImagenPredefinida');
+    const preview = document.getElementById('previewImagenProducto');
+
+    if (fileInput) fileInput.value = '';
+    if (fileNameEl) {
+        fileNameEl.textContent = 'Ningún archivo seleccionado';
+        fileNameEl.classList.remove('has-file');
+    }
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (preview) {
+        const fallback = (selector && selector.value) ? selector.value : preview.getAttribute('data-default-src');
+        if (fallback) preview.src = fallback;
+    }
+}
+
 function previsualizarSelectorImagen(url) {
     const preview = document.getElementById('previewImagenProducto');
     const fileInput = document.getElementById('ImagenArchivo');
