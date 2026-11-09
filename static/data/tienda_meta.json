@@ -460,5 +460,137 @@
     "Destacado": false,
     "VisibleTienda": true,
     "EsDemo": false
+  },
+  "52": {
+    "IdProducto": 52,
+    "Presentacion": "Lata 355 ml • 180mg Cafeína Natural • Zero Azúcar",
+    "Descripcion": "Bebida energética refrescante sin azúcar para activar tu metabolismo y concentración antes de entrenar.",
+    "ImagenUrl": "/static/image/productos/real_bebida_energetica.webp",
+    "Descuento": 0,
+    "PrecioAnterior": 120.0,
+    "Destacado": false,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "54": {
+    "IdProducto": 54,
+    "Presentacion": "Bloque 2 oz (56g) Carbonato de Magnesio para Levantamiento",
+    "Descripcion": "Magnesio deportivo de alta adherencia que absorbe el sudor y mejora el agarre en peso muerto, dominadas y halterofilia.",
+    "ImagenUrl": "/static/image/productos/real_accesorio_gym.webp",
+    "Descuento": 0,
+    "PrecioAnterior": 220.0,
+    "Destacado": false,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "51": {
+    "IdProducto": 51,
+    "Presentacion": "Bote 5.73 lbs (2.6 kg) • 1,000+ kcal • 40g Proteína",
+    "Descripcion": "Ganador de peso hipercalórico con carbohidratos complejos, creatina y triglicéridos de cadena media para etapas de volumen.",
+    "ImagenUrl": "/static/image/productos/real_mass_gainer.webp",
+    "Descuento": 12,
+    "PrecioAnterior": 2670.0,
+    "Destacado": false,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "45": {
+    "IdProducto": 45,
+    "Presentacion": "Bote 2.11 lbs • 29 servicios • 25g Proteína • 0g Azúcar",
+    "Descripcion": "Proteína de suero hidrolizada y aislada con enzimas digestivas, cero grasa y cero carbohidratos.",
+    "ImagenUrl": "/static/image/productos/real_iso_whey.webp",
+    "Descuento": 10,
+    "PrecioAnterior": 3278.0,
+    "Destacado": true,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "48": {
+    "IdProducto": 48,
+    "Presentacion": "Envase 450g • 90 servicios • 5g Creatina HPLC Certificada",
+    "Descripcion": "Creatina monohidratada de grado clínico probada por HPLC para aumentar el volumen celular y la fuerza muscular.",
+    "ImagenUrl": "/static/image/productos/real_creatina_mono.png",
+    "Descuento": 0,
+    "PrecioAnterior": 1390.0,
+    "Destacado": false,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "50": {
+    "IdProducto": 50,
+    "Presentacion": "Envase 609g • 30 servicios • Fórmula Hiperémica",
+    "Descripcion": "Pre-entreno de alta intensidad diseñado para entrenamientos de fuerza pesada y congestión muscular prolongada.",
+    "ImagenUrl": "/static/image/productos/real_nitraflex_pre.webp",
+    "Descuento": 0,
+    "PrecioAnterior": 1580.0,
+    "Destacado": false,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "49": {
+    "IdProducto": 49,
+    "Presentacion": "Envase 315g • 30 servicios • Energía y Bombeo Extremo",
+    "Descripcion": "Fórmula pre-entrenamiento con L-Citrulina, Beta-Alanina y cafeína para máxima energía, enfoque mental y vascularidad.",
+    "ImagenUrl": "/static/image/productos/real_power_preworkout.webp",
+    "Descuento": 15,
+    "PrecioAnterior": 1705.0,
+    "Destacado": true,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "46": {
+    "IdProducto": 46,
+    "Presentacion": "Bote 5 lbs (2.27 kg) • 71 servicios • 24g Proteína + 5.5g BCAA",
+    "Descripcion": "Mezcla premium de aislado y concentrado de proteína de suero de leche para desarrollo y mantenimiento de masa muscular magra.",
+    "ImagenUrl": "/static/image/productos/real_whey_gold.webp",
+    "Descuento": 10,
+    "PrecioAnterior": 3533.0,
+    "Destacado": true,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "43": {
+    "IdProducto": 43,
+    "Presentacion": "Bote 3.96 lbs (1.8 kg) • 60 servicios • 27g Proteína",
+    "Descripcion": "Proteína aislada hidrolizada libre de lactosa y azúcar con 27g de proteína pura por servicio para máxima definición y fuerza muscular.",
+    "ImagenUrl": "/static/image/productos/real_beef_xp.avif",
+    "Descuento": 15,
+    "PrecioAnterior": 3118.0,
+    "Destacado": true,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "44": {
+    "IdProducto": 44,
+    "Presentacion": "Bote 3.96 lbs (1.8 kg) • 60 servicios • Sabor Citrus Twist",
+    "Descripcion": "Aislado de proteína de absorción ultrarrápida con aminoácidos esenciales para recuperación muscular post-entrenamiento.",
+    "ImagenUrl": "/static/image/productos/real_beef_citrus.avif",
+    "Descuento": 12,
+    "PrecioAnterior": 3011.0,
+    "Destacado": true,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "53": {
+    "IdProducto": 53,
+    "Presentacion": "Lata 330 ml • 10g Proteína + Electrolitos • Sin Azúcar",
+    "Descripcion": "Agua gasificada proteica enriquecida con vitamina C y electrolitos para hidratación y recuperación inmediata.",
+    "ImagenUrl": "/static/image/productos/real_protein_water.webp",
+    "Descuento": 10,
+    "PrecioAnterior": 161.0,
+    "Destacado": false,
+    "VisibleTienda": true,
+    "EsDemo": true
+  },
+  "47": {
+    "IdProducto": 47,
+    "Presentacion": "Envase 250g • 50 servicios (5g por toma) • Micronizada",
+    "Descripcion": "Creatina monohidratada pura micronizada que incrementa la fuerza explosiva, la potencia en series pesadas y la regeneración de ATP.",
+    "ImagenUrl": "/static/image/productos/real_power_creatina.webp",
+    "Descuento": 20,
+    "PrecioAnterior": 1438.0,
+    "Destacado": true,
+    "VisibleTienda": true,
+    "EsDemo": true
   }
 }

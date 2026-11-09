@@ -1,7 +1,8 @@
 /**
- * WORLDGYM STORE — Arquitectura Multivista (#inicio, #membresias, #productos, #ofertas)
- * Conserva 100% la identidad visual, encabezado y lógica de negocio de WORLDGYM.
- * En cada momento solo UNA vista existe en el DOM (#storeViewRoot), sin recargar página.
+ * WORLDGYM STORE — Arquitectura Multivista Integrada a SYSTEM-GYM (v5.0)
+ * Vistas sin recarga: #inicio, #membresias, #productos, #categorias, #marcas, #ofertas.
+ * Incluye barra de filtros interactiva con slider dual en C$, píldoras deslizantes,
+ * switches modernos, vuelo al carrito, verificación de stock en tiempo real y checkout.
  */
 
 (function () {
@@ -9,9 +10,9 @@
 
     const CART_STORAGE_KEY = 'worldgym_store_cart_v1';
     const PAGE_SIZE = 24;
-    const DEBOUNCE_MS = 250;
+    const DEBOUNCE_MS = 220;
 
-    const VISTAS_VALIDAS = new Set(['inicio', 'membresias', 'productos', 'ofertas']);
+    const VISTAS_VALIDAS = new Set(['inicio', 'membresias', 'productos', 'categorias', 'marcas', 'ofertas']);
 
     const ETIQUETAS_CATEGORIA = {
         'Todos': 'Productos',
@@ -22,6 +23,49 @@
         'Bebidas energéticas': 'Bebidas y energía',
         'Accesorios': 'Accesorios',
         'Suplementos': 'Aminoácidos y vitaminas'
+    };
+
+    const META_CATEGORIAS_UI = {
+        'Todos': {
+            icono: 'fa-border-all',
+            imagen: '/static/image/productos/cat_proteinas.png',
+            descripcion: 'Suplementación deportiva, hidratación y accesorios con existencias verificadas en vivo.'
+        },
+        'Proteínas': {
+            icono: 'fa-jar',
+            imagen: '/static/image/productos/cat_proteinas.png',
+            descripcion: 'Aislados de suero, mezclas proteicas y porciones individuales para síntesis y recuperación muscular.'
+        },
+        'Creatina': {
+            icono: 'fa-bolt',
+            imagen: '/static/image/productos/cat_creatinas.png',
+            descripcion: 'Creatina monohidratada micronizada de alta pureza para fuerza explosiva y rendimiento.'
+        },
+        'Preentrenos': {
+            icono: 'fa-fire-flame-curved',
+            imagen: '/static/image/productos/cat_preentreno.png',
+            descripcion: 'Energía sostenida, concentración mental y vasodilatación para entrenamientos de máxima intensidad.'
+        },
+        'Ganadores de masa': {
+            icono: 'fa-dumbbell',
+            imagen: '/static/image/productos/cat_massgainer.png',
+            descripcion: 'Fórmulas hipercalóricas con carbohidratos complejos y proteína para etapas de volumen.'
+        },
+        'Bebidas energéticas': {
+            icono: 'fa-bottle-water',
+            imagen: '/static/image/productos/cat_aminoacidos.png',
+            descripcion: 'Bebidas isotónicas, electrolitos, agua purificada y energizantes fríos listos para entrenar.'
+        },
+        'Accesorios': {
+            icono: 'fa-mitten',
+            imagen: '/static/image/productos/cat_accesorios.webp',
+            descripcion: 'Guantes, shakers, cinturones y equipamiento de apoyo para tus sesiones en WorldGym.'
+        },
+        'Suplementos': {
+            icono: 'fa-capsules',
+            imagen: '/static/image/productos/cat_vitaminas.png',
+            descripcion: 'Aminoácidos BCAA, glutamina, multivitamínicos, omega 3 y snacks proteicos.'
+        }
     };
 
     const ORDEN_CATEGORIAS_SIDEBAR = [
@@ -36,10 +80,10 @@
     ];
 
     const OPCIONES_DISPONIBILIDAD = [
-        { valor: 'todos', etiqueta: 'Todos' },
-        { valor: 'disponibles', etiqueta: 'Disponible' },
-        { valor: 'ultimas', etiqueta: 'Últimas unidades' },
-        { valor: 'agotados', etiqueta: 'Agotado' }
+        { valor: 'todos', etiqueta: 'Todos', dotClass: 'todos' },
+        { valor: 'disponibles', etiqueta: 'Disponible', dotClass: 'disponible' },
+        { valor: 'ultimas', etiqueta: 'Últimas unidades', dotClass: 'bajo' },
+        { valor: 'agotados', etiqueta: 'Agotado', dotClass: 'agotado' }
     ];
 
     let catalogoProductos = Array.isArray(window.CATALOGO_INICIAL) ? window.CATALOGO_INICIAL : [];
@@ -49,7 +93,9 @@
     let vistaActual = '';
     let carrito = [];
     let busquedaMarcaSidebar = '';
+    let busquedaDirectorioMarcas = '';
     let paginaOfertas = 1;
+    let lotesAcumuladosCatalogo = 1;
 
     let timerBusqueda = null;
     let timerPrecio = null;
@@ -112,6 +158,18 @@
         return obtenerProductosActivosBase().some(p => Number(p.UnidadesVendidas || 0) > 0);
     }
 
+    function obtenerLimitesPrecioReales() {
+        const precios = obtenerProductosActivosBase()
+            .map(p => Number(p.Precio || 0))
+            .filter(n => n > 0);
+        if (precios.length === 0) {
+            return { min: 0, max: 2000 };
+        }
+        const minReal = Math.floor(Math.min(...precios));
+        const maxReal = Math.ceil(Math.max(...precios) / 10) * 10;
+        return { min: Math.max(0, minReal), max: Math.max(100, maxReal) };
+    }
+
     function obtenerTextoPresentacion(p) {
         const pres = String(p.Presentacion || '').trim();
         const tam = String(p.ContenidoTamano || '').trim();
@@ -161,6 +219,8 @@
             cerrarModalComprobante();
             cerrarCarrito();
             cerrarSidebarFiltrosMovil();
+            if (typeof window.cerrarBuscadorHeader === 'function') window.cerrarBuscadorHeader();
+            if (typeof window.cerrarMenuMovilTienda === 'function') window.cerrarMenuMovilTienda();
             return;
         }
 
@@ -188,7 +248,8 @@
     }
 
     /* ======================================================================
-        ROUTER DE VISTAS Y ESTADO EN URL (#inicio, #membresias, #productos, #ofertas)
+        ROUTER DE VISTAS Y ESTADO EN URL
+        (#inicio, #membresias, #productos, #categorias, #marcas, #ofertas)
        ====================================================================== */
     function resolverCategoriaCanonica(valorCat) {
         if (!valorCat) return 'Todos';
@@ -220,7 +281,6 @@
             params = searchParams;
         }
 
-        // Compatibilidad con anclas antiguas si existieran en favoritos del navegador
         if (nombreVista === 'membresiassection') nombreVista = 'membresias';
         if (nombreVista === 'catalogosection') nombreVista = 'productos';
         if (!VISTAS_VALIDAS.has(nombreVista)) nombreVista = 'inicio';
@@ -257,6 +317,8 @@
     function construirHashDeEstado() {
         if (vistaActual === 'inicio') return '#inicio';
         if (vistaActual === 'membresias') return '#membresias';
+        if (vistaActual === 'categorias') return '#categorias';
+        if (vistaActual === 'marcas') return '#marcas';
         if (vistaActual === 'ofertas') {
             return paginaOfertas > 1 ? `#ofertas?pag=${paginaOfertas}` : '#ofertas';
         }
@@ -298,8 +360,21 @@
     }
 
     function actualizarNavegacionActivaHeader() {
+        const filtrandoMarca = vistaActual === 'productos' && Boolean(estadoFiltros.marca);
+        const filtrandoCat = vistaActual === 'productos' && !filtrandoMarca && estadoFiltros.categoria !== 'Todos';
+
         document.querySelectorAll('[data-nav-view]').forEach(link => {
-            const esActiva = link.getAttribute('data-nav-view') === vistaActual;
+            const vistaLink = link.getAttribute('data-nav-view');
+            let esActiva = vistaLink === vistaActual;
+
+            if (vistaLink === 'productos' && (filtrandoMarca || filtrandoCat)) {
+                esActiva = false;
+            } else if (vistaLink === 'categorias' && filtrandoCat) {
+                esActiva = true;
+            } else if (vistaLink === 'marcas' && filtrandoMarca) {
+                esActiva = true;
+            }
+
             link.classList.toggle('active', esActiva);
             if (esActiva) {
                 link.setAttribute('aria-current', 'page');
@@ -308,31 +383,210 @@
             }
         });
 
-        const btnCatNav = document.querySelector('[data-nav-dropdown="categoria"]');
-        if (btnCatNav) {
-            btnCatNav.classList.toggle('active', vistaActual === 'productos' && estadoFiltros.categoria !== 'Todos');
-        }
-        const btnMarcaNav = document.querySelector('[data-nav-dropdown="marca"]');
-        if (btnMarcaNav) {
-            btnMarcaNav.classList.toggle('active', vistaActual === 'productos' && Boolean(estadoFiltros.marca));
+        if (window.WGMotion && typeof window.WGMotion.syncNavPill === 'function') {
+            window.WGMotion.syncNavPill(false);
         }
     }
 
     function sincronizarBuscadorHeader() {
         const inputSearch = document.getElementById('storeSearchInput');
         const btnClear = document.getElementById('storeSearchClear');
+        const searchStrip = document.getElementById('searchStrip');
         const textoActual = vistaActual === 'productos' ? estadoFiltros.busqueda : '';
 
         if (inputSearch && document.activeElement !== inputSearch && inputSearch.value !== textoActual) {
             inputSearch.value = textoActual;
         }
+        const valorVisible = inputSearch ? inputSearch.value : textoActual;
         if (btnClear) {
-            const valorVisible = inputSearch ? inputSearch.value : textoActual;
             btnClear.style.display = valorVisible ? 'block' : 'none';
+        }
+        if (searchStrip && valorVisible.trim() !== '') {
+            searchStrip.classList.add('is-open');
+            searchStrip.setAttribute('aria-hidden', 'false');
         }
     }
 
+    /* ======================================================================
+        MOTOR DE REVELADO AL SCROLL (60 FPS — SOLO TRANSFORM Y OPACITY)
+       ====================================================================== */
+    const mediaMovimientoReducido = window.matchMedia
+        ? window.matchMedia('(prefers-reduced-motion: reduce)')
+        : null;
+    const timersAsentadoFade = new WeakMap();
+    let observadorFade = null;
+
+    function prefiereMovimientoReducido() {
+        return Boolean(mediaMovimientoReducido && mediaMovimientoReducido.matches);
+    }
+
+    function marcarElementoVisible(el, delayMs) {
+        if (!el || el.classList.contains('is-visible')) return;
+        const espera = Math.max(0, Number(delayMs) || 0);
+        el.style.setProperty('--reveal-delay', espera + 'ms');
+        el.classList.add('is-visible');
+
+        const previo = timersAsentadoFade.get(el);
+        if (previo) clearTimeout(previo);
+        const timerId = setTimeout(function () {
+            el.classList.add('is-settled');
+            el.style.removeProperty('--reveal-delay');
+            timersAsentadoFade.delete(el);
+        }, espera + 680);
+        timersAsentadoFade.set(el, timerId);
+    }
+
+    function ordenarElementosPorLectura(lista) {
+        return lista.slice().sort(function (a, b) {
+            const diffTop = a.rect.top - b.rect.top;
+            if (Math.abs(diffTop) > 24) return diffTop;
+            return a.rect.left - b.rect.left;
+        });
+    }
+
+    function aplicarCascadaEnLote(elementosConRect) {
+        const ordenados = ordenarElementosPorLectura(elementosConRect);
+        let idxCard = 0;
+        let idxBloque = 0;
+
+        ordenados.forEach(function (item) {
+            const el = item.el;
+            const tipo = el.getAttribute('data-fade') || 'card';
+            let delay = 0;
+
+            if (tipo === 'card') {
+                delay = Math.min(idxCard * 55, 280);
+                idxCard++;
+            } else if (tipo === 'heading' || tipo === 'sidebar') {
+                delay = Math.min(idxBloque * 40, 120);
+                idxBloque++;
+            }
+            marcarElementoVisible(el, delay);
+        });
+    }
+
+    function asegurarObservadorDesvanecimiento() {
+        if (observadorFade || typeof IntersectionObserver === 'undefined') return observadorFade;
+
+        observadorFade = new IntersectionObserver(function (entries) {
+            if (prefiereMovimientoReducido()) return;
+            const entrantes = [];
+
+            entries.forEach(function (entry) {
+                const el = entry.target;
+                if (entry.isIntersecting && !el.classList.contains('is-visible')) {
+                    entrantes.push({ el: el, rect: entry.boundingClientRect });
+                }
+            });
+
+            if (entrantes.length > 0) {
+                aplicarCascadaEnLote(entrantes);
+            }
+        }, {
+            threshold: [0, 0.06],
+            rootMargin: '0px 0px -24px 0px'
+        });
+
+        return observadorFade;
+    }
+
+    function limpiarObservadosEnContenedor(contenedor) {
+        if (!contenedor) return;
+        contenedor.querySelectorAll('[data-fade-bound]').forEach(function (el) {
+            const previo = timersAsentadoFade.get(el);
+            if (previo) {
+                clearTimeout(previo);
+                timersAsentadoFade.delete(el);
+            }
+            if (observadorFade) observadorFade.unobserve(el);
+        });
+    }
+
+    function sincronizarElementosAnimados(contenedor) {
+        const ambito = contenedor || document;
+        if (window.WGMotion && typeof window.WGMotion.refreshDynamicElements === 'function') {
+            window.WGMotion.refreshDynamicElements(ambito);
+        }
+
+        if (prefiereMovimientoReducido()) return;
+        const obs = asegurarObservadorDesvanecimiento();
+        const nuevos = Array.from(ambito.querySelectorAll('[data-fade]:not([data-fade-bound])'));
+        if (nuevos.length === 0) return;
+
+        nuevos.forEach(function (el) {
+            el.setAttribute('data-fade-bound', '1');
+            if (obs) obs.observe(el);
+        });
+
+        requestAnimationFrame(function () {
+            if (prefiereMovimientoReducido()) return;
+            const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+            const visiblesIniciales = [];
+
+            nuevos.forEach(function (el) {
+                if (!el.isConnected || el.classList.contains('is-visible')) return;
+                const estilo = window.getComputedStyle(el);
+                if (estilo.display === 'none' || estilo.visibility === 'hidden') return;
+                const rect = el.getBoundingClientRect();
+                if (rect.height === 0 && rect.width === 0) return;
+                if (rect.top < vh - 16 && rect.bottom > 0) {
+                    visiblesIniciales.push({ el: el, rect: rect });
+                }
+            });
+
+            if (visiblesIniciales.length > 0) {
+                aplicarCascadaEnLote(visiblesIniciales);
+            }
+        });
+    }
+
+    function inicializarMotorDesvanecimiento() {
+        const aplicarPreferencia = function () {
+            if (prefiereMovimientoReducido()) {
+                document.body.classList.remove('tienda-fx-ready');
+            } else {
+                document.body.classList.add('tienda-fx-ready');
+                sincronizarElementosAnimados(document);
+            }
+        };
+
+        aplicarPreferencia();
+        if (mediaMovimientoReducido && typeof mediaMovimientoReducido.addEventListener === 'function') {
+            mediaMovimientoReducido.addEventListener('change', aplicarPreferencia);
+        }
+    }
+
+    /* ======================================================================
+        MONTAJE MULTIVISTA CON TRANSICIÓN FLUIDA ENTRE APARTADOS
+       ====================================================================== */
     function montarVista(nuevaVista, opciones) {
+        const opts = opciones || {};
+        const vistaObjetivo = VISTAS_VALIDAS.has(nuevaVista) ? nuevaVista : 'inicio';
+        const inputSearch = document.getElementById('storeSearchInput');
+        const usarTransicionVista = (
+            vistaActual !== '' &&
+            vistaActual !== vistaObjetivo &&
+            !opts.desdePopState &&
+            !prefiereMovimientoReducido() &&
+            document.activeElement !== inputSearch &&
+            !obtenerContenedorModalActivo()
+        );
+
+        if (usarTransicionVista && typeof document.startViewTransition === 'function') {
+            try {
+                document.startViewTransition(function () {
+                    ejecutarMontajeVista(vistaObjetivo, opts, false);
+                });
+                return;
+            } catch (e) {
+                // Respaldo inmediato si la API de transición se cancela
+            }
+        }
+
+        ejecutarMontajeVista(vistaObjetivo, opts, usarTransicionVista);
+    }
+
+    function ejecutarMontajeVista(nuevaVista, opciones, animarPanelFallback) {
         const opts = opciones || {};
         const vistaObjetivo = VISTAS_VALIDAS.has(nuevaVista) ? nuevaVista : 'inicio';
         const root = document.getElementById('storeViewRoot');
@@ -340,6 +594,7 @@
 
         const cambioDeVista = vistaActual !== vistaObjetivo || root.children.length === 0;
         vistaActual = vistaObjetivo;
+        document.body.setAttribute('data-current-view', vistaObjetivo);
 
         if (cambioDeVista) {
             cerrarSidebarFiltrosMovil();
@@ -348,17 +603,25 @@
                 inicio: 'tplVistaInicio',
                 membresias: 'tplVistaMembresias',
                 productos: 'tplVistaProductos',
+                categorias: 'tplVistaCategorias',
+                marcas: 'tplVistaMarcas',
                 ofertas: 'tplVistaOfertas'
             };
             const tpl = document.getElementById(mapaTemplates[vistaObjetivo]);
+            limpiarObservadosEnContenedor(root);
             root.innerHTML = '';
             if (tpl && tpl.content) {
                 root.appendChild(tpl.content.cloneNode(true));
             }
             root.setAttribute('data-active-view', vistaObjetivo);
+            if (animarPanelFallback) {
+                root.querySelector('.store-view-panel')?.classList.add('is-entering');
+            }
 
             if (vistaObjetivo === 'productos') {
                 vincularEventosVistaProductos();
+            } else if (vistaObjetivo === 'marcas') {
+                vincularEventosVistaMarcas();
             }
         }
 
@@ -370,6 +633,10 @@
             renderizarVistaInicio();
         } else if (vistaObjetivo === 'productos') {
             renderizarVistaProductos();
+        } else if (vistaObjetivo === 'categorias') {
+            renderizarVistaCategorias();
+        } else if (vistaObjetivo === 'marcas') {
+            renderizarVistaMarcas();
         } else if (vistaObjetivo === 'ofertas') {
             renderizarVistaOfertas();
         }
@@ -379,7 +646,15 @@
         }
 
         if (cambioDeVista || opts.subirAlInicio) {
-            window.scrollTo(0, 0);
+            if (window.WGMotion && typeof window.WGMotion.scrollToTop === 'function') {
+                window.WGMotion.scrollToTop(true);
+            } else {
+                window.scrollTo(0, 0);
+            }
+        }
+        sincronizarElementosAnimados(root);
+        if (window.WGMotion && typeof window.WGMotion.onViewMounted === 'function') {
+            window.WGMotion.onViewMounted(vistaObjetivo);
         }
     }
 
@@ -389,9 +664,8 @@
     window.navegarVistaTienda = function (vista, ev) {
         if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
         cerrarDropdownsHeader();
-        if (vista === 'ofertas') {
-            paginaOfertas = 1;
-        }
+        if (vista === 'ofertas') paginaOfertas = 1;
+        if (vista === 'marcas') busquedaDirectorioMarcas = '';
         montarVista(vista, { subirAlInicio: true });
         return false;
     };
@@ -400,6 +674,7 @@
         if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
         cerrarDropdownsHeader();
         estadoFiltros = crearEstadoFiltrosInicial();
+        lotesAcumuladosCatalogo = 1;
         busquedaMarcaSidebar = '';
         const inputSearch = document.getElementById('storeSearchInput');
         if (inputSearch) inputSearch.value = '';
@@ -411,6 +686,7 @@
         cerrarDropdownsHeader();
         estadoFiltros = crearEstadoFiltrosInicial();
         estadoFiltros.categoria = resolverCategoriaCanonica(categoria);
+        lotesAcumuladosCatalogo = 1;
         busquedaMarcaSidebar = '';
         const inputSearch = document.getElementById('storeSearchInput');
         if (inputSearch) inputSearch.value = '';
@@ -419,8 +695,14 @@
 
     window.abrirMarcaDesdeMenu = function (marca) {
         cerrarDropdownsHeader();
+        const valorMarca = String(marca || '').trim();
+        if (!valorMarca) {
+            montarVista('marcas', { subirAlInicio: true });
+            return;
+        }
         estadoFiltros = crearEstadoFiltrosInicial();
-        estadoFiltros.marca = String(marca || '').trim();
+        estadoFiltros.marca = valorMarca;
+        lotesAcumuladosCatalogo = 1;
         busquedaMarcaSidebar = '';
         const inputSearch = document.getElementById('storeSearchInput');
         if (inputSearch) inputSearch.value = '';
@@ -433,12 +715,20 @@
         if (timerBusqueda) clearTimeout(timerBusqueda);
         estadoFiltros.busqueda = q;
         estadoFiltros.pagina = 1;
+        lotesAcumuladosCatalogo = 1;
         montarVista('productos', { subirAlInicio: vistaActual !== 'productos' });
     };
 
     window.enfocarBuscador = function () {
+        const strip = document.getElementById('searchStrip');
         const input = document.getElementById('storeSearchInput');
-        if (input) {
+        if (strip && strip.classList.contains('is-open') && input && !input.value.trim()) {
+            if (typeof window.cerrarBuscadorHeader === 'function') window.cerrarBuscadorHeader();
+            return;
+        }
+        if (typeof window.abrirBuscadorHeader === 'function') {
+            window.abrirBuscadorHeader();
+        } else if (input) {
             input.focus();
         }
     };
@@ -446,6 +736,9 @@
     window.abrirSidebarFiltrosMovil = function () {
         document.getElementById('storeFiltersBackdrop')?.classList.add('open');
         document.getElementById('storeFiltersSidebar')?.classList.add('open');
+        if (window.WGMotion && typeof window.WGMotion.syncSidebarPills === 'function') {
+            setTimeout(() => window.WGMotion.syncSidebarPills(true), 60);
+        }
     };
 
     window.cerrarSidebarFiltrosMovil = function () {
@@ -454,7 +747,7 @@
     };
 
     /* ======================================================================
-        RECARGA Y ESTADOS DEL CATÁLOGO (CARGANDO / ERROR CON REINTENTAR)
+        RECARGA Y ESTADOS DEL CATÁLOGO EN TIEMPO REAL
        ====================================================================== */
     window.recargarCatalogoDesdeServidor = async function () {
         cargandoCatalogo = true;
@@ -484,6 +777,8 @@
     function refrescarVistaActivaSinRemontar() {
         if (vistaActual === 'inicio') renderizarVistaInicio();
         else if (vistaActual === 'productos') renderizarVistaProductos();
+        else if (vistaActual === 'categorias') renderizarVistaCategorias();
+        else if (vistaActual === 'marcas') renderizarVistaMarcas();
         else if (vistaActual === 'ofertas') renderizarVistaOfertas();
     }
 
@@ -492,11 +787,11 @@
         for (let i = 0; i < cantidad; i++) {
             items.push(`
                 <div class="store-skeleton-card" aria-hidden="true">
-                    <div class="store-skeleton-block" style="height: 190px;"></div>
-                    <div class="store-skeleton-block" style="height: 14px; width: 45%;"></div>
+                    <div class="store-skeleton-block" style="height: 196px;"></div>
+                    <div class="store-skeleton-block" style="height: 12px; width: 42%;"></div>
                     <div class="store-skeleton-block" style="height: 18px; width: 88%;"></div>
                     <div class="store-skeleton-block" style="height: 22px; width: 38%; margin-top: auto;"></div>
-                    <div class="store-skeleton-block" style="height: 42px; width: 100%;"></div>
+                    <div class="store-skeleton-block" style="height: 44px; width: 100%;"></div>
                 </div>
             `);
         }
@@ -504,41 +799,51 @@
     }
 
     /* ======================================================================
-        CONSTRUCCIÓN DE TARJETAS DE PRODUCTO (LIMPIAS, SIN ACTIVO/OFICIAL)
+        TARJETAS DE PRODUCTO (LIMPIAS + QUICK VIEW + VUELO AL CARRITO)
        ====================================================================== */
-    function crearHtmlTarjeta(p, indiceEnVista) {
+    function crearHtmlTarjeta(p, indiceEnVista, sinReveal) {
         const stock = Number(p.Stock || 0);
         const agotado = stock <= 0;
         const ultimasUnidades = stock > 0 && stock <= 5;
         const enOferta = Boolean(p.EnOferta) && Number(p.Descuento) > 0;
         const mostrarPrecioAnterior = enOferta && Number(p.PrecioAnterior) > Number(p.Precio);
 
-        // Etiqueta SOLO cuando aporte valor real: Agotado, Oferta, Últimas unidades o Nuevo
         let badgeHtml = '';
         if (agotado) {
             badgeHtml = `<span class="store-pill-agotado">Agotado</span>`;
         } else if (enOferta) {
-            badgeHtml = `<span class="store-pill-oferta">OFERTA -${Number(p.Descuento)}%</span>`;
+            badgeHtml = `<span class="store-pill-oferta">-${Number(p.Descuento)}%</span>`;
         } else if (ultimasUnidades) {
-            badgeHtml = `<span class="store-pill-ultimas">Últimas unidades</span>`;
+            badgeHtml = `<span class="store-pill-ultimas">Últimas uds.</span>`;
         } else if (p.EsNuevo) {
             badgeHtml = `<span class="store-pill-nuevo">Nuevo</span>`;
         }
 
         const textoPresentacion = obtenerTextoPresentacion(p);
         const cargaImg = (typeof indiceEnVista === 'number' && indiceEnVista < 4) ? 'eager' : 'lazy';
+        const attrFade = sinReveal ? '' : 'data-fade="card"';
 
         return `
-            <article class="store-card" data-id="${Number(p.IdProducto)}">
-                ${badgeHtml ? `<div class="store-card-badges">${badgeHtml}<span></span></div>` : ''}
+            <article class="store-card" data-id="${Number(p.IdProducto)}" ${attrFade}>
+                <div class="store-card-badges">
+                    <div>${badgeHtml}</div>
+                    <button type="button"
+                            class="store-quickview-btn"
+                            onclick="event.stopPropagation(); abrirDetalleProducto(${Number(p.IdProducto)}, this)"
+                            title="Vista rápida de ${escaparHtml(p.NombreProducto)}"
+                            aria-label="Vista rápida de ${escaparHtml(p.NombreProducto)}">
+                        <i class="far fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
 
-                <div class="store-card-image-wrap" onclick="abrirDetalleProducto(${Number(p.IdProducto)}, this)">
+                <div class="store-card-image-wrap is-img-loading" onclick="abrirDetalleProducto(${Number(p.IdProducto)}, this)">
                     <img src="${escaparHtml(p.ImagenUrl)}"
                          alt="${escaparHtml(p.NombreProducto)}"
                          width="220"
                          height="210"
                          loading="${cargaImg}"
-                         onerror="this.src='/static/image/productos/real_whey_gold.webp'">
+                         onload="this.parentElement.classList.remove('is-img-loading')"
+                         onerror="this.parentElement.classList.remove('is-img-loading'); this.src='/static/image/productos/real_whey_gold.webp'">
                 </div>
 
                 <div class="store-card-body">
@@ -567,7 +872,7 @@
                         </div>
 
                         <button type="button" class="store-add-btn"
-                                onclick="agregarAlCarrito(${Number(p.IdProducto)}, 1)"
+                                onclick="agregarAlCarrito(${Number(p.IdProducto)}, 1, this)"
                                 ${agotado ? 'disabled' : ''}>
                             <i class="fas ${agotado ? 'fa-ban' : 'fa-cart-plus'}" aria-hidden="true"></i>
                             <span>${agotado ? 'Agotado' : 'Agregar al carrito'}</span>
@@ -579,7 +884,7 @@
     }
 
     /* ======================================================================
-        CONTEOS REALES 1 A 1 (MISMA LISTA QUE LA REJILLA)
+        CONTEOS REALES 1 A 1 EN CATEGORÍAS, MARCAS, DISPONIBILIDAD Y CONDICIÓN
        ====================================================================== */
     function calcularConteosPorCategoria() {
         const conteos = {};
@@ -600,11 +905,39 @@
         obtenerProductosActivosBase().forEach(p => {
             const marca = String(p.Marca || '').trim();
             if (!marca) return;
-            mapa.set(marca, (mapa.get(marca) || 0) + 1);
+            const actual = mapa.get(marca) || { marca: marca, cantidad: 0, categorias: new Set(), imagenMuestra: p.ImagenUrl };
+            actual.cantidad += 1;
+            if (p.CategoriaTienda) {
+                actual.categorias.add(ETIQUETAS_CATEGORIA[p.CategoriaTienda] || p.CategoriaTienda);
+            }
+            mapa.set(marca, actual);
         });
-        return Array.from(mapa.entries())
-            .sort((a, b) => a[0].localeCompare(b[0], 'es', { sensitivity: 'base' }))
-            .map(([marca, cantidad]) => ({ marca, cantidad }));
+        return Array.from(mapa.values())
+            .sort((a, b) => a.marca.localeCompare(b.marca, 'es', { sensitivity: 'base' }))
+            .map(item => ({
+                marca: item.marca,
+                cantidad: item.cantidad,
+                categorias: Array.from(item.categorias).slice(0, 2),
+                imagenMuestra: item.imagenMuestra
+            }));
+    }
+
+    function calcularConteosDisponibilidadYCondicion() {
+        const activos = obtenerProductosActivosBase();
+        const disp = { todos: activos.length, disponibles: 0, ultimas: 0, agotados: 0 };
+        let ofertas = 0;
+        let nuevos = 0;
+
+        activos.forEach(p => {
+            const stock = Number(p.Stock || 0);
+            if (stock > 0) disp.disponibles++;
+            if (stock > 0 && stock <= 5) disp.ultimas++;
+            if (stock <= 0) disp.agotados++;
+            if (Boolean(p.EnOferta) && Number(p.Descuento) > 0) ofertas++;
+            if (Boolean(p.EsNuevo)) nuevos++;
+        });
+
+        return { disp, ofertas, nuevos };
     }
 
     function actualizarBadgeOfertasHeader() {
@@ -623,7 +956,6 @@
         const activos = obtenerProductosActivosBase().filter(p => Number(p.Stock) > 0);
         if (activos.length === 0) return [];
 
-        // Condición real: en oferta, destacado administrable, nuevo ingreso o con ventas reales registradas
         const conCondicionReal = activos.filter(p =>
             (Boolean(p.EnOferta) && Number(p.Descuento) > 0) ||
             Boolean(p.DestacadoAdmin) ||
@@ -639,7 +971,6 @@
             return (scoreB - scoreA) || String(a.NombreProducto).localeCompare(String(b.NombreProducto), 'es');
         });
 
-        // Evitar repetir dos presentaciones idénticas en la fila de 5 destacados
         const familiasVistas = new Set();
         const unicos = [];
         for (const prod of ordenados) {
@@ -673,18 +1004,19 @@
 
         const destacados = seleccionarProductosDestacadosReales();
         if (destacados.length === 0) {
-            // Si no hay candidatos reales, ocultar toda la sección sin dejar mensajes vacíos
             secDestacados.style.display = 'none';
             gridDestacados.innerHTML = '';
             return;
         }
 
         secDestacados.style.display = '';
-        gridDestacados.innerHTML = destacados.map((p, idx) => crearHtmlTarjeta(p, idx)).join('');
+        limpiarObservadosEnContenedor(gridDestacados);
+        gridDestacados.innerHTML = destacados.map((p, idx) => crearHtmlTarjeta(p, idx, false)).join('');
+        sincronizarElementosAnimados(gridDestacados);
     }
 
     /* ======================================================================
-        VISTA 3: PRODUCTOS / CATÁLOGO (#productos)
+        VISTA 3: PRODUCTOS / CATÁLOGO COMPLETO + BARRA DE FILTROS DINÁMICA
        ====================================================================== */
     function calcularPuntajeBusqueda(p, tokens) {
         if (!tokens || tokens.length === 0) return 1;
@@ -721,40 +1053,142 @@
         return total;
     }
 
+    function actualizarVisualizacionSliderPrecio() {
+        const rangeMin = document.getElementById('storePriceRangeMin');
+        const rangeMax = document.getElementById('storePriceRangeMax');
+        const fill = document.getElementById('storePriceRangeFill');
+        const readout = document.getElementById('storePriceLiveReadout');
+        if (!rangeMin || !rangeMax || !fill) return;
+
+        const limites = obtenerLimitesPrecioReales();
+        rangeMin.min = String(limites.min);
+        rangeMin.max = String(limites.max);
+        rangeMax.min = String(limites.min);
+        rangeMax.max = String(limites.max);
+
+        const valMin = estadoFiltros.precioMin !== ''
+            ? Math.max(limites.min, Math.min(limites.max, Number(estadoFiltros.precioMin)))
+            : limites.min;
+        const valMax = estadoFiltros.precioMax !== ''
+            ? Math.max(valMin, Math.min(limites.max, Number(estadoFiltros.precioMax)))
+            : limites.max;
+
+        rangeMin.value = String(valMin);
+        rangeMax.value = String(valMax);
+
+        const span = Math.max(1, limites.max - limites.min);
+        const pctLeft = ((valMin - limites.min) / span) * 100;
+        const pctRight = ((valMax - limites.min) / span) * 100;
+
+        fill.style.left = `${Math.max(0, Math.min(100, pctLeft))}%`;
+        fill.style.width = `${Math.max(0, Math.min(100 - pctLeft, pctRight - pctLeft))}%`;
+
+        if (readout) {
+            readout.textContent = `C$${valMin.toLocaleString('es-NI')} – C$${valMax.toLocaleString('es-NI')}`;
+        }
+
+        // Resaltar preset rápido si coincide exactamente
+        document.querySelectorAll('#storePriceQuickPresets .store-price-preset-chip').forEach(chip => {
+            const cMin = chip.getAttribute('data-pmin') || '';
+            const cMax = chip.getAttribute('data-pmax') || '';
+            chip.classList.toggle('active', estadoFiltros.precioMin === cMin && estadoFiltros.precioMax === cMax);
+        });
+    }
+
+    window.aplicarPresetPrecio = function (minStr, maxStr) {
+        const yaActivo = estadoFiltros.precioMin === String(minStr) && estadoFiltros.precioMax === String(maxStr);
+        estadoFiltros.precioMin = yaActivo ? '' : String(minStr);
+        estadoFiltros.precioMax = yaActivo ? '' : String(maxStr);
+        estadoFiltros.pagina = 1;
+        lotesAcumuladosCatalogo = 1;
+        actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
+    };
+
+    window.limpiarBusquedaMarcaSidebar = function () {
+        busquedaMarcaSidebar = '';
+        const brandSearch = document.getElementById('sidebarBrandSearch');
+        const brandClear = document.getElementById('sidebarBrandClearBtn');
+        if (brandSearch) {
+            brandSearch.value = '';
+            brandSearch.focus();
+        }
+        if (brandClear) brandClear.style.display = 'none';
+        renderizarListaMarcasSidebar();
+    };
+
     function vincularEventosVistaProductos() {
         const brandSearch = document.getElementById('sidebarBrandSearch');
+        const brandClear = document.getElementById('sidebarBrandClearBtn');
         const priceMin = document.getElementById('storePriceMin');
         const priceMax = document.getElementById('storePriceMax');
+        const rangeMin = document.getElementById('storePriceRangeMin');
+        const rangeMax = document.getElementById('storePriceRangeMax');
         const chkOffers = document.getElementById('storeFilterOffers');
         const chkNew = document.getElementById('storeFilterNew');
         const selSort = document.getElementById('storeSortSelect');
 
         if (brandSearch) {
             brandSearch.value = busquedaMarcaSidebar;
+            if (brandClear) brandClear.style.display = busquedaMarcaSidebar ? 'inline-flex' : 'none';
             brandSearch.addEventListener('input', function () {
                 busquedaMarcaSidebar = this.value;
+                if (brandClear) brandClear.style.display = busquedaMarcaSidebar ? 'inline-flex' : 'none';
                 renderizarListaMarcasSidebar();
             });
         }
 
-        const manejarCambioPrecio = function () {
+        const manejarCambioPrecioInputs = function () {
             if (timerPrecio) clearTimeout(timerPrecio);
             timerPrecio = setTimeout(function () {
                 estadoFiltros.precioMin = priceMin ? priceMin.value.trim() : '';
                 estadoFiltros.precioMax = priceMax ? priceMax.value.trim() : '';
                 estadoFiltros.pagina = 1;
-                actualizarResultadosCatalogo({ reemplazarUrl: true });
+                lotesAcumuladosCatalogo = 1;
+                actualizarResultadosCatalogo({ reemplazarUrl: true, animarGrilla: true });
             }, DEBOUNCE_MS);
         };
 
-        if (priceMin) priceMin.addEventListener('input', manejarCambioPrecio);
-        if (priceMax) priceMax.addEventListener('input', manejarCambioPrecio);
+        if (priceMin) priceMin.addEventListener('input', manejarCambioPrecioInputs);
+        if (priceMax) priceMax.addEventListener('input', manejarCambioPrecioInputs);
+
+        const manejarSliderDual = function (esMin) {
+            if (!rangeMin || !rangeMax) return;
+            const limites = obtenerLimitesPrecioReales();
+            let vMin = Number(rangeMin.value);
+            let vMax = Number(rangeMax.value);
+
+            if (esMin && vMin > vMax) {
+                vMin = vMax;
+                rangeMin.value = String(vMin);
+            } else if (!esMin && vMax < vMin) {
+                vMax = vMin;
+                rangeMax.value = String(vMax);
+            }
+
+            estadoFiltros.precioMin = vMin <= limites.min ? '' : String(vMin);
+            estadoFiltros.precioMax = vMax >= limites.max ? '' : String(vMax);
+
+            if (priceMin) priceMin.value = estadoFiltros.precioMin;
+            if (priceMax) priceMax.value = estadoFiltros.precioMax;
+            actualizarVisualizacionSliderPrecio();
+
+            if (timerPrecio) clearTimeout(timerPrecio);
+            timerPrecio = setTimeout(function () {
+                estadoFiltros.pagina = 1;
+                lotesAcumuladosCatalogo = 1;
+                actualizarResultadosCatalogo({ reemplazarUrl: true, animarGrilla: true });
+            }, 140);
+        };
+
+        if (rangeMin) rangeMin.addEventListener('input', function () { manejarSliderDual(true); });
+        if (rangeMax) rangeMax.addEventListener('input', function () { manejarSliderDual(false); });
 
         if (chkOffers) {
             chkOffers.addEventListener('change', function () {
                 estadoFiltros.soloOfertas = this.checked;
                 estadoFiltros.pagina = 1;
-                actualizarResultadosCatalogo({ reemplazarUrl: false });
+                lotesAcumuladosCatalogo = 1;
+                actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
             });
         }
 
@@ -762,7 +1196,8 @@
             chkNew.addEventListener('change', function () {
                 estadoFiltros.soloNuevos = this.checked;
                 estadoFiltros.pagina = 1;
-                actualizarResultadosCatalogo({ reemplazarUrl: false });
+                lotesAcumuladosCatalogo = 1;
+                actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
             });
         }
 
@@ -770,7 +1205,8 @@
             selSort.addEventListener('change', function () {
                 estadoFiltros.orden = this.value;
                 estadoFiltros.pagina = 1;
-                actualizarResultadosCatalogo({ reemplazarUrl: false });
+                lotesAcumuladosCatalogo = 1;
+                actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
             });
         }
     }
@@ -784,9 +1220,7 @@
             estadoFiltros.orden = 'relevancia';
         }
 
-        const opciones = [
-            { valor: 'relevancia', texto: 'Ordenar: Relevancia' }
-        ];
+        const opciones = [{ valor: 'relevancia', texto: 'Ordenar: Relevancia' }];
         if (hayVentas) {
             opciones.push({ valor: 'mas_vendidos', texto: 'Más vendidos' });
         }
@@ -810,42 +1244,61 @@
         const priceMax = document.getElementById('storePriceMax');
         const chkOffers = document.getElementById('storeFilterOffers');
         const chkNew = document.getElementById('storeFilterNew');
+        const countOffersEl = document.getElementById('countFilterOffers');
+        const countNewEl = document.getElementById('countFilterNew');
         const btnClear = document.getElementById('storeClearFiltersBtn');
         const badgeMovil = document.getElementById('storeMobileFiltersBadge');
 
         const conteosCat = calcularConteosPorCategoria();
+        const metricasEstado = calcularConteosDisponibilidadYCondicion();
+
         if (catContainer) {
-            catContainer.innerHTML = ORDEN_CATEGORIAS_SIDEBAR
+            const pillExistente = catContainer.querySelector('.wg-sidebar-sliding-pill');
+            const htmlOpcionesCat = ORDEN_CATEGORIAS_SIDEBAR
                 .filter(c => !c.ocultarSiCero || (conteosCat[c.clave] || 0) > 0 || estadoFiltros.categoria === c.clave)
                 .map(c => {
                     const activa = estadoFiltros.categoria === c.clave;
                     const cant = conteosCat[c.clave] || 0;
+                    const meta = META_CATEGORIAS_UI[c.clave] || META_CATEGORIAS_UI['Todos'];
                     return `
                         <button type="button"
                                 class="store-sidebar-option ${activa ? 'active' : ''}"
                                 data-sidebar-cat="${escaparHtml(c.clave)}"
                                 ${activa ? 'aria-current="true"' : ''}
                                 onclick="seleccionarCategoriaCatalogo(this.getAttribute('data-sidebar-cat'))">
-                            <span>${escaparHtml(c.nombre)}</span>
+                            <span class="store-sidebar-opt-left">
+                                <i class="fas ${meta.icono} store-sidebar-opt-icon" aria-hidden="true"></i>
+                                <span>${escaparHtml(c.nombre)}</span>
+                            </span>
                             <span class="store-sidebar-count">${cant}</span>
                         </button>
                     `;
                 }).join('');
+
+            catContainer.innerHTML = htmlOpcionesCat;
+            if (pillExistente) catContainer.prepend(pillExistente);
         }
 
         renderizarListaMarcasSidebar();
 
         if (dispContainer) {
+            const pillDisp = dispContainer.querySelector('.wg-sidebar-sliding-pill');
             dispContainer.innerHTML = OPCIONES_DISPONIBILIDAD.map(op => {
                 const activa = estadoFiltros.disponibilidad === op.valor;
+                const cantDisp = metricasEstado.disp[op.valor] ?? 0;
                 return `
                     <button type="button"
                             class="store-sidebar-option ${activa ? 'active' : ''}"
                             onclick="seleccionarDisponibilidadCatalogo('${op.valor}')">
-                        <span>${escaparHtml(op.etiqueta)}</span>
+                        <span class="store-sidebar-opt-left">
+                            <span class="store-disp-dot is-${op.dotClass}" aria-hidden="true"></span>
+                            <span>${escaparHtml(op.etiqueta)}</span>
+                        </span>
+                        <span class="store-sidebar-count">${cantDisp}</span>
                     </button>
                 `;
             }).join('');
+            if (pillDisp) dispContainer.prepend(pillDisp);
         }
 
         if (priceMin && document.activeElement !== priceMin) {
@@ -854,10 +1307,48 @@
         if (priceMax && document.activeElement !== priceMax) {
             priceMax.value = estadoFiltros.precioMax;
         }
-        if (chkOffers) chkOffers.checked = estadoFiltros.soloOfertas;
-        if (chkNew) chkNew.checked = estadoFiltros.soloNuevos;
+        actualizarVisualizacionSliderPrecio();
 
+        if (chkOffers) {
+            chkOffers.checked = estadoFiltros.soloOfertas;
+            chkOffers.closest('.store-switch-row')?.classList.toggle('is-checked', estadoFiltros.soloOfertas);
+        }
+        if (chkNew) {
+            chkNew.checked = estadoFiltros.soloNuevos;
+            chkNew.closest('.store-switch-row')?.classList.toggle('is-checked', estadoFiltros.soloNuevos);
+        }
+        if (countOffersEl) countOffersEl.textContent = String(metricasEstado.ofertas);
+        if (countNewEl) countNewEl.textContent = String(metricasEstado.nuevos);
+
+        // Indicadores vivos de filtros aplicados en la cabecera y en cada acordeón
         const cantFiltros = contarFiltrosActivosCatalogo();
+        const summaryEl = document.getElementById('sidebarActiveSummary');
+        const countBadge = document.getElementById('sidebarActiveCountBadge');
+        const quickReset = document.getElementById('sidebarQuickResetBtn');
+
+        if (summaryEl) {
+            summaryEl.textContent = cantFiltros > 0
+                ? `${cantFiltros} filtro${cantFiltros === 1 ? '' : 's'} activo${cantFiltros === 1 ? '' : 's'}`
+                : 'Catálogo completo';
+        }
+        if (countBadge) {
+            countBadge.textContent = String(cantFiltros);
+            countBadge.style.display = cantFiltros > 0 ? 'inline-flex' : 'none';
+        }
+        if (quickReset) {
+            quickReset.style.display = cantFiltros > 0 ? 'inline-flex' : 'none';
+        }
+
+        const setDot = (id, show) => {
+            const el = document.getElementById(id);
+            if (el) el.hidden = !show;
+        };
+        setDot('dotFilterCat', estadoFiltros.categoria !== 'Todos');
+        setDot('dotFilterBrand', estadoFiltros.marca !== '');
+        setDot('dotFilterPrice', estadoFiltros.precioMin !== '' || estadoFiltros.precioMax !== '');
+        setDot('dotFilterDisp', estadoFiltros.disponibilidad !== 'todos');
+        setDot('dotFilterCond', estadoFiltros.soloOfertas || estadoFiltros.soloNuevos);
+
         if (btnClear) {
             btnClear.classList.toggle('has-active', cantFiltros > 0 || estadoFiltros.orden !== 'relevancia');
         }
@@ -865,16 +1356,20 @@
             badgeMovil.textContent = String(cantFiltros);
             badgeMovil.style.display = cantFiltros > 0 ? 'inline-flex' : 'none';
         }
+
+        if (window.WGMotion && typeof window.WGMotion.syncSidebarPills === 'function') {
+            requestAnimationFrame(() => window.WGMotion.syncSidebarPills(false));
+        }
     }
 
     function renderizarListaMarcasSidebar() {
         const brandContainer = document.getElementById('sidebarBrandList');
-        const brandSearch = document.getElementById('sidebarBrandSearch');
+        const searchWrap = document.getElementById('sidebarBrandSearchWrap');
         if (!brandContainer) return;
 
         const todasLasMarcas = calcularConteosPorMarca();
-        if (brandSearch) {
-            brandSearch.style.display = todasLasMarcas.length > 8 ? 'block' : 'none';
+        if (searchWrap) {
+            searchWrap.style.display = todasLasMarcas.length > 5 ? 'flex' : 'none';
         }
 
         const filtroMarcaTexto = normalizarTexto(busquedaMarcaSidebar);
@@ -887,13 +1382,15 @@
             <button type="button"
                     class="store-sidebar-option ${estadoFiltros.marca === '' ? 'active' : ''}"
                     onclick="seleccionarMarcaCatalogo('')">
-                <span>Todas las marcas</span>
+                <span class="store-sidebar-opt-left">
+                    <span>Todas las marcas</span>
+                </span>
                 <span class="store-sidebar-count">${totalActivos}</span>
             </button>
         ` : '';
 
         if (marcasVisibles.length === 0 && filtroMarcaTexto) {
-            brandContainer.innerHTML = `<p style="margin: 6px 4px; font-size: 12.5px; color: #6B7280;">Sin marcas que coincidan.</p>`;
+            brandContainer.innerHTML = `<p class="store-sidebar-empty-hint">Sin marcas que coincidan con "${escaparHtml(busquedaMarcaSidebar.trim())}".</p>`;
             return;
         }
 
@@ -904,40 +1401,131 @@
                         class="store-sidebar-option ${activa ? 'active' : ''}"
                         data-sidebar-brand="${escaparHtml(item.marca)}"
                         onclick="seleccionarMarcaCatalogo(this.getAttribute('data-sidebar-brand'))">
-                    <span>${escaparHtml(item.marca)}</span>
+                    <span class="store-sidebar-opt-left">
+                        <span>${escaparHtml(item.marca)}</span>
+                    </span>
                     <span class="store-sidebar-count">${item.cantidad}</span>
                 </button>
             `;
         }).join('');
     }
 
+    function sincronizarBotonAdminCatalogo() {
+        const topbarControls = document.querySelector('.store-topbar-right-controls');
+        if (!topbarControls) return;
+        let btnAdmin = topbarControls.querySelector('.store-grid-admin-btn');
+        if (window.ES_ADMIN_TIENDA) {
+            if (!btnAdmin) {
+                btnAdmin = document.createElement('a');
+                btnAdmin.href = '/producto_listar';
+                btnAdmin.className = 'store-grid-admin-btn';
+                btnAdmin.title = 'Ir al panel administrativo de productos';
+                btnAdmin.innerHTML = '<i class="fas fa-sliders" aria-hidden="true"></i> <span>Administrar Productos</span>';
+                const selectEl = topbarControls.querySelector('#storeSortSelect');
+                if (selectEl) {
+                    topbarControls.insertBefore(btnAdmin, selectEl);
+                } else {
+                    topbarControls.appendChild(btnAdmin);
+                }
+            }
+        } else if (btnAdmin) {
+            btnAdmin.remove();
+        }
+    }
+
     function renderizarMigasYTituloCatalogo() {
         const navMigas = document.getElementById('storeBreadcrumbs');
-        const tituloEl = document.getElementById('storeCatalogTitle');
+        const heroContext = document.getElementById('storeCatalogContextHero');
 
         const catActiva = estadoFiltros.categoria;
+        const marcaActiva = estadoFiltros.marca;
         const etiquetaCat = ETIQUETAS_CATEGORIA[catActiva] || catActiva;
+        const conteosCat = calcularConteosPorCategoria();
 
-        if (tituloEl) {
-            tituloEl.textContent = (catActiva === 'Todos' ? 'PRODUCTOS' : etiquetaCat).toUpperCase();
+        if (navMigas) {
+            if (marcaActiva) {
+                navMigas.innerHTML = `
+                    <a href="#inicio" onclick="return navegarVistaTienda('inicio', event)">Inicio</a>
+                    <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
+                    <a href="#marcas" onclick="return navegarVistaTienda('marcas', event)">Por Marca</a>
+                    <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
+                    <span class="store-breadcrumbs-current">${escaparHtml(marcaActiva)}</span>
+                `;
+            } else if (catActiva !== 'Todos') {
+                navMigas.innerHTML = `
+                    <a href="#inicio" onclick="return navegarVistaTienda('inicio', event)">Inicio</a>
+                    <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
+                    <a href="#categorias" onclick="return navegarVistaTienda('categorias', event)">Por Categoría</a>
+                    <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
+                    <span class="store-breadcrumbs-current">${escaparHtml(etiquetaCat)}</span>
+                `;
+            } else {
+                navMigas.innerHTML = `
+                    <a href="#inicio" onclick="return navegarVistaTienda('inicio', event)">Inicio</a>
+                    <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
+                    <span class="store-breadcrumbs-current">Productos</span>
+                `;
+            }
         }
 
-        if (!navMigas) return;
-        if (catActiva === 'Todos') {
-            navMigas.innerHTML = `
-                <a href="#inicio" onclick="return navegarVistaTienda('inicio', event)">Inicio</a>
-                <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
-                <span class="store-breadcrumbs-current">Productos</span>
+        sincronizarBotonAdminCatalogo();
+        if (!heroContext) return;
+
+        // 1. Hero especializado cuando se explora una Marca
+        if (marcaActiva) {
+            const infoMarca = calcularConteosPorMarca().find(m => normalizarTexto(m.marca) === normalizarTexto(marcaActiva));
+            const cantMarca = infoMarca ? infoMarca.cantidad : 0;
+            const iniciales = marcaActiva.split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || 'WG';
+            heroContext.innerHTML = `
+                <div class="wg-context-banner is-brand">
+                    <div class="wg-context-emblem">${escaparHtml(iniciales)}</div>
+                    <div class="wg-context-copy">
+                        <span class="wg-section-eyebrow">MARCA OFICIAL EN INVENTARIO</span>
+                        <h1 class="store-display-heading store-page-heading" id="storeCatalogTitle">${escaparHtml(marcaActiva)}</h1>
+                        <p>${cantMarca} producto${cantMarca === 1 ? '' : 's'} registrado${cantMarca === 1 ? '' : 's'} en el catálogo activo de WorldGym Store.</p>
+                    </div>
+                    <div class="wg-context-banner-actions">
+                        <a href="#marcas" class="store-view-all-link" onclick="return navegarVistaTienda('marcas', event)">
+                            Todas las marcas <span aria-hidden="true">&rarr;</span>
+                        </a>
+                    </div>
+                </div>
             `;
-        } else {
-            navMigas.innerHTML = `
-                <a href="#inicio" onclick="return navegarVistaTienda('inicio', event)">Inicio</a>
-                <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
-                <button type="button" onclick="seleccionarCategoriaCatalogo('Todos')">Productos</button>
-                <span class="store-breadcrumbs-sep" aria-hidden="true">&rsaquo;</span>
-                <span class="store-breadcrumbs-current">${escaparHtml(etiquetaCat)}</span>
-            `;
+            return;
         }
+
+        // 2. Hero especializado cuando se explora una Categoría específica
+        if (catActiva !== 'Todos') {
+            const metaCat = META_CATEGORIAS_UI[catActiva] || META_CATEGORIAS_UI['Todos'];
+            const cantCat = conteosCat[catActiva] || 0;
+            heroContext.innerHTML = `
+                <div class="wg-context-banner is-category">
+                    <div class="wg-context-img-box">
+                        <img src="${escaparHtml(metaCat.imagen)}" alt="${escaparHtml(etiquetaCat)}">
+                    </div>
+                    <div class="wg-context-copy">
+                        <span class="wg-section-eyebrow">CATEGORÍA NUTRICIONAL · ${cantCat} PRODUCTO${cantCat === 1 ? '' : 'S'}</span>
+                        <h1 class="store-display-heading store-page-heading" id="storeCatalogTitle">${escaparHtml(etiquetaCat)}</h1>
+                        <p>${escaparHtml(metaCat.descripcion)}</p>
+                    </div>
+                    <div class="wg-context-banner-actions">
+                        <a href="#categorias" class="store-view-all-link" onclick="return navegarVistaTienda('categorias', event)">
+                            Ver categorías <span aria-hidden="true">&rarr;</span>
+                        </a>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // 3. Encabezado limpio y monumental del catálogo completo (sin botones apretados bajo el texto)
+        const totalCat = obtenerProductosActivosBase().length;
+        heroContext.innerHTML = `
+            <div class="wg-catalog-default-head">
+                <span class="wg-section-eyebrow">CATÁLOGO OFICIAL · ${totalCat} PRODUCTOS ACTIVOS</span>
+                <h1 class="store-display-heading store-page-heading" id="storeCatalogTitle">Catálogo de <em>productos</em></h1>
+            </div>
+        `;
     }
 
     function renderizarChipsFiltrosActivos() {
@@ -964,7 +1552,7 @@
             chips.push({ clave: 'disponibilidad', texto: opDisp ? opDisp.etiqueta : estadoFiltros.disponibilidad });
         }
         if (estadoFiltros.soloOfertas) {
-            chips.push({ clave: 'soloOfertas', texto: 'Ofertas' });
+            chips.push({ clave: 'soloOfertas', texto: 'En oferta' });
         }
         if (estadoFiltros.soloNuevos) {
             chips.push({ clave: 'soloNuevos', texto: 'Nuevos ingresos' });
@@ -984,7 +1572,7 @@
                     onclick="quitarFiltroIndividual('${ch.clave}')"
                     aria-label="Quitar filtro ${escaparHtml(ch.texto)}">
                 <span>${escaparHtml(ch.texto)}</span>
-                <span aria-hidden="true">&times;</span>
+                <span class="store-chip-x" aria-hidden="true">&times;</span>
             </button>
         `).join('');
 
@@ -1000,7 +1588,7 @@
     }
 
     function construirHtmlPaginacion(totalItems, paginaActual, funcionGlobalCambio) {
-        if (totalItems <= 0) return '';
+        if (totalItems <= PAGE_SIZE) return '';
         const totalPaginas = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
         const pagSegura = Math.min(Math.max(1, paginaActual), totalPaginas);
         const inicio = (pagSegura - 1) * PAGE_SIZE + 1;
@@ -1035,7 +1623,7 @@
 
     function renderizarVistaProductos() {
         renderizarOpcionesOrdenamiento();
-        actualizarResultadosCatalogo({ noSincronizarUrl: true });
+        actualizarResultadosCatalogo({ noSincronizarUrl: true, animarGrilla: false });
     }
 
     function actualizarResultadosCatalogo(opciones) {
@@ -1049,28 +1637,32 @@
         const gridCatalogo = document.getElementById('storeCatalogGrid');
         const contadorEl = document.getElementById('storeResultsCounter');
         const paginacionEl = document.getElementById('storePagination');
+        const loadMoreWrap = document.getElementById('storeLoadMoreWrap');
         if (!gridCatalogo) return;
 
         if (cargandoCatalogo) {
             if (contadorEl) contadorEl.textContent = 'Cargando productos...';
             gridCatalogo.innerHTML = crearHtmlSkeletons(8);
             if (paginacionEl) paginacionEl.innerHTML = '';
+            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
             return;
         }
 
         if (errorCargaCatalogo && obtenerProductosActivosBase().length === 0) {
             if (contadorEl) contadorEl.textContent = '0 productos';
             gridCatalogo.innerHTML = `
-                <div class="store-state-box" role="alert">
+                <div class="store-state-box" role="alert" data-fade="panel">
                     <i class="fas fa-triangle-exclamation store-state-icon" aria-hidden="true"></i>
                     <h3>No se pudo cargar el catálogo</h3>
                     <p>${escaparHtml(errorCargaCatalogo)}</p>
-                    <button type="button" class="store-btn-cta" onclick="recargarCatalogoDesdeServidor()" style="padding: 11px 24px; font-size: 13.5px;">
+                    <button type="button" class="store-btn-cta" onclick="recargarCatalogoDesdeServidor()">
                         <i class="fas fa-rotate-right"></i> Reintentar
                     </button>
                 </div>
             `;
             if (paginacionEl) paginacionEl.innerHTML = '';
+            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+            sincronizarElementosAnimados(gridCatalogo);
             return;
         }
 
@@ -1169,46 +1761,118 @@
         }
 
         if (total === 0) {
-            gridCatalogo.innerHTML = `
-                <div class="store-state-box">
-                    <i class="fas fa-magnifying-glass store-state-icon" aria-hidden="true"></i>
-                    <h3>No encontramos productos con esos filtros</h3>
-                    <p>Prueba con otros términos de búsqueda o restablece los filtros activos.</p>
-                    <button type="button" class="store-btn-cta" onclick="limpiarFiltrosCatalogo()" style="padding: 11px 24px; font-size: 13.5px;">
-                        Limpiar filtros
-                    </button>
-                </div>
-            `;
+            const soloCatVacia = estadoFiltros.categoria !== 'Todos' && contarFiltrosActivosCatalogo() === 1;
+            const etqVacia = ETIQUETAS_CATEGORIA[estadoFiltros.categoria] || estadoFiltros.categoria;
+            const btnAdminHtml = window.ES_ADMIN_TIENDA
+                ? `<a href="/producto_listar" class="wg-btn-system-outline"><i class="fas fa-sliders"></i> Administrar Productos</a>`
+                : '';
+
+            gridCatalogo.innerHTML = soloCatVacia
+                ? `
+                    <div class="store-state-box is-empty-category" data-fade="panel">
+                        <div class="store-state-badge-icon"><i class="fas fa-box-open" aria-hidden="true"></i></div>
+                        <h3>La línea de ${escaparHtml(etqVacia)} aún no tiene existencias publicadas</h3>
+                        <p>Pronto incorporaremos productos verificados en esta categoría. Mientras tanto, explora nuestras proteínas, creatinas, pre-entrenos y bebidas en stock.</p>
+                        <div class="store-state-actions">
+                            <button type="button" class="store-btn-cta" onclick="seleccionarCategoriaCatalogo('Todos')">
+                                Ver todos los productos
+                            </button>
+                            ${btnAdminHtml}
+                        </div>
+                    </div>
+                `
+                : `
+                    <div class="store-state-box" data-fade="panel">
+                        <div class="store-state-badge-icon"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></div>
+                        <h3>Sin coincidencias con los filtros seleccionados</h3>
+                        <p>Ajusta el rango de precio, marca o disponibilidad para mostrar suplementos disponibles.</p>
+                        <div class="store-state-actions">
+                            <button type="button" class="store-btn-cta" onclick="limpiarFiltrosCatalogo()">
+                                Restablecer filtros
+                            </button>
+                        </div>
+                    </div>
+                `;
             if (paginacionEl) paginacionEl.innerHTML = '';
+            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+            sincronizarElementosAnimados(gridCatalogo);
             return;
         }
 
         const inicioIdx = (estadoFiltros.pagina - 1) * PAGE_SIZE;
-        const paginaItems = filtrados.slice(inicioIdx, inicioIdx + PAGE_SIZE);
+        const finIdx = inicioIdx + (PAGE_SIZE * lotesAcumuladosCatalogo);
+        const paginaItems = filtrados.slice(inicioIdx, finIdx);
 
-        gridCatalogo.innerHTML = paginaItems.map((p, idx) => crearHtmlTarjeta(p, idx)).join('');
+        limpiarObservadosEnContenedor(gridCatalogo);
+        gridCatalogo.innerHTML = paginaItems.map((p, idx) => crearHtmlTarjeta(p, idx, Boolean(opts.animarGrilla))).join('');
+
+        if (opts.animarGrilla && window.WGMotion && typeof window.WGMotion.animateGridItems === 'function') {
+            window.WGMotion.animateGridItems(gridCatalogo);
+        } else {
+            sincronizarElementosAnimados(gridCatalogo);
+        }
+
+        // Botón discreto "Ver más" si hay más productos después del lote actual
+        if (loadMoreWrap) {
+            const restantes = total - (inicioIdx + paginaItems.length);
+            if (restantes > 0 && estadoFiltros.pagina === 1) {
+                loadMoreWrap.style.display = 'flex';
+                loadMoreWrap.innerHTML = `
+                    <button type="button" class="wg-load-more-btn" onclick="cargarMasProductosCatalogo()">
+                        <span>Ver más productos (${restantes} restantes)</span>
+                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                `;
+            } else {
+                loadMoreWrap.style.display = 'none';
+                loadMoreWrap.innerHTML = '';
+            }
+        }
+
         if (paginacionEl) {
-            paginacionEl.innerHTML = construirHtmlPaginacion(total, estadoFiltros.pagina, 'irAPaginaCatalogo');
+            paginacionEl.innerHTML = lotesAcumuladosCatalogo === 1
+                ? construirHtmlPaginacion(total, estadoFiltros.pagina, 'irAPaginaCatalogo')
+                : '';
         }
     }
 
-    /* Acciones de filtros dentro de PRODUCTOS */
+    window.cargarMasProductosCatalogo = function () {
+        const gridCatalogo = document.getElementById('storeCatalogGrid');
+        if (gridCatalogo) {
+            const tempWrap = document.createElement('div');
+            tempWrap.style.display = 'contents';
+            tempWrap.innerHTML = crearHtmlSkeletons(4);
+            gridCatalogo.appendChild(tempWrap);
+            setTimeout(function () {
+                lotesAcumuladosCatalogo += 1;
+                actualizarResultadosCatalogo({ noSincronizarUrl: true, animarGrilla: true });
+            }, 240);
+        } else {
+            lotesAcumuladosCatalogo += 1;
+            actualizarResultadosCatalogo({ noSincronizarUrl: true, animarGrilla: true });
+        }
+    };
+
+    /* Acciones interactivas de filtros dentro de PRODUCTOS */
     window.seleccionarCategoriaCatalogo = function (categoria) {
         estadoFiltros.categoria = resolverCategoriaCanonica(categoria);
         estadoFiltros.pagina = 1;
-        actualizarResultadosCatalogo({ reemplazarUrl: false });
+        lotesAcumuladosCatalogo = 1;
+        actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
     };
 
     window.seleccionarMarcaCatalogo = function (marca) {
         estadoFiltros.marca = String(marca || '').trim();
         estadoFiltros.pagina = 1;
-        actualizarResultadosCatalogo({ reemplazarUrl: false });
+        lotesAcumuladosCatalogo = 1;
+        actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
     };
 
     window.seleccionarDisponibilidadCatalogo = function (disp) {
         estadoFiltros.disponibilidad = disp || 'todos';
         estadoFiltros.pagina = 1;
-        actualizarResultadosCatalogo({ reemplazarUrl: false });
+        lotesAcumuladosCatalogo = 1;
+        actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
     };
 
     window.quitarFiltroIndividual = function (clave) {
@@ -1225,37 +1889,153 @@
             if (inputSearch) inputSearch.value = '';
         }
         estadoFiltros.pagina = 1;
-        actualizarResultadosCatalogo({ reemplazarUrl: false });
+        lotesAcumuladosCatalogo = 1;
+        actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
     };
 
     window.limpiarFiltrosCatalogo = function () {
-        const ordenActual = 'relevancia';
         estadoFiltros = crearEstadoFiltrosInicial();
-        estadoFiltros.orden = ordenActual;
+        lotesAcumuladosCatalogo = 1;
         busquedaMarcaSidebar = '';
         const brandSearch = document.getElementById('sidebarBrandSearch');
+        const brandClear = document.getElementById('sidebarBrandClearBtn');
         if (brandSearch) brandSearch.value = '';
+        if (brandClear) brandClear.style.display = 'none';
         const inputSearch = document.getElementById('storeSearchInput');
         if (inputSearch) inputSearch.value = '';
         const selSort = document.getElementById('storeSortSelect');
         if (selSort) selSort.value = 'relevancia';
-        actualizarResultadosCatalogo({ reemplazarUrl: false });
+        actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
     };
 
     window.irAPaginaCatalogo = function (numPagina) {
         estadoFiltros.pagina = Math.max(1, Number(numPagina) || 1);
-        actualizarResultadosCatalogo({ reemplazarUrl: false });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        lotesAcumuladosCatalogo = 1;
+        actualizarResultadosCatalogo({ reemplazarUrl: false, animarGrilla: true });
+        if (window.WGMotion && typeof window.WGMotion.scrollToTop === 'function') {
+            window.WGMotion.scrollToTop(false);
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     /* ======================================================================
-        VISTA 4: OFERTAS (#ofertas)
+        VISTA 4: POR CATEGORÍA (#categorias — DIRECTORIO COMPLETO)
+       ====================================================================== */
+    function renderizarVistaCategorias() {
+        const grid = document.getElementById('storeCategoriesDirectoryGrid');
+        if (!grid) return;
+
+        const conteos = calcularConteosPorCategoria();
+        const categoriasMostrar = ORDEN_CATEGORIAS_SIDEBAR.filter(c => c.clave !== 'Todos' && (!c.ocultarSiCero || (conteos[c.clave] || 0) > 0));
+
+        limpiarObservadosEnContenedor(grid);
+        grid.innerHTML = categoriasMostrar.map((cat, idx) => {
+            const cant = conteos[cat.clave] || 0;
+            const meta = META_CATEGORIAS_UI[cat.clave] || META_CATEGORIAS_UI['Todos'];
+            return `
+                <article class="wg-dir-card ${cant === 0 ? 'is-empty' : ''}"
+                         data-fade="card"
+                         role="button"
+                         tabindex="0"
+                         onclick="abrirCategoriaDesdeMenu('${escaparHtml(cat.clave)}')"
+                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirCategoriaDesdeMenu('${escaparHtml(cat.clave)}');}">
+                    <div class="wg-dir-card-top">
+                        <span class="wg-dir-index">0${idx + 1}</span>
+                        <span class="wg-dir-count-pill ${cant === 0 ? 'is-zero' : ''}">${cant} producto${cant === 1 ? '' : 's'}</span>
+                    </div>
+                    <div class="wg-dir-media">
+                        <img src="${escaparHtml(meta.imagen)}" alt="${escaparHtml(cat.nombre)}" loading="lazy">
+                    </div>
+                    <div class="wg-dir-body">
+                        <h2>${escaparHtml(cat.nombre)}</h2>
+                        <p>${escaparHtml(meta.descripcion)}</p>
+                        <span class="wg-dir-cta">
+                            <span>${cant > 0 ? 'Explorar categoría' : 'Ver estado de línea'}</span>
+                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                </article>
+            `;
+        }).join('');
+        sincronizarElementosAnimados(grid);
+    }
+
+    /* ======================================================================
+        VISTA 5: POR MARCA (#marcas — DIRECTORIO INTERACTIVO DE MARCAS REALES)
+       ====================================================================== */
+    function vincularEventosVistaMarcas() {
+        const searchInput = document.getElementById('brandsDirectorySearch');
+        if (!searchInput) return;
+        searchInput.value = busquedaDirectorioMarcas;
+        searchInput.addEventListener('input', function () {
+            busquedaDirectorioMarcas = this.value;
+            renderizarVistaMarcas(true);
+        });
+    }
+
+    function renderizarVistaMarcas(animarSuave) {
+        const grid = document.getElementById('storeBrandsDirectoryGrid');
+        if (!grid) return;
+
+        const todas = calcularConteosPorMarca();
+        const q = normalizarTexto(busquedaDirectorioMarcas);
+        const filtradas = q ? todas.filter(m => normalizarTexto(m.marca).includes(q)) : todas;
+
+        if (filtradas.length === 0) {
+            grid.innerHTML = `
+                <div class="store-state-box">
+                    <div class="store-state-badge-icon"><i class="fas fa-certificate" aria-hidden="true"></i></div>
+                    <h3>No encontramos marcas con "${escaparHtml(busquedaDirectorioMarcas.trim())}"</h3>
+                    <p>Prueba con otro nombre de marca o explora el catálogo completo.</p>
+                </div>
+            `;
+            return;
+        }
+
+        limpiarObservadosEnContenedor(grid);
+        grid.innerHTML = filtradas.map(item => {
+            const iniciales = item.marca.split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || 'WG';
+            const subCats = item.categorias.length > 0 ? item.categorias.join(' · ') : 'Suplementación deportiva';
+            return `
+                <button type="button"
+                        class="wg-brand-card"
+                        ${animarSuave ? '' : 'data-fade="card"'}
+                        data-brand-go="${escaparHtml(item.marca)}"
+                        onclick="abrirMarcaDesdeMenu(this.getAttribute('data-brand-go'))">
+                    <div class="wg-brand-card-head">
+                        <span class="wg-brand-monogram">${escaparHtml(iniciales)}</span>
+                        <span class="wg-brand-count">${item.cantidad} prod.</span>
+                    </div>
+                    <div class="wg-brand-card-main">
+                        <h3>${escaparHtml(item.marca)}</h3>
+                        <p>${escaparHtml(subCats)}</p>
+                    </div>
+                    <div class="wg-brand-card-foot">
+                        <span>Ver productos</span>
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </div>
+                </button>
+            `;
+        }).join('');
+
+        if (animarSuave && window.WGMotion && typeof window.WGMotion.animateGridItems === 'function') {
+            window.WGMotion.animateGridItems(grid);
+        } else {
+            sincronizarElementosAnimados(grid);
+        }
+    }
+
+    /* ======================================================================
+        VISTA 6: OFERTAS (#ofertas — BANNER PROMOCIONAL + DESCUENTOS)
        ====================================================================== */
     function renderizarVistaOfertas() {
         const gridOfertas = document.getElementById('storeOffersGrid');
         const topbarWrap = document.getElementById('ofertasTopbarWrap');
         const counterEl = document.getElementById('ofertasResultsCounter');
         const pagEl = document.getElementById('storeOffersPagination');
+        const statsWrap = document.getElementById('ofertasPromoStats');
+        const subtitleEl = document.getElementById('ofertasPromoSubtitle');
         if (!gridOfertas) return;
 
         if (cargandoCatalogo) {
@@ -1269,25 +2049,62 @@
             .filter(p => Boolean(p.EnOferta) && Number(p.Descuento) > 0)
             .sort((a, b) => (Number(b.Descuento) - Number(a.Descuento)) || (Number(a.Precio) - Number(b.Precio)));
 
+        const maxDesc = ofertasReales.reduce((acc, p) => Math.max(acc, Number(p.Descuento || 0)), 0);
+        const totalDisponibles = obtenerProductosActivosBase().filter(p => Number(p.Stock) > 0).length;
+
+        if (statsWrap) {
+            statsWrap.innerHTML = ofertasReales.length > 0
+                ? `
+                    <div class="wg-offer-stat-pill">
+                        <strong>${ofertasReales.length}</strong>
+                        <span>Ofertas activas</span>
+                    </div>
+                    <div class="wg-offer-stat-pill is-highlight">
+                        <strong>-${maxDesc}%</strong>
+                        <span>Descuento máximo</span>
+                    </div>
+                `
+                : `
+                    <div class="wg-offer-stat-pill">
+                        <strong>${totalDisponibles}</strong>
+                        <span>Productos en stock</span>
+                    </div>
+                `;
+        }
+
         if (ofertasReales.length === 0) {
+            if (subtitleEl) {
+                subtitleEl.textContent = 'En este momento todos los suplementos mantienen su precio regular directo en córdobas (C$).';
+            }
             if (topbarWrap) topbarWrap.style.display = 'none';
             if (pagEl) pagEl.innerHTML = '';
+            const btnAdminOfertas = window.ES_ADMIN_TIENDA
+                ? `<a href="/producto_listar" class="wg-btn-system-outline"><i class="fas fa-sliders"></i> Configurar ofertas en sistema</a>`
+                : '';
+
             gridOfertas.innerHTML = `
-                <div class="store-state-box">
-                    <i class="fas fa-tag store-state-icon" aria-hidden="true"></i>
-                    <h3>No hay productos en oferta en este momento</h3>
-                    <p>Explora el catálogo de suplementos e hidratación con existencias disponibles.</p>
-                    <button type="button" class="store-btn-cta" onclick="navegarVistaProductosLimpia()" style="padding: 11px 24px; font-size: 13.5px;">
-                        Ver catálogo <i class="fas fa-arrow-right"></i>
-                    </button>
+                <div class="store-state-box" data-fade="panel">
+                    <div class="store-state-badge-icon"><i class="fas fa-tag" aria-hidden="true"></i></div>
+                    <h3>No hay promociones con descuento activas hoy</h3>
+                    <p>Explora nuestro catálogo completo con precios oficiales en córdobas y existencias reales listas en recepción.</p>
+                    <div class="store-state-actions">
+                        <button type="button" class="store-btn-cta" onclick="navegarVistaProductosLimpia()">
+                            Explorar catálogo <i class="fas fa-arrow-right"></i>
+                        </button>
+                        ${btnAdminOfertas}
+                    </div>
                 </div>
             `;
+            sincronizarElementosAnimados(gridOfertas);
             return;
         }
 
+        if (subtitleEl) {
+            subtitleEl.textContent = 'Descuentos directos aplicados sobre precios reales en córdobas (C$), listos para retiro en gimnasio.';
+        }
         if (topbarWrap) topbarWrap.style.display = 'flex';
         if (counterEl) {
-            counterEl.innerHTML = `<strong>${ofertasReales.length}</strong> producto${ofertasReales.length === 1 ? '' : 's'} en oferta`;
+            counterEl.innerHTML = `<strong>${ofertasReales.length}</strong> producto${ofertasReales.length === 1 ? '' : 's'} con descuento activo`;
         }
 
         const totalPaginas = Math.max(1, Math.ceil(ofertasReales.length / PAGE_SIZE));
@@ -1296,7 +2113,9 @@
         const inicioIdx = (paginaOfertas - 1) * PAGE_SIZE;
         const visibles = ofertasReales.slice(inicioIdx, inicioIdx + PAGE_SIZE);
 
-        gridOfertas.innerHTML = visibles.map((p, idx) => crearHtmlTarjeta(p, idx)).join('');
+        limpiarObservadosEnContenedor(gridOfertas);
+        gridOfertas.innerHTML = visibles.map((p, idx) => crearHtmlTarjeta(p, idx, false)).join('');
+        sincronizarElementosAnimados(gridOfertas);
         if (pagEl) {
             pagEl.innerHTML = construirHtmlPaginacion(ofertasReales.length, paginaOfertas, 'irAPaginaOfertas');
         }
@@ -1306,11 +2125,15 @@
         paginaOfertas = Math.max(1, Number(numPagina) || 1);
         renderizarVistaOfertas();
         sincronizarUrlConEstado(false);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (window.WGMotion && typeof window.WGMotion.scrollToTop === 'function') {
+            window.WGMotion.scrollToTop(false);
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     /* ======================================================================
-        MODAL DE DETALLES DEL PLAN DE MEMBRESÍA ( FLUJO DE CONTRATACIÓN INTACTO )
+        MODAL DE DETALLES DEL PLAN DE MEMBRESÍA (CONTRATACIÓN INTACTA)
        ====================================================================== */
     window.abrirDetalleMembresiaTienda = function (cardEl) {
         if (!cardEl) return;
@@ -1406,7 +2229,7 @@
     };
 
     /* ======================================================================
-        MODAL DE DETALLE DE PRODUCTO (IMAGEN IZQ + COMPRA DER + FICHA DEBAJO)
+        MODAL DE VISTA RÁPIDA / DETALLE DE PRODUCTO
        ====================================================================== */
     window.cambiarCantidadModalProducto = function (delta, maxPermitido) {
         const input = document.getElementById('modalProdQty');
@@ -1416,10 +2239,10 @@
         input.value = String(Math.min(max, Math.max(1, actual + Number(delta))));
     };
 
-    window.agregarDesdeModalProducto = function (idProducto) {
+    window.agregarDesdeModalProducto = function (idProducto, btnEl) {
         const input = document.getElementById('modalProdQty');
         const cant = input ? Math.max(1, Math.floor(Number(input.value) || 1)) : 1;
-        if (window.agregarAlCarrito(idProducto, cant)) {
+        if (window.agregarAlCarrito(idProducto, cant, btnEl)) {
             cerrarModalProducto();
         }
     };
@@ -1535,7 +2358,7 @@
                         </div>
 
                         <button type="button" class="store-add-btn" style="flex: 1; min-width: 190px; height: 46px; font-size: 14px;"
-                                onclick="agregarDesdeModalProducto(${Number(prod.IdProducto)})"
+                                onclick="agregarDesdeModalProducto(${Number(prod.IdProducto)}, this)"
                                 ${deshabilitarCompra ? 'disabled' : ''}>
                             <i class="fas ${agotado ? 'fa-ban' : 'fa-cart-plus'}" aria-hidden="true"></i>
                             <span>${escaparHtml(textoBotonCompra)}</span>
@@ -1605,7 +2428,7 @@
     };
 
     /* ======================================================================
-        CARRITO DE COMPRAS Y VERIFICACIÓN DE STOCK EN VIVO AL COMPRAR
+        CARRITO DE COMPRAS + VUELO ANIMADO AL ICONO + CHECKOUT EN VIVO
        ====================================================================== */
     function cargarCarrito() {
         try {
@@ -1664,10 +2487,10 @@
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.22s ease';
             setTimeout(() => toast.remove(), 240);
-        }, 3200);
+        }, 3000);
     };
 
-    window.agregarAlCarrito = function (idProducto, cantidadAgregar) {
+    window.agregarAlCarrito = function (idProducto, cantidadAgregar, triggerBtn) {
         const id = Number(idProducto);
         const cant = Math.max(1, Math.floor(Number(cantidadAgregar || 1)));
         const prod = catalogoProductos.find(p => Number(p.IdProducto) === id);
@@ -1711,6 +2534,13 @@
         }
 
         guardarCarrito();
+
+        if (window.WGMotion && typeof window.WGMotion.flyToCart === 'function' && triggerBtn) {
+            window.WGMotion.flyToCart(triggerBtn, prod.ImagenUrl);
+        } else if (window.WGMotion && typeof window.WGMotion.bounceCartBadge === 'function') {
+            window.WGMotion.bounceCartBadge();
+        }
+
         window.mostrarToastTienda(
             cant > 1
                 ? `${cant} uds. de "${prod.NombreProducto}" agregadas al carrito`
@@ -1759,6 +2589,9 @@
         if (carrito.length === 0) return;
         carrito = [];
         guardarCarrito();
+        if (window.WGMotion && typeof window.WGMotion.bounceCartBadge === 'function') {
+            window.WGMotion.bounceCartBadge();
+        }
         window.mostrarToastTienda('Se vació el carrito de compras.', 'info');
     };
 
@@ -2019,26 +2852,25 @@
         INICIALIZACIÓN GENERAL
        ====================================================================== */
     document.addEventListener('DOMContentLoaded', function () {
+        inicializarMotorDesvanecimiento();
         cargarCarrito();
         renderizarCarrito();
 
-        // Montar inicialmente la vista indicada en la URL (#inicio por defecto)
         const rutaInicial = leerRutaDesdeUrl();
         estadoFiltros = rutaInicial.filtros;
         paginaOfertas = rutaInicial.paginaOfertas;
         montarVista(rutaInicial.vista, { reemplazarHistorial: true, subirAlInicio: true });
 
-        // Escuchar navegación atrás/adelante o cambios manuales de hash
         const sincronizarDesdeNavegador = function () {
             const ruta = leerRutaDesdeUrl();
             estadoFiltros = ruta.filtros;
             paginaOfertas = ruta.paginaOfertas;
+            lotesAcumuladosCatalogo = 1;
             montarVista(ruta.vista, { desdePopState: true });
         };
         window.addEventListener('hashchange', sincronizarDesdeNavegador);
         window.addEventListener('popstate', sincronizarDesdeNavegador);
 
-        // Buscador del encabezado con debounce de 250 ms
         const searchInput = document.getElementById('storeSearchInput');
         const clearBtn = document.getElementById('storeSearchClear');
         if (searchInput) {
@@ -2049,12 +2881,13 @@
                 timerBusqueda = setTimeout(function () {
                     estadoFiltros.busqueda = texto;
                     estadoFiltros.pagina = 1;
+                    lotesAcumuladosCatalogo = 1;
                     if (vistaActual !== 'productos') {
                         if (texto.trim() !== '') {
                             montarVista('productos', { reemplazarHistorial: false, subirAlInicio: true });
                         }
                     } else {
-                        actualizarResultadosCatalogo({ reemplazarUrl: true });
+                        actualizarResultadosCatalogo({ reemplazarUrl: true, animarGrilla: true });
                     }
                 }, DEBOUNCE_MS);
             });
@@ -2078,12 +2911,12 @@
                 if (vistaActual === 'productos') {
                     estadoFiltros.busqueda = '';
                     estadoFiltros.pagina = 1;
-                    actualizarResultadosCatalogo({ reemplazarUrl: true });
+                    lotesAcumuladosCatalogo = 1;
+                    actualizarResultadosCatalogo({ reemplazarUrl: true, animarGrilla: true });
                 }
             });
         }
 
-        // Menú desplegable de usuario en el encabezado
         const userBtn = document.getElementById('storeUserBtn');
         const userDropdown = document.getElementById('storeUserDropdown');
         if (userBtn && userDropdown) {
