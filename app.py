@@ -174,17 +174,28 @@ def _parse_fecha(fecha_val):
 # ==================================================
 # DECORADORES Y CONTROL DE ACCESO POR ROL
 # ==================================================
-def _es_rol_cliente():
+ROLES_ADMIN_PERMITIDOS = {'administrador', 'entrenador', 'recepcionista'}
+
+def _tiene_permiso_admin():
+    if 'usuario_id' not in session:
+        return False
     rol = str(session.get('rol') or '').strip().lower()
-    return rol == 'cliente'
+    return rol in ROLES_ADMIN_PERMITIDOS
+
+def _es_rol_cliente():
+    if 'usuario_id' not in session:
+        return False
+    return not _tiene_permiso_admin()
 
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'usuario_id' not in session:
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'requiere_login': True, 'error': 'Debes iniciar sesión para continuar.'}), 401
             return redirect(url_for('login'))
-        # Proteger rutas administrativas para que los clientes solo accedan a la tienda
-        if _es_rol_cliente():
+        # El panel de administrador y sus rutas solo se muestran a usuarios con permisos administrativos/staff
+        if not _tiene_permiso_admin():
             if request.path.startswith('/api/'):
                 return jsonify({'success': False, 'error': 'Acceso restringido al panel administrativo.'}), 403
             return redirect(url_for('tienda'))
@@ -195,6 +206,12 @@ def tienda_login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'usuario_id' not in session:
+            if request.path.startswith('/api/') or request.is_json:
+                return jsonify({
+                    'success': False,
+                    'requiere_login': True,
+                    'error': 'Para realizar cualquier compra debes iniciar sesión o registrarte.'
+                }), 401
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
@@ -245,13 +262,29 @@ def _procesar_imagen_subida(archivo_file, imagen_predefinida="", nombre="", marc
 # ==================================================
 # RUTAS PRINCIPALES
 # ==================================================
+def _renderizar_pagina_web_tienda():
+    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=False)
+    resumen_tienda = ObtenerResumenTienda(catalogo)
+    _, membresias_raw = ListarMembresias()
+    membresias_enriquecidas = EnriquecerMembresiasTienda(membresias_raw)
+    autenticado = 'usuario_id' in session
+    es_admin_o_staff = _tiene_permiso_admin()
+    rol_actual = str(session.get('rol') or 'Cliente') if autenticado else 'Visitante'
+    nombre_usuario = session.get('usuario_nombre') if autenticado else None
+    return render_template(
+        'tienda.html',
+        autenticado=autenticado,
+        usuario=nombre_usuario,
+        usuario_rol=rol_actual,
+        es_admin_o_staff=es_admin_o_staff,
+        catalogo=catalogo,
+        resumen_tienda=resumen_tienda,
+        membresias=membresias_enriquecidas
+    )
+
 @app.route('/')
 def index():
-    if 'usuario_id' in session:
-        if _es_rol_cliente():
-            return redirect(url_for('tienda'))
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return _renderizar_pagina_web_tienda()
 
 @app.route('/login')
 def login():
@@ -265,7 +298,7 @@ def dashboard():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('tienda'))
 
 # ==================================================
 # RECUPERACIÓN Y RESTABLECIMIENTO DE CONTRASEÑA (HU-003)
@@ -313,9 +346,10 @@ def api_restablecer_contrasena():
 # ==================================================
 @app.route('/api/login', methods=['POST'])
 def api_login():
-    data = request.json
-    usuario = data.get('NombreUsuario')
-    password = data.get('Contrasena')
+    data = request.json or {}
+    usuario = (data.get('NombreUsuario') or '').strip()
+    password = data.get('Contrasena') or ''
+    origen = str(data.get('origen') or '').strip().lower()
     
     success, res = LoginCompleto(usuario, password)
     if success:
@@ -325,29 +359,144 @@ def api_login():
         session['nivel'] = res.get('Nivel')
         session['cliente_id'] = res.get('IdCliente')
         session['empleado_id'] = res.get('IdEmpleado')
-        rol_str = str(res.get('NombreRol') or '').strip().lower()
-        redirect_url = '/tienda' if rol_str == 'cliente' else '/dashboard'
+        rol_nombre = res.get('NombreRol') or 'Cliente'
+        rol_str = str(rol_nombre).strip().lower()
+        es_admin = rol_str in ROLES_ADMIN_PERMITIDOS
+        if origen == 'tienda' and not es_admin:
+            redirect_url = '/tienda'
+        else:
+            redirect_url = '/dashboard' if es_admin else '/tienda'
         return jsonify({
             'success': True,
             'redirect_url': redirect_url,
-            'usuario': {'nombre': res.get('NombreUsuario'), 'rol': res.get('NombreRol')}
+            'usuario': {
+                'id': res.get('IdUsuario'),
+                'nombre': res.get('NombreUsuario'),
+                'rol': rol_nombre,
+                'es_admin': es_admin
+            }
         })
     
     return jsonify({'success': False, 'error': res})
 
+@app.route('/api/tienda/registro', methods=['POST'])
+@app.route('/api/registro-cliente', methods=['POST'])
+def api_tienda_registro():
+    data = request.json or {}
+    primer_nombre = (data.get('PrimerNombre') or '').strip()
+    segundo_nombre = (data.get('SegundoNombre') or '').strip() or None
+    primer_apellido = (data.get('PrimerApellido') or '').strip()
+    segundo_apellido = (data.get('SegundoApellido') or '').strip() or None
+    telefono = (data.get('Telefono') or '').strip()
+    correo = (data.get('Correo') or '').strip()
+    nombre_usuario = (data.get('NombreUsuario') or '').strip()
+    contrasena = (data.get('Contrasena') or '').strip()
+
+    if not primer_nombre or not primer_apellido or not telefono or not correo or not nombre_usuario or not contrasena:
+        return jsonify({'success': False, 'error': 'Por favor completa todos los campos obligatorios.'}), 400
+
+    if len(contrasena) < 4:
+        return jsonify({'success': False, 'error': 'La contraseña debe tener al menos 4 caracteres.'}), 400
+
+    id_cliente_existente = None
+    id_rol_cliente = 4
+    conexion = None
+    try:
+        conexion = ConectarBD()
+        if not conexion:
+            return jsonify({'success': False, 'error': 'No se pudo conectar con la base de datos.'}), 500
+        cursor = conexion.cursor()
+
+        # 1. Verificar que el NombreUsuario no esté ocupado antes de crear el cliente
+        cursor.execute("SELECT 1 FROM Usuario WHERE NombreUsuario = ?", (nombre_usuario,))
+        if cursor.fetchone():
+            return jsonify({'success': False, 'error': 'El nombre de usuario ya existe. Elige otro diferente.'}), 400
+
+        # 2. Verificar si ya existe un Cliente con ese correo o teléfono
+        cursor.execute("SELECT IdCliente FROM Cliente WHERE Correo = ? OR Telefono = ?", (correo, telefono))
+        fila_cli = cursor.fetchone()
+        if fila_cli:
+            id_cli_temp = int(fila_cli[0])
+            cursor.execute("SELECT 1 FROM Usuario WHERE IdCliente = ?", (id_cli_temp,))
+            if cursor.fetchone():
+                return jsonify({'success': False, 'error': 'Ya existe una cuenta registrada con ese correo o teléfono. Inicia sesión.'}), 400
+            id_cliente_existente = id_cli_temp
+
+        # 3. Obtener IdRol correspondiente a Cliente
+        cursor.execute("SELECT IdRol FROM Rol WHERE LOWER(LTRIM(RTRIM(NombreRol))) = 'cliente'")
+        fila_rol = cursor.fetchone()
+        if fila_rol and fila_rol[0]:
+            id_rol_cliente = int(fila_rol[0])
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error al verificar registro: {str(e)}'}), 500
+    finally:
+        if conexion:
+            conexion.close()
+
+    if id_cliente_existente is None:
+        ok_cli, res_cli = RegistrarCliente(
+            primer_nombre,
+            segundo_nombre,
+            primer_apellido,
+            segundo_apellido,
+            telefono,
+            correo,
+            0,
+            None
+        )
+        if not ok_cli:
+            return jsonify({'success': False, 'error': str(res_cli)}), 400
+        id_cliente_final = int(res_cli)
+    else:
+        id_cliente_final = id_cliente_existente
+
+    ok_usu, res_usu = CrearUsuario(
+        nombre_usuario,
+        contrasena,
+        id_rol_cliente,
+        id_cliente_final,
+        None
+    )
+    if not ok_usu:
+        return jsonify({'success': False, 'error': str(res_usu)}), 400
+
+    id_usuario_final = int(res_usu)
+    session['usuario_id'] = id_usuario_final
+    session['usuario_nombre'] = nombre_usuario
+    session['rol'] = 'Cliente'
+    session['nivel'] = 3
+    session['cliente_id'] = id_cliente_final
+    session['empleado_id'] = None
+
+    return jsonify({
+        'success': True,
+        'mensaje': '¡Cuenta creada exitosamente! Ya puedes realizar tus compras.',
+        'redirect_url': '/tienda',
+        'usuario': {
+            'id': id_usuario_final,
+            'nombre': nombre_usuario,
+            'rol': 'Cliente',
+            'es_admin': False
+        }
+    })
+
 @app.route('/api/verificar-sesion', methods=['GET', 'POST'])
 def verificar_sesion():
     if 'usuario_id' in session:
+        es_admin = _tiene_permiso_admin()
         return jsonify({
             'autenticado': True,
             'success': True,
+            'es_admin': es_admin,
             'usuario': {
                 'nombre': session.get('usuario_nombre'),
-                'rol': session.get('rol')
+                'rol': session.get('rol'),
+                'es_admin': es_admin
             }
         })
     return jsonify({
         'autenticado': False,
+        'es_admin': False,
         'success': False
     })
 
@@ -1999,26 +2148,10 @@ def empleado_entrenadores():
 # RUTAS HTML Y API - PRODUCTOS Y TIENDA DE SUPLEMENTOS
 # ==================================================
 @app.route('/tienda')
-@tienda_login_required
 def tienda():
-    catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=False)
-    resumen_tienda = ObtenerResumenTienda(catalogo)
-    _, membresias_raw = ListarMembresias()
-    membresias_enriquecidas = EnriquecerMembresiasTienda(membresias_raw)
-    rol_actual = str(session.get('rol') or 'Cliente')
-    es_admin_o_staff = rol_actual.strip().lower() != 'cliente'
-    return render_template(
-        'tienda.html',
-        usuario=session.get('usuario_nombre', 'Cliente'),
-        usuario_rol=rol_actual,
-        es_admin_o_staff=es_admin_o_staff,
-        catalogo=catalogo,
-        resumen_tienda=resumen_tienda,
-        membresias=membresias_enriquecidas
-    )
+    return _renderizar_pagina_web_tienda()
 
 @app.route('/api/tienda/productos', methods=['GET'])
-@tienda_login_required
 def api_tienda_productos():
     catalogo = ObtenerCatalogoTienda(incluir_ocultos=False, incluir_demos=False)
     resumen_tienda = ObtenerResumenTienda(catalogo)

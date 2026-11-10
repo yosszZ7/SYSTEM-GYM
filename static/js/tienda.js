@@ -101,6 +101,7 @@
     let timerPrecio = null;
     let ultimoElementoEnfocado = null;
     let planTiendaActual = { id: '', titulo: '', precio: '', duracion: '' };
+    let accionPendienteAuth = null;
 
     let estadoFiltros = crearEstadoFiltrosInicial();
 
@@ -201,6 +202,10 @@
         if (modalProd && modalProd.classList.contains('open')) {
             return modalProd.querySelector('.store-modal-card');
         }
+        const modalAuth = document.getElementById('storeAuthModal');
+        if (modalAuth && modalAuth.classList.contains('open')) {
+            return modalAuth.querySelector('.store-modal-card');
+        }
         const modalRec = document.getElementById('storeReceiptModal');
         if (modalRec && modalRec.classList.contains('open')) {
             return modalRec.querySelector('.store-modal-card');
@@ -214,6 +219,7 @@
 
     function manejarTecladoGlobal(e) {
         if (e.key === 'Escape') {
+            if (typeof window.cerrarModalAuthTienda === 'function') window.cerrarModalAuthTienda();
             cerrarDetalleMembresiaTienda();
             cerrarModalProducto();
             cerrarModalComprobante();
@@ -2223,8 +2229,18 @@
     };
 
     window.seleccionarPlanComoCliente = function () {
+        if (!window.USUARIO_AUTENTICADO) {
+            accionPendienteAuth = { tipo: 'seleccionar_plan' };
+            cerrarDetalleMembresiaTienda();
+            window.abrirModalAuthTienda(
+                'login',
+                'Para contratar un plan de membresía debes iniciar sesión o registrarte.'
+            );
+            return;
+        }
         cerrarDetalleMembresiaTienda();
-        const msg = `Plan seleccionado: ${planTiendaActual.titulo} (${planTiendaActual.duracion} — C$${planTiendaActual.precio}). Solicita tu activación en recepción de World Gym.`;
+        const nombreSocio = (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) ? ` (${window.USUARIO_ACTUAL.nombre})` : '';
+        const msg = `Plan seleccionado${nombreSocio}: ${planTiendaActual.titulo} (${planTiendaActual.duracion} — C$${planTiendaActual.precio}). Solicita tu activación en recepción de World Gym.`;
         window.mostrarToastTienda(msg, 'success');
     };
 
@@ -2491,6 +2507,20 @@
     };
 
     window.agregarAlCarrito = function (idProducto, cantidadAgregar, triggerBtn) {
+        if (!window.USUARIO_AUTENTICADO) {
+            accionPendienteAuth = {
+                tipo: 'agregar_carrito',
+                idProducto: Number(idProducto),
+                cantidadAgregar: Math.max(1, Math.floor(Number(cantidadAgregar || 1))),
+                triggerBtn: triggerBtn || null
+            };
+            cerrarModalProducto();
+            window.abrirModalAuthTienda(
+                'login',
+                'Para realizar cualquier compra debes iniciar sesión o registrarte.'
+            );
+            return false;
+        }
         const id = Number(idProducto);
         const cant = Math.max(1, Math.floor(Number(cantidadAgregar || 1)));
         const prod = catalogoProductos.find(p => Number(p.IdProducto) === id);
@@ -2702,6 +2732,15 @@
     window.confirmarCompraTienda = async function () {
         if (carrito.length === 0) return;
 
+        if (!window.USUARIO_AUTENTICADO) {
+            accionPendienteAuth = { tipo: 'confirmar_compra' };
+            window.abrirModalAuthTienda(
+                'login',
+                'Para realizar cualquier compra debes iniciar sesión o registrarte.'
+            );
+            return;
+        }
+
         const btn = document.getElementById('storeCheckoutBtn');
         const notasInput = document.getElementById('storeOrderNotes');
         const notas = notasInput ? notasInput.value.trim() : '';
@@ -2749,6 +2788,16 @@
                 })
             });
             const data = await resp.json();
+
+            if (resp.status === 401 || data.requiere_login) {
+                window.USUARIO_AUTENTICADO = false;
+                accionPendienteAuth = { tipo: 'confirmar_compra' };
+                window.abrirModalAuthTienda(
+                    'login',
+                    data.error || 'Para realizar cualquier compra debes iniciar sesión o registrarte.'
+                );
+                return;
+            }
 
             if (!data.success) {
                 window.mostrarToastTienda(data.error || 'No se pudo procesar el pedido.', 'error');
@@ -2849,6 +2898,352 @@
     }
 
     /* ======================================================================
+        MODAL DE ACCESO Y REGISTRO DE CLIENTES EN TIENDA
+       ====================================================================== */
+    function mostrarAlertaAuthTienda(mensaje, tipo) {
+        const alertEl = document.getElementById('storeAuthAlertBox');
+        if (!alertEl) return;
+        if (!mensaje) {
+            alertEl.style.display = 'none';
+            alertEl.textContent = '';
+            alertEl.className = 'store-auth-alert';
+            return;
+        }
+        alertEl.className = 'store-auth-alert ' + (tipo === 'success' ? 'is-success' : 'is-error');
+        alertEl.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}" aria-hidden="true"></i> <span>${escaparHtml(mensaje)}</span>`;
+        alertEl.style.display = 'flex';
+    }
+
+    window.cambiarTabAuthTienda = function (tab) {
+        const esRegistro = tab === 'registro';
+        const btnLogin = document.getElementById('tabBtnLoginTienda');
+        const btnRegistro = document.getElementById('tabBtnRegistroTienda');
+        const formLogin = document.getElementById('formLoginTienda');
+        const formRegistro = document.getElementById('formRegistroTienda');
+        const heading = document.getElementById('storeAuthModalHeading');
+
+        mostrarAlertaAuthTienda('', '');
+
+        if (btnLogin && btnRegistro) {
+            btnLogin.classList.toggle('active', !esRegistro);
+            btnLogin.setAttribute('aria-selected', esRegistro ? 'false' : 'true');
+            btnRegistro.classList.toggle('active', esRegistro);
+            btnRegistro.setAttribute('aria-selected', esRegistro ? 'true' : 'false');
+        }
+        if (formLogin) formLogin.style.display = esRegistro ? 'none' : 'flex';
+        if (formRegistro) formRegistro.style.display = esRegistro ? 'flex' : 'none';
+        if (heading) {
+            heading.textContent = esRegistro
+                ? 'Crea tu cuenta de cliente'
+                : 'Inicia sesión en tu cuenta';
+        }
+
+        setTimeout(() => {
+            if (esRegistro) {
+                document.getElementById('authRegPrimerNombre')?.focus();
+            } else {
+                document.getElementById('authLoginUsuario')?.focus();
+            }
+        }, 25);
+    };
+
+    window.abrirModalAuthTienda = function (tabInicial, motivoTexto) {
+        const modal = document.getElementById('storeAuthModal');
+        if (!modal) {
+            window.location.href = '/login';
+            return;
+        }
+        ultimoElementoEnfocado = document.activeElement;
+        document.getElementById('storeUserDropdown')?.classList.remove('open');
+
+        const motivoEl = document.getElementById('storeAuthMotivoBanner');
+        if (motivoEl) {
+            motivoEl.textContent = motivoTexto || 'Para realizar cualquier compra o contratar una membresía debes iniciar sesión o registrarte.';
+        }
+
+        window.cambiarTabAuthTienda(tabInicial === 'registro' ? 'registro' : 'login');
+        modal.classList.add('open');
+    };
+
+    window.cerrarModalAuthTienda = function (conservarPendiente) {
+        const modal = document.getElementById('storeAuthModal');
+        if (!modal || !modal.classList.contains('open')) return;
+        modal.classList.remove('open');
+        mostrarAlertaAuthTienda('', '');
+        if (!conservarPendiente) {
+            accionPendienteAuth = null;
+        }
+        if (ultimoElementoEnfocado && typeof ultimoElementoEnfocado.focus === 'function') {
+            ultimoElementoEnfocado.focus();
+            ultimoElementoEnfocado = null;
+        }
+    };
+
+    function actualizarUIUsuarioAutenticado(usuario) {
+        const nombre = (usuario && usuario.nombre) ? String(usuario.nombre) : 'Cliente';
+        const rol = (usuario && usuario.rol) ? String(usuario.rol) : 'Cliente';
+        const esAdmin = Boolean(usuario && usuario.es_admin);
+
+        window.USUARIO_AUTENTICADO = true;
+        window.USUARIO_ACTUAL = { nombre: nombre, rol: rol, es_admin: esAdmin };
+        window.ES_ADMIN_TIENDA = esAdmin;
+
+        // 1. Icono y menú desplegable de usuario en el header
+        const userBtn = document.getElementById('storeUserBtn');
+        const userIcon = document.getElementById('storeUserBtnIcon');
+        const dropdownHead = document.getElementById('storeUserDropdownHead');
+        const dropdownBody = document.getElementById('storeUserDropdownBody');
+
+        if (userBtn) userBtn.title = `Mi cuenta (${nombre})`;
+        if (userIcon) userIcon.className = 'fas fa-user-check';
+        if (dropdownHead) {
+            dropdownHead.innerHTML = `
+                <strong>${escaparHtml(nombre)}</strong>
+                <small>Rol: ${escaparHtml(rol)}</small>
+            `;
+        }
+        if (dropdownBody) {
+            const linksAdminHtml = esAdmin ? `
+                <a href="/dashboard">
+                    <i class="fas fa-gauge-high"></i> Panel de Administrador
+                </a>
+                <a href="/producto_listar">
+                    <i class="fas fa-sliders"></i> Administrar Productos
+                </a>
+                <a href="/membresia_listar">
+                    <i class="fas fa-id-card"></i> Administrar Membresías
+                </a>
+                <a href="/producto_registrar">
+                    <i class="fas fa-plus-circle"></i> Nuevo Producto
+                </a>
+            ` : '';
+            dropdownBody.innerHTML = `
+                <button type="button" onclick="abrirCarrito()">
+                    <i class="fas fa-bag-shopping"></i> Ver Carrito de Compras
+                </button>
+                ${linksAdminHtml}
+                <hr>
+                <a href="/logout" class="store-logout-link">
+                    <i class="fas fa-right-from-bracket"></i> Cerrar Sesión
+                </a>
+            `;
+        }
+
+        // 2. Slot de acción en el header (ocultar botón Iniciar sesión; mostrar Panel Admin solo si tiene permisos)
+        const headerSlot = document.getElementById('storeHeaderAuthSlot');
+        if (headerSlot) {
+            headerSlot.innerHTML = esAdmin ? `
+                <a href="/dashboard" class="store-header-admin-btn" id="storeHeaderAdminBtn" title="Ir al Panel de Administrador">
+                    <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                    <span>Panel Admin</span>
+                </a>
+            ` : '';
+        }
+
+        // 3. Barra superior ejecutiva SYSTEM-GYM (solo si tiene permisos administrativos)
+        let sysBar = document.getElementById('storeSystemBar');
+        if (esAdmin) {
+            document.body.classList.add('has-system-bar');
+            if (!sysBar) {
+                sysBar = document.createElement('div');
+                sysBar.className = 'store-system-bar';
+                sysBar.id = 'storeSystemBar';
+                sysBar.setAttribute('role', 'region');
+                sysBar.setAttribute('aria-label', 'Accesos rápidos al sistema de gestión');
+                sysBar.innerHTML = `
+                    <div class="wg-container store-system-bar-inner">
+                        <div class="store-system-status">
+                            <span class="store-system-dot" aria-hidden="true"></span>
+                            <span><strong>SYSTEM-GYM</strong> · Vista Tienda sincronizada con inventario en vivo</span>
+                            <span class="store-system-role-pill">${escaparHtml(rol)}</span>
+                        </div>
+                        <div class="store-system-actions">
+                            <a href="/dashboard" class="store-back-dashboard" title="Regresar al Panel de Administrador">
+                                <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                                <span>Panel de Administrador</span>
+                            </a>
+                            <a href="/producto_listar" class="store-admin-pill store-only-productos" title="Ir al panel administrativo de productos">
+                                <i class="fas fa-sliders" aria-hidden="true"></i>
+                                <span>Administrar Productos</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                document.body.insertBefore(sysBar, document.body.firstChild);
+            }
+        } else {
+            document.body.classList.remove('has-system-bar');
+            if (sysBar) sysBar.remove();
+        }
+
+        // 4. Menú móvil y Footer
+        const mobileAuth = document.getElementById('storeMobileNavAuth');
+        if (mobileAuth) {
+            mobileAuth.innerHTML = esAdmin ? `
+                <a href="/dashboard" class="store-back-dashboard">
+                    <i class="fas fa-gauge-high"></i> <span>Panel de Administrador</span>
+                </a>
+                <a href="/producto_listar" class="store-admin-pill">
+                    <i class="fas fa-sliders"></i> <span>Administrar Productos</span>
+                </a>
+            ` : `
+                <a href="/logout" class="store-back-dashboard" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-right-from-bracket"></i> <span>Cerrar Sesión (${escaparHtml(nombre)})</span>
+                </a>
+            `;
+        }
+
+        const footerCol = document.getElementById('storeFooterAccountCol');
+        if (footerCol) {
+            footerCol.innerHTML = `
+                <h4>Tu Cuenta</h4>
+                <button type="button" onclick="abrirCarrito()">Mi Carrito</button>
+                ${esAdmin ? '<a href="/dashboard">Panel de Administrador</a><a href="/producto_listar">Administrar Productos</a>' : ''}
+                <a href="/logout">Cerrar Sesión</a>
+            `;
+        }
+    }
+
+    function ejecutarAccionPendienteAuth() {
+        const pendiente = accionPendienteAuth;
+        accionPendienteAuth = null;
+        if (!pendiente) return;
+
+        if (pendiente.tipo === 'agregar_carrito') {
+            window.agregarAlCarrito(pendiente.idProducto, pendiente.cantidadAgregar, pendiente.triggerBtn);
+        } else if (pendiente.tipo === 'confirmar_compra') {
+            window.confirmarCompraTienda();
+        } else if (pendiente.tipo === 'seleccionar_plan') {
+            window.seleccionarPlanComoCliente();
+        }
+    }
+
+    window.enviarLoginTienda = async function (e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        const inputUsu = document.getElementById('authLoginUsuario');
+        const inputPass = document.getElementById('authLoginPassword');
+        const btn = document.getElementById('btnSubmitLoginTienda');
+
+        const usuario = inputUsu ? inputUsu.value.trim() : '';
+        const password = inputPass ? inputPass.value : '';
+
+        if (!usuario || !password) {
+            mostrarAlertaAuthTienda('Por favor ingresa tu nombre de usuario y contraseña.', 'error');
+            return false;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Verificando acceso...</span>`;
+        }
+        mostrarAlertaAuthTienda('', '');
+
+        try {
+            const resp = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    NombreUsuario: usuario,
+                    Contrasena: password,
+                    origen: 'tienda'
+                })
+            });
+            const data = await resp.json();
+
+            if (!data.success) {
+                mostrarAlertaAuthTienda(data.error || 'Usuario o contraseña incorrectos.', 'error');
+                return false;
+            }
+
+            actualizarUIUsuarioAutenticado(data.usuario || { nombre: usuario, rol: 'Cliente', es_admin: false });
+            window.cerrarModalAuthTienda(true);
+            if (inputPass) inputPass.value = '';
+
+            const saludo = (data.usuario && data.usuario.es_admin)
+                ? `¡Bienvenido, ${data.usuario.nombre}! Panel de Administrador habilitado.`
+                : `¡Sesión iniciada como ${data.usuario ? data.usuario.nombre : usuario}!`;
+            window.mostrarToastTienda(saludo, 'success');
+
+            ejecutarAccionPendienteAuth();
+        } catch (err) {
+            console.error(err);
+            mostrarAlertaAuthTienda('Error de conexión con el servidor. Intenta nuevamente.', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-right-to-bracket"></i> <span>Iniciar Sesión y Continuar</span>`;
+            }
+        }
+        return false;
+    };
+
+    window.enviarRegistroTienda = async function (e) {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        const primerNombre = document.getElementById('authRegPrimerNombre')?.value.trim() || '';
+        const segundoNombre = document.getElementById('authRegSegundoNombre')?.value.trim() || '';
+        const primerApellido = document.getElementById('authRegPrimerApellido')?.value.trim() || '';
+        const segundoApellido = document.getElementById('authRegSegundoApellido')?.value.trim() || '';
+        const telefono = document.getElementById('authRegTelefono')?.value.trim() || '';
+        const correo = document.getElementById('authRegCorreo')?.value.trim() || '';
+        const nombreUsuario = document.getElementById('authRegUsuario')?.value.trim() || '';
+        const contrasena = document.getElementById('authRegPassword')?.value || '';
+        const btn = document.getElementById('btnSubmitRegistroTienda');
+
+        if (!primerNombre || !primerApellido || !telefono || !correo || !nombreUsuario || !contrasena) {
+            mostrarAlertaAuthTienda('Completa todos los campos marcados con asterisco (*).', 'error');
+            return false;
+        }
+        if (contrasena.length < 4) {
+            mostrarAlertaAuthTienda('La contraseña debe tener al menos 4 caracteres.', 'error');
+            return false;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Creando cuenta...</span>`;
+        }
+        mostrarAlertaAuthTienda('', '');
+
+        try {
+            const resp = await fetch('/api/tienda/registro', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    PrimerNombre: primerNombre,
+                    SegundoNombre: segundoNombre,
+                    PrimerApellido: primerApellido,
+                    SegundoApellido: segundoApellido,
+                    Telefono: telefono,
+                    Correo: correo,
+                    NombreUsuario: nombreUsuario,
+                    Contrasena: contrasena
+                })
+            });
+            const data = await resp.json();
+
+            if (!data.success) {
+                mostrarAlertaAuthTienda(data.error || 'No se pudo completar el registro.', 'error');
+                return false;
+            }
+
+            actualizarUIUsuarioAutenticado(data.usuario || { nombre: nombreUsuario, rol: 'Cliente', es_admin: false });
+            window.cerrarModalAuthTienda(true);
+            window.mostrarToastTienda(data.mensaje || `¡Cuenta creada exitosamente! Bienvenido, ${nombreUsuario}.`, 'success');
+
+            ejecutarAccionPendienteAuth();
+        } catch (err) {
+            console.error(err);
+            mostrarAlertaAuthTienda('Error de conexión al registrar tu cuenta.', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-user-check"></i> <span>Crear Cuenta y Continuar</span>`;
+            }
+        }
+        return false;
+    };
+
+    /* ======================================================================
         INICIALIZACIÓN GENERAL
        ====================================================================== */
     document.addEventListener('DOMContentLoaded', function () {
@@ -2930,5 +3325,13 @@
         }
 
         document.addEventListener('keydown', manejarTecladoGlobal);
+
+        const urlParamsAuth = new URLSearchParams(window.location.search);
+        const authParam = (urlParamsAuth.get('auth') || '').toLowerCase();
+        if (!window.USUARIO_AUTENTICADO && (authParam === 'login' || authParam === 'registro')) {
+            setTimeout(() => {
+                window.abrirModalAuthTienda(authParam);
+            }, 150);
+        }
     });
 })();

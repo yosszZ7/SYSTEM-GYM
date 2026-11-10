@@ -141,3 +141,71 @@ class TestTiendaServicio:
         ok_exceso, msg_exceso, _ = ProcesarPedidoTienda([{"IdProducto": 5, "Cantidad": 4}])
         assert ok_exceso is False
         assert "existencias" in msg_exceso.lower()
+
+
+    @patch("app.EnriquecerMembresiasTienda", return_value=[])
+    @patch("app.ListarMembresias", return_value=(True, []))
+    @patch("app.ObtenerResumenTienda", return_value={"categorias": [], "marcas": [], "ofertas_count": 0, "total_productos_unicos": 0, "otros_suplementos_totales": 0})
+    @patch("app.ObtenerCatalogoTienda", return_value=[])
+    def test_inicio_muestra_pagina_web_y_controla_permisos_admin(self, _mock_cat, _mock_res, _mock_mem, _mock_enr):
+        """Al iniciar el sistema (/) muestra la página web, exige login para comprar y oculta el panel admin a visitantes y clientes."""
+        from app import app
+        app.config["TESTING"] = True
+
+        with app.test_client() as client:
+            # 1. Visitante no autenticado ve la página web al entrar a '/'
+            resp_home = client.get("/")
+            assert resp_home.status_code == 200
+            html_home = resp_home.get_data(as_text=True)
+            assert "WorldGym Store" in html_home
+            assert 'id="storeAuthModal"' in html_home
+            assert 'id="storeSystemBar"' not in html_home
+            assert "window.USUARIO_AUTENTICADO = false;" in html_home
+            assert "window.ES_ADMIN_TIENDA = false;" in html_home
+
+            # 2. Visitante no autenticado no puede comprar sin iniciar sesión o registrarse
+            resp_checkout = client.post("/api/tienda/checkout", json={"items": [{"IdProducto": 1, "Cantidad": 1}]})
+            assert resp_checkout.status_code == 401
+            data_checkout = resp_checkout.get_json()
+            assert data_checkout["success"] is False
+            assert data_checkout["requiere_login"] is True
+
+            # 3. Visitante no autenticado no puede acceder a /dashboard
+            resp_dash_guest = client.get("/dashboard")
+            assert resp_dash_guest.status_code == 302
+            assert "/login" in resp_dash_guest.headers["Location"]
+
+            # 4. Usuario con rol Cliente puede ver la tienda pero NO ve el panel de administrador ni accede a /dashboard
+            with client.session_transaction() as sess:
+                sess["usuario_id"] = 99
+                sess["usuario_nombre"] = "cliente_prueba"
+                sess["rol"] = "Cliente"
+                sess["cliente_id"] = 50
+
+            resp_client_store = client.get("/")
+            assert resp_client_store.status_code == 200
+            html_client = resp_client_store.get_data(as_text=True)
+            assert 'id="storeSystemBar"' not in html_client
+            assert "window.USUARIO_AUTENTICADO = true;" in html_client
+            assert "window.ES_ADMIN_TIENDA = false;" in html_client
+
+            resp_dash_client = client.get("/dashboard")
+            assert resp_dash_client.status_code == 302
+            assert "/tienda" in resp_dash_client.headers["Location"]
+
+            # 5. Usuario con rol Administrador sí ve el Panel de Administrador y accede a /dashboard
+            with client.session_transaction() as sess:
+                sess["usuario_id"] = 1
+                sess["usuario_nombre"] = "admin_wg"
+                sess["rol"] = "Administrador"
+
+            resp_admin_store = client.get("/")
+            assert resp_admin_store.status_code == 200
+            html_admin = resp_admin_store.get_data(as_text=True)
+            assert 'id="storeSystemBar"' in html_admin
+            assert "Panel de Administrador" in html_admin
+            assert "window.USUARIO_AUTENTICADO = true;" in html_admin
+            assert "window.ES_ADMIN_TIENDA = true;" in html_admin
+
+            resp_dash_admin = client.get("/dashboard")
+            assert resp_dash_admin.status_code == 200

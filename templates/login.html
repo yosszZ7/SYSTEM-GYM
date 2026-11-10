@@ -887,6 +887,15 @@
                     </button>
                 </div>
 
+                <div class="login-stagger" style="width: 100%; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; --stagger: 7;">
+                    <a href="/tienda" class="forgot-link" style="color: #4B5563;">
+                        <i class="fas fa-store" aria-hidden="true"></i> Ir a la Página Web
+                    </a>
+                    <a href="/tienda?auth=registro" class="forgot-link">
+                        ¿Eres cliente nuevo? Regístrate
+                    </a>
+                </div>
+
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}

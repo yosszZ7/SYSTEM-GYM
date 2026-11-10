@@ -106,9 +106,9 @@
                 <span class="store-system-role-pill">{{ usuario_rol or 'Administrador' }}</span>
             </div>
             <div class="store-system-actions">
-                <a href="/dashboard" class="store-back-dashboard store-only-inicio" title="Regresar al Dashboard del sistema">
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                    <span>Volver al Dashboard</span>
+                <a href="/dashboard" class="store-back-dashboard" title="Regresar al Panel de Administrador">
+                    <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                    <span>Panel de Administrador</span>
                 </a>
                 <a href="/producto_listar" class="store-admin-pill store-only-productos" title="Ir al panel administrativo de productos">
                     <i class="fas fa-sliders" aria-hidden="true"></i>
@@ -219,36 +219,56 @@
 
                     <!-- Icono Perfil de Usuario y Accesos del Sistema -->
                     <div class="store-user-wrapper">
-                        <button type="button" class="store-icon-btn" id="storeUserBtn" title="Mi cuenta ({{ usuario or 'Cliente' }})" aria-label="Menú de usuario">
-                            <i class="far fa-user"></i>
+                        <button type="button" class="store-icon-btn" id="storeUserBtn" title="{% if autenticado %}Mi cuenta ({{ usuario }}){% else %}Iniciar sesión o registrarse{% endif %}" aria-label="Menú de usuario">
+                            <i class="{% if autenticado %}fas fa-user-check{% else %}far fa-user{% endif %}" id="storeUserBtnIcon"></i>
                         </button>
 
                         <div class="store-user-dropdown" id="storeUserDropdown">
-                            <div class="store-user-dropdown-head">
-                                <strong>{{ usuario or 'Cliente' }}</strong>
+                            <div class="store-user-dropdown-head" id="storeUserDropdownHead">
+                                {% if autenticado %}
+                                <strong>{{ usuario }}</strong>
                                 <small>Rol: {{ usuario_rol or 'Cliente' }}</small>
+                                {% else %}
+                                <strong>Visitante</strong>
+                                <small>Inicia sesión para realizar compras</small>
+                                {% endif %}
                             </div>
-                            <button type="button" onclick="abrirCarrito()">
-                                <i class="fas fa-bag-shopping"></i> Ver Carrito de Compras
-                            </button>
-                            {% if es_admin_o_staff %}
-                            <a href="/dashboard">
-                                <i class="fas fa-gauge-high"></i> Volver al Dashboard
-                            </a>
-                            <a href="/producto_listar">
-                                <i class="fas fa-sliders"></i> Administrar Productos
-                            </a>
-                            <a href="/membresia_listar">
-                                <i class="fas fa-id-card"></i> Administrar Membresías
-                            </a>
-                            <a href="/producto_registrar">
-                                <i class="fas fa-plus-circle"></i> Nuevo Producto
-                            </a>
-                            {% endif %}
-                            <hr>
-                            <a href="/logout" class="store-logout-link">
-                                <i class="fas fa-right-from-bracket"></i> Cerrar Sesión
-                            </a>
+                            <div id="storeUserDropdownBody">
+                                {% if autenticado %}
+                                <button type="button" onclick="abrirCarrito()">
+                                    <i class="fas fa-bag-shopping"></i> Ver Carrito de Compras
+                                </button>
+                                {% if es_admin_o_staff %}
+                                <a href="/dashboard">
+                                    <i class="fas fa-gauge-high"></i> Panel de Administrador
+                                </a>
+                                <a href="/producto_listar">
+                                    <i class="fas fa-sliders"></i> Administrar Productos
+                                </a>
+                                <a href="/membresia_listar">
+                                    <i class="fas fa-id-card"></i> Administrar Membresías
+                                </a>
+                                <a href="/producto_registrar">
+                                    <i class="fas fa-plus-circle"></i> Nuevo Producto
+                                </a>
+                                {% endif %}
+                                <hr>
+                                <a href="/logout" class="store-logout-link">
+                                    <i class="fas fa-right-from-bracket"></i> Cerrar Sesión
+                                </a>
+                                {% else %}
+                                <button type="button" onclick="abrirModalAuthTienda('login')">
+                                    <i class="fas fa-right-to-bracket"></i> Iniciar Sesión
+                                </button>
+                                <button type="button" onclick="abrirModalAuthTienda('registro')">
+                                    <i class="fas fa-user-plus"></i> Crear Cuenta (Registrarse)
+                                </button>
+                                <hr>
+                                <button type="button" onclick="abrirCarrito()">
+                                    <i class="fas fa-bag-shopping"></i> Ver Carrito de Compras
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
@@ -263,6 +283,21 @@
                         <i class="fas fa-cart-shopping"></i>
                         <span class="store-icon-badge" id="storeCartBadge">0</span>
                     </button>
+                </div>
+
+                <!-- Acceso directo a Login o Panel de Administrador según sesión/permisos -->
+                <div id="storeHeaderAuthSlot" class="store-header-auth-slot">
+                    {% if not autenticado %}
+                    <button type="button" class="store-header-login-btn" id="storeHeaderLoginBtn" onclick="abrirModalAuthTienda('login')">
+                        <i class="fas fa-user-lock" aria-hidden="true"></i>
+                        <span>Iniciar sesión</span>
+                    </button>
+                    {% elif es_admin_o_staff %}
+                    <a href="/dashboard" class="store-header-admin-btn" id="storeHeaderAdminBtn" title="Ir al Panel de Administrador">
+                        <i class="fas fa-gauge-high" aria-hidden="true"></i>
+                        <span>Panel Admin</span>
+                    </a>
+                    {% endif %}
                 </div>
 
                 <!-- Botón CTA a la derecha -->
@@ -318,16 +353,27 @@
             <a href="#marcas" data-nav-view="marcas" onclick="cerrarMenuMovilTienda(); return navegarVistaTienda('marcas', event)">Por Marca</a>
             <a href="#ofertas" data-nav-view="ofertas" onclick="cerrarMenuMovilTienda(); return navegarVistaTienda('ofertas', event)">Ofertas</a>
         </div>
-        {% if es_admin_o_staff %}
-        <div class="store-mobile-nav-staff">
-            <a href="/dashboard" class="store-back-dashboard store-only-inicio">
-                <i class="fas fa-arrow-left"></i> <span>Volver al Dashboard</span>
+        <div class="store-mobile-nav-staff" id="storeMobileNavAuth">
+            {% if not autenticado %}
+            <button type="button" class="store-back-dashboard" onclick="cerrarMenuMovilTienda(); abrirModalAuthTienda('login')" style="width: 100%; justify-content: center; cursor: pointer;">
+                <i class="fas fa-right-to-bracket"></i> <span>Iniciar Sesión</span>
+            </button>
+            <button type="button" class="store-admin-pill" onclick="cerrarMenuMovilTienda(); abrirModalAuthTienda('registro')" style="width: 100%; justify-content: center; cursor: pointer;">
+                <i class="fas fa-user-plus"></i> <span>Crear Cuenta</span>
+            </button>
+            {% elif es_admin_o_staff %}
+            <a href="/dashboard" class="store-back-dashboard">
+                <i class="fas fa-gauge-high"></i> <span>Panel de Administrador</span>
             </a>
-            <a href="/producto_listar" class="store-admin-pill store-only-productos">
+            <a href="/producto_listar" class="store-admin-pill">
                 <i class="fas fa-sliders"></i> <span>Administrar Productos</span>
             </a>
+            {% else %}
+            <a href="/logout" class="store-back-dashboard" style="width: 100%; justify-content: center;">
+                <i class="fas fa-right-from-bracket"></i> <span>Cerrar Sesión ({{ usuario }})</span>
+            </a>
+            {% endif %}
         </div>
-        {% endif %}
     </aside>
 
     <!-- ==================================================================
@@ -1475,6 +1521,127 @@
         </div>
     </div>
 
+    <!-- ==================================================================
+         MODAL DE INICIO DE SESIÓN Y REGISTRO DE CLIENTE (REQUERIDO PARA COMPRAR)
+         ================================================================== -->
+    <div class="store-modal-overlay" id="storeAuthModal" onclick="if(event.target===this) cerrarModalAuthTienda()">
+        <div class="store-modal-card store-auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="storeAuthModalHeading" data-lenis-prevent>
+            <button type="button" class="store-cart-close store-auth-close-btn" id="storeAuthModalCloseBtn" onclick="cerrarModalAuthTienda()" aria-label="Cerrar ventana de acceso">
+                <i class="fas fa-xmark"></i>
+            </button>
+
+            <div class="store-auth-head">
+                <div class="store-auth-brand-badge">
+                    <img src="/static/image/logo.jpeg" alt="WorldGym" width="38" height="38">
+                    <span>WORLD<em>GYM</em> ACCESS</span>
+                </div>
+                <h2 id="storeAuthModalHeading" class="store-auth-title">Inicia sesión o crea tu cuenta</h2>
+                <p id="storeAuthMotivoBanner" class="store-auth-motivo">
+                    Para realizar cualquier compra o contratar una membresía debes iniciar sesión o registrarte.
+                </p>
+            </div>
+
+            <div class="store-auth-tabs" role="tablist" aria-label="Opciones de acceso">
+                <button type="button" role="tab" id="tabBtnLoginTienda" class="store-auth-tab active" aria-selected="true" onclick="cambiarTabAuthTienda('login')">
+                    <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
+                    <span>Iniciar Sesión</span>
+                </button>
+                <button type="button" role="tab" id="tabBtnRegistroTienda" class="store-auth-tab" aria-selected="false" onclick="cambiarTabAuthTienda('registro')">
+                    <i class="fas fa-user-plus" aria-hidden="true"></i>
+                    <span>Registrarse</span>
+                </button>
+            </div>
+
+            <div id="storeAuthAlertBox" class="store-auth-alert" style="display: none;" role="alert"></div>
+
+            <!-- FORMULARIO 1: INICIAR SESIÓN -->
+            <form id="formLoginTienda" class="store-auth-form" onsubmit="return enviarLoginTienda(event)" novalidate>
+                <div class="store-auth-field">
+                    <label for="authLoginUsuario">Nombre de usuario</label>
+                    <div class="store-auth-input-wrap">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                        <input type="text" id="authLoginUsuario" name="NombreUsuario" placeholder="Ingresa tu usuario" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="store-auth-field">
+                    <label for="authLoginPassword">Contraseña</label>
+                    <div class="store-auth-input-wrap">
+                        <i class="fas fa-lock" aria-hidden="true"></i>
+                        <input type="password" id="authLoginPassword" name="Contrasena" placeholder="Ingresa tu contraseña" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="store-auth-submit-btn" id="btnSubmitLoginTienda">
+                    <i class="fas fa-right-to-bracket" aria-hidden="true"></i>
+                    <span>Iniciar Sesión y Continuar</span>
+                </button>
+
+                <div class="store-auth-switch-foot">
+                    <span>¿Aún no tienes cuenta en WorldGym?</span>
+                    <button type="button" class="store-auth-link-btn" onclick="cambiarTabAuthTienda('registro')">Regístrate gratis aquí</button>
+                </div>
+            </form>
+
+            <!-- FORMULARIO 2: REGISTRO DE NUEVO CLIENTE -->
+            <form id="formRegistroTienda" class="store-auth-form" style="display: none;" onsubmit="return enviarRegistroTienda(event)" novalidate>
+                <div class="store-auth-grid-2">
+                    <div class="store-auth-field">
+                        <label for="authRegPrimerNombre">Primer nombre *</label>
+                        <input type="text" id="authRegPrimerNombre" placeholder="Ej. Carlos" required>
+                    </div>
+                    <div class="store-auth-field">
+                        <label for="authRegSegundoNombre">Segundo nombre</label>
+                        <input type="text" id="authRegSegundoNombre" placeholder="Opcional">
+                    </div>
+                </div>
+
+                <div class="store-auth-grid-2">
+                    <div class="store-auth-field">
+                        <label for="authRegPrimerApellido">Primer apellido *</label>
+                        <input type="text" id="authRegPrimerApellido" placeholder="Ej. Ramírez" required>
+                    </div>
+                    <div class="store-auth-field">
+                        <label for="authRegSegundoApellido">Segundo apellido</label>
+                        <input type="text" id="authRegSegundoApellido" placeholder="Opcional">
+                    </div>
+                </div>
+
+                <div class="store-auth-grid-2">
+                    <div class="store-auth-field">
+                        <label for="authRegTelefono">Teléfono *</label>
+                        <input type="tel" id="authRegTelefono" placeholder="Ej. 8888-8888" required>
+                    </div>
+                    <div class="store-auth-field">
+                        <label for="authRegCorreo">Correo electrónico *</label>
+                        <input type="email" id="authRegCorreo" placeholder="correo@ejemplo.com" required>
+                    </div>
+                </div>
+
+                <div class="store-auth-grid-2">
+                    <div class="store-auth-field">
+                        <label for="authRegUsuario">Usuario para iniciar sesión *</label>
+                        <input type="text" id="authRegUsuario" placeholder="Ej. carlos_wg" required autocomplete="username">
+                    </div>
+                    <div class="store-auth-field">
+                        <label for="authRegPassword">Contraseña *</label>
+                        <input type="password" id="authRegPassword" placeholder="Mínimo 4 caracteres" required autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="store-auth-submit-btn" id="btnSubmitRegistroTienda">
+                    <i class="fas fa-user-check" aria-hidden="true"></i>
+                    <span>Crear Cuenta y Continuar</span>
+                </button>
+
+                <div class="store-auth-switch-foot">
+                    <span>¿Ya tienes una cuenta registrada?</span>
+                    <button type="button" class="store-auth-link-btn" onclick="cambiarTabAuthTienda('login')">Inicia sesión aquí</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Contenedor de notificaciones Toast -->
     <div class="store-toast-container" id="storeToastContainer" aria-live="polite"></div>
 
@@ -1517,14 +1684,19 @@
                     <button type="button" onclick="abrirCategoriaDesdeMenu('Bebidas energéticas')">Bebidas y energía</button>
                 </div>
 
-                <div class="wg-footer-nav-col">
+                <div class="wg-footer-nav-col" id="storeFooterAccountCol">
                     <h4>Tu Cuenta</h4>
                     <button type="button" onclick="abrirCarrito()">Mi Carrito</button>
-                    {% if es_admin_o_staff %}
-                    <a href="/dashboard">Volver al Dashboard</a>
-                    <a href="/producto_listar">Administrar Productos</a>
+                    {% if autenticado %}
+                        {% if es_admin_o_staff %}
+                        <a href="/dashboard">Panel de Administrador</a>
+                        <a href="/producto_listar">Administrar Productos</a>
+                        {% endif %}
+                        <a href="/logout">Cerrar Sesión</a>
+                    {% else %}
+                        <button type="button" onclick="abrirModalAuthTienda('login')">Iniciar Sesión</button>
+                        <button type="button" onclick="abrirModalAuthTienda('registro')">Crear Cuenta</button>
                     {% endif %}
-                    <a href="/logout">Cerrar Sesión</a>
                 </div>
             </div>
 
@@ -1547,6 +1719,8 @@
     <script>
         window.CATALOGO_INICIAL = {{ catalogo | tojson | safe }};
         window.RESUMEN_TIENDA_INICIAL = {{ (resumen_tienda if resumen_tienda is defined else {}) | tojson | safe }};
+        window.USUARIO_AUTENTICADO = {{ 'true' if autenticado else 'false' }};
+        window.USUARIO_ACTUAL = {{ ({'nombre': usuario, 'rol': usuario_rol, 'es_admin': es_admin_o_staff} if autenticado else none) | tojson | safe }};
         window.ES_ADMIN_TIENDA = {{ 'true' if es_admin_o_staff else 'false' }};
     </script>
 
