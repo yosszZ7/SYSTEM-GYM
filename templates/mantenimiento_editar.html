@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Mantenimiento{% endblock %}
+{% block breadcrumb %}Maquinaria / Editar Mantenimiento{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-tools"></i> Editar Mantenimiento #{{ mantenimiento.IdMantenimiento if mantenimiento else '' }}</h1>
+            <p>Actualice la máquina asignada, fecha programada, estado o descripción del trabajo</p>
+        </div>
+        <a href="/mantenimiento_ver" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Historial
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-clipboard-check"></i> Datos del Mantenimiento</h2>
+            <span class="badge badge-info">Edición</span>
+        </div>
+
+        <div class="card-body">
+            {% if mantenimiento %}
+            <form method="POST" action="/mantenimiento_editar/{{ mantenimiento.IdMantenimiento }}">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="IdMaquina">
+                            <i class="fas fa-cogs"></i> Máquina <span class="required">*</span>
+                        </label>
+                        <select id="IdMaquina" name="IdMaquina" required>
+                            <option value="">Seleccionar máquina...</option>
+                            {% for m in maquinas %}
+                            <option value="{{ m.IdMaquina }}" {% if m.IdMaquina|string == mantenimiento.IdMaquina|string %}selected{% endif %}>
+                                {{ m.NombreMaquinaria or m.Nombre or ('Máquina #' ~ m.IdMaquina) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="FechaMantenimiento">
+                            <i class="fas fa-calendar-alt"></i> Fecha de Mantenimiento <span class="required">*</span>
+                        </label>
+                        <input type="date" id="FechaMantenimiento" name="FechaMantenimiento"
+                               value="{{ (mantenimiento.FechaMantenimiento|string)[:10] if mantenimiento.FechaMantenimiento else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Estado">
+                            <i class="fas fa-check-circle"></i> Estado de la Máquina
+                        </label>
+                        <select id="Estado" name="Estado">
+                            <option value="Operativa">Operativa</option>
+                            <option value="En Mantenimiento">En Mantenimiento</option>
+                            <option value="Fuera de Servicio">Fuera de Servicio</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="Descripcion">
+                            <i class="fas fa-align-left"></i> Descripción del Trabajo <span class="required">*</span>
+                        </label>
+                        <textarea id="Descripcion" name="Descripcion" rows="4" required maxlength="500">{{ mantenimiento.Descripcion or '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem;">
+                    <a href="/mantenimiento_ver" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Actualizar Mantenimiento
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="empty-state" style="padding: 2rem; text-align: center;">
+                <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                <p>No se encontró el registro de mantenimiento solicitado.</p>
+                <a href="/mantenimiento_ver" class="btn btn-primary" style="margin-top: 10px;">Volver al listado</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

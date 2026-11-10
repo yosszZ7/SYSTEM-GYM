@@ -2239,9 +2239,25 @@
             return;
         }
         cerrarDetalleMembresiaTienda();
-        const nombreSocio = (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) ? ` (${window.USUARIO_ACTUAL.nombre})` : '';
-        const msg = `Plan seleccionado${nombreSocio}: ${planTiendaActual.titulo} (${planTiendaActual.duracion} — C$${planTiendaActual.precio}). Solicita tu activación en recepción de World Gym.`;
+        const nombreSocio = (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) ? window.USUARIO_ACTUAL.nombre : 'Cliente';
+        const folioMembresia = 'MEM-' + Date.now().toString().slice(-6);
+        const fechaActual = new Date().toLocaleString('es-NI');
+        const msg = `Plan seleccionado (${nombreSocio}): ${planTiendaActual.titulo} (${planTiendaActual.duracion} — C$${planTiendaActual.precio}). Presenta este comprobante en recepción de World Gym para activar tu membresía.`;
         window.mostrarToastTienda(msg, 'success');
+
+        mostrarComprobantePedido({
+            Folio: folioMembresia,
+            Fecha: fechaActual,
+            Cliente: nombreSocio,
+            Total: Number(planTiendaActual.precio || 0),
+            Items: [{
+                NombreProducto: planTiendaActual.titulo || 'Plan de Membresía',
+                Marca: 'WORLDGYM MEMBRESÍAS',
+                Presentacion: 'Vigencia: ' + (planTiendaActual.duracion || 'Estándar'),
+                Cantidad: 1,
+                Subtotal: Number(planTiendaActual.precio || 0)
+            }]
+        }, 'Solicitud de membresía registrada. Realiza tu pago y activación inmediata en recepción.');
     };
 
     /* ======================================================================
@@ -3100,6 +3116,25 @@
                 <button type="button" onclick="abrirCarrito()">Mi Carrito</button>
                 ${esAdmin ? '<a href="/dashboard">Panel de Administrador</a><a href="/producto_listar">Administrar Productos</a>' : ''}
                 <a href="/logout">Cerrar Sesión</a>
+            `;
+        }
+
+        const modalPlanFooter = document.getElementById('wgModalPlanFooter');
+        if (modalPlanFooter && esAdmin) {
+            const idPlan = encodeURIComponent(planTiendaActual.id || '1');
+            modalPlanFooter.innerHTML = `
+                <div class="wg-modal-admin-links">
+                    <a href="/membresia_actualizar?id=${idPlan}" id="wgModalBtnEditar" class="wg-btn-outline-dark" title="Editar membresía">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="/membresia_eliminar?id=${idPlan}" id="wgModalBtnEliminar" class="wg-btn-outline-dark danger" title="Eliminar membresía">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </a>
+                </div>
+                <a href="/cliente_membresia?id_membresia=${idPlan}" id="wgModalBtnSeleccionar" class="wg-btn-orange-select">
+                    <span>Continuar con la contratación</span>
+                    <span aria-hidden="true">&rarr;</span>
+                </a>
             `;
         }
     }

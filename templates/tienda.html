@@ -110,7 +110,11 @@
                     <i class="fas fa-gauge-high" aria-hidden="true"></i>
                     <span>Panel de Administrador</span>
                 </a>
-                <a href="/producto_listar" class="store-admin-pill store-only-productos" title="Ir al panel administrativo de productos">
+                <a href="/membresia_listar" class="store-admin-pill" title="Ir al panel administrativo de membresías">
+                    <i class="fas fa-id-card" aria-hidden="true"></i>
+                    <span>Administrar Membresías</span>
+                </a>
+                <a href="/producto_listar" class="store-admin-pill" title="Ir al panel administrativo de productos">
                     <i class="fas fa-sliders" aria-hidden="true"></i>
                     <span>Administrar Productos</span>
                 </a>
@@ -1418,7 +1422,7 @@
                 </div>
             </div>
 
-            <div class="wg-modal-footer">
+            <div class="wg-modal-footer" id="wgModalPlanFooter">
                 {% if es_admin_o_staff %}
                 <div class="wg-modal-admin-links">
                     <a href="#" id="wgModalBtnEditar" class="wg-btn-outline-dark" title="Editar membresía">

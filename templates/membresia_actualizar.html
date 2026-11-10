@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Plan de Membresía{% endblock %}
+{% block breadcrumb %}Membresías / Editar Plan{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-id-card"></i> Editar Plan de Membresía</h1>
+            <p>Actualice el nombre, modalidad, duración o precio oficial del plan seleccionado</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/membresia_listar" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Planes
+            </a>
+            <a href="/cliente_membresia?id_membresia={{ membresia.IdMembresia }}" class="btn btn-primary">
+                <i class="fas fa-user-check"></i> Asignar este Plan
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-pen-to-square"></i> Datos del Plan #{{ membresia.IdMembresia }}</h2>
+            <span class="badge badge-info">{{ membresia.Tipo or 'Estándar' }}</span>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" action="/membresia_actualizar/{{ membresia.IdMembresia }}">
+                <input type="hidden" name="IdMembresia" value="{{ membresia.IdMembresia }}">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="NombreMembresia">
+                            <i class="fas fa-tag"></i> Nombre del Plan <span class="required">*</span>
+                        </label>
+                        <input type="text" id="NombreMembresia" name="NombreMembresia"
+                               value="{{ membresia.NombreMembresia }}" required maxlength="100"
+                               placeholder="Ej. Membresía básica mensual">
+                        <small class="help-text">Nombre oficial registrado en el sistema</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Tipo">
+                            <i class="fas fa-layer-group"></i> Modalidad / Tipo <span class="required">*</span>
+                        </label>
+                        <select id="Tipo" name="Tipo" required>
+                            {% set tipo_actual = (membresia.Tipo or '') %}
+                            <option value="Diario" {% if 'diario' in tipo_actual|lower %}selected{% endif %}>Diario</option>
+                            <option value="Semanal" {% if 'semanal' in tipo_actual|lower %}selected{% endif %}>Semanal</option>
+                            <option value="Quincenal" {% if 'quincenal' in tipo_actual|lower %}selected{% endif %}>Quincenal</option>
+                            <option value="Mensual" {% if 'mensual' in tipo_actual|lower %}selected{% endif %}>Mensual</option>
+                        </select>
+                        <small class="help-text">Categoría de vigencia del plan</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Precio">
+                            <i class="fas fa-coins"></i> Precio en Córdobas (C$) <span class="required">*</span>
+                        </label>
+                        <input type="number" id="Precio" name="Precio"
+                               value="{{ '%.2f'|format(membresia.Precio|float) }}"
+                               step="0.01" min="1" required>
+                        <small class="help-text">Precio vigente en C$ para tienda y recepción</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="DuracionDias">
+                            <i class="fas fa-calendar-day"></i> Duración en Días <span class="required">*</span>
+                        </label>
+                        <input type="number" id="DuracionDias" name="DuracionDias"
+                               value="{{ membresia.DuracionDias if membresia.DuracionDias is not none else 30 }}"
+                               min="1" max="365" required>
+                        <small class="help-text">Cantidad de días calendario de vigencia (ej. 1, 7, 15, 30)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="DuracionMeses">
+                            <i class="fas fa-calendar-alt"></i> Duración en Meses
+                        </label>
+                        <input type="number" id="DuracionMeses" name="DuracionMeses"
+                               value="{{ membresia.DuracionMeses if membresia.DuracionMeses is not none else 0 }}"
+                               min="0" max="24">
+                        <small class="help-text">0 para planes por días (diario/semanal/quincenal), 1 para mensual</small>
+                    </div>
+                </div>
+
+                <div class="card-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem;">
+                    <a href="/membresia_listar" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

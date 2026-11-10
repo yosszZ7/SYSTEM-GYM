@@ -209,3 +209,30 @@ class TestTiendaServicio:
 
             resp_dash_admin = client.get("/dashboard")
             assert resp_dash_admin.status_code == 200
+
+    @patch("app.ListarMembresias", return_value=(True, [{"IdMembresia": 1, "NombreMembresia": "Pase de un día", "Tipo": "Diario", "Precio": 50.0, "DuracionDias": 1, "DuracionMeses": 0}]))
+    @patch("app.ListarMantenimientos", return_value=(True, [{"IdMantenimiento": 1, "IdMaquina": 1, "NombreMaquinaria": "Prensa", "Descripcion": "Ajuste general", "FechaMantenimiento": "2026-10-01"}]))
+    @patch("app.ListarMaquinaria", return_value=(True, [{"IdMaquina": 1, "NombreMaquinaria": "Prensa"}]))
+    @patch("app.ListarClientes", return_value=(True, [{"IdCliente": 1, "PrimerNombre": "Juan", "PrimerApellido": "Pérez"}]))
+    def test_rutas_botones_admin_membresias_mantenimiento_y_qr(self, _mock_cli, _mock_maq, _mock_mant, _mock_mem):
+        """Verifica que los botones de edición de membresías, mantenimiento y credencial QR carguen sus vistas sin errores."""
+        from app import app
+        app.config["TESTING"] = True
+
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess["usuario_id"] = 1
+                sess["usuario_nombre"] = "admin_wg"
+                sess["rol"] = "Administrador"
+
+            resp_mem_edit = client.get("/membresia_actualizar?id=1")
+            assert resp_mem_edit.status_code == 200
+            assert "Editar Plan de Membresía" in resp_mem_edit.get_data(as_text=True)
+
+            resp_mant_edit = client.get("/mantenimiento_editar/1")
+            assert resp_mant_edit.status_code == 200
+            assert "Editar Mantenimiento" in resp_mant_edit.get_data(as_text=True)
+
+            resp_qr = client.get("/cliente_qr")
+            assert resp_qr.status_code == 200
+            assert "Credencial QR" in resp_qr.get_data(as_text=True)

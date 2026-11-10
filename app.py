@@ -504,6 +504,32 @@ def verificar_sesion():
 def api_time():
     return jsonify({'serverTime': datetime.now().isoformat()})
 
+@app.route('/api/sync', methods=['GET', 'POST'])
+def api_sync():
+    return jsonify({'success': True, 'timestamp': datetime.now().isoformat()})
+
+@app.route('/api/registrar-actividad', methods=['POST'])
+def api_registrar_actividad():
+    return jsonify({'success': True})
+
+@app.route('/api/clientes/registrar', methods=['POST'])
+@login_required
+def api_clientes_registrar():
+    data = request.json or request.form or {}
+    ok, res = RegistrarCliente(
+        data.get('PrimerNombre'),
+        data.get('SegundoNombre') or None,
+        data.get('PrimerApellido'),
+        data.get('SegundoApellido') or None,
+        data.get('Telefono'),
+        data.get('Correo'),
+        1 if str(data.get('RequiereEntrenador', '0')) in ('1', 'true', 'True') else 0,
+        int(data.get('IdEntrenador')) if data.get('IdEntrenador') else None
+    )
+    if ok:
+        return jsonify({'success': True, 'id_cliente': res, 'message': 'Cliente registrado exitosamente'})
+    return jsonify({'success': False, 'error': str(res)}), 400
+
 @app.route('/api/heartbeat', methods=['POST'])
 def api_heartbeat():
     return jsonify({'status': 'ok'})
@@ -1972,7 +1998,8 @@ def cliente_rutina():
 @app.route('/cliente_qr')
 @login_required
 def cliente_qr():
-    return render_template('cliente_qr.html', usuario=session.get('usuario_nombre'))
+    _, clientes = ListarClientes()
+    return render_template('cliente_qr.html', usuario=session.get('usuario_nombre'), clientes=clientes or [])
 
 # ==================================================
 # RUTAS HTML - EMPLEADOS
@@ -2822,6 +2849,96 @@ def inventario_movimiento():
 def membresia_listar():
     _, membresias = ListarMembresias()
     return render_template('membresia_listar.html', usuario=session.get('usuario_nombre'), membresias=membresias or [])
+
+@app.route('/membresia_actualizar', methods=['GET', 'POST'])
+@app.route('/membresia_actualizar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def membresia_actualizar(id=None):
+    if id is None:
+        id_raw = request.args.get('id') or request.form.get('IdMembresia')
+        if id_raw and str(id_raw).isdigit():
+            id = int(id_raw)
+        else:
+            flash('Seleccione un plan de membresía para editar.', 'warning')
+            return redirect(url_for('membresia_listar'))
+
+    if request.method == 'POST':
+        nombre_plan = (request.form.get('NombreMembresia') or '').strip()
+        tipo_plan = (request.form.get('Tipo') or 'Estándar').strip()
+        try:
+            precio_plan = float(request.form.get('Precio') or 0)
+            dias_plan = int(request.form.get('DuracionDias') or 30)
+            meses_plan = int(request.form.get('DuracionMeses') or 0)
+        except ValueError:
+            flash('Verifique que el precio y la duración sean valores numéricos válidos.', 'error')
+            return redirect(url_for('membresia_actualizar', id=id))
+
+        if not nombre_plan or precio_plan <= 0 or dias_plan <= 0:
+            flash('Complete todos los datos obligatorios con valores mayores a cero.', 'error')
+            return redirect(url_for('membresia_actualizar', id=id))
+
+        conexion = None
+        try:
+            conexion = ConectarBD()
+            if not conexion:
+                flash('No se pudo conectar con la base de datos.', 'error')
+                return redirect(url_for('membresia_actualizar', id=id))
+            cursor = conexion.cursor()
+            cursor.execute(
+                "UPDATE Membresia SET NombreMembresia = ?, Tipo = ?, Precio = ?, DuracionDias = ?, DuracionMeses = ? WHERE IdMembresia = ?",
+                (nombre_plan, tipo_plan, precio_plan, dias_plan, meses_plan, id)
+            )
+            conexion.commit()
+            flash('Plan de membresía actualizado exitosamente.', 'success')
+            return redirect(url_for('membresia_listar'))
+        except Exception as e:
+            flash(f'Error al actualizar membresía: {limpiar_error_sql(e)}', 'error')
+        finally:
+            if conexion:
+                conexion.close()
+
+    _, membresias = ListarMembresias()
+    membresia = next((m for m in (membresias or []) if int(m.get('IdMembresia') or 0) == id), None)
+    if not membresia:
+        flash('No se encontró el plan de membresía solicitado.', 'error')
+        return redirect(url_for('membresia_listar'))
+
+    return render_template('membresia_actualizar.html', usuario=session.get('usuario_nombre'), membresia=membresia)
+
+@app.route('/membresia_eliminar', methods=['GET', 'POST'])
+@app.route('/membresia_eliminar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def membresia_eliminar(id=None):
+    if id is None:
+        id_raw = request.args.get('id') or request.form.get('IdMembresia')
+        if id_raw and str(id_raw).isdigit():
+            id = int(id_raw)
+        else:
+            flash('Seleccione un plan de membresía válido.', 'warning')
+            return redirect(url_for('membresia_listar'))
+
+    conexion = None
+    try:
+        conexion = ConectarBD()
+        if not conexion:
+            flash('No se pudo conectar con la base de datos.', 'error')
+            return redirect(url_for('membresia_listar'))
+        cursor = conexion.cursor()
+        cursor.execute("SELECT COUNT(*) FROM ClienteMembresia WHERE IdMembresia = ?", (id,))
+        asociados = int(cursor.fetchone()[0] or 0)
+        if asociados > 0:
+            flash(f'No se puede eliminar este plan porque tiene {asociados} membresía(s) de clientes asociadas. Puede editar su nombre o precio.', 'warning')
+            return redirect(url_for('membresia_listar'))
+
+        cursor.execute("DELETE FROM Membresia WHERE IdMembresia = ?", (id,))
+        conexion.commit()
+        flash('Plan de membresía eliminado correctamente.', 'success')
+    except Exception as e:
+        flash(f'No se pudo eliminar el plan: {limpiar_error_sql(e)}', 'error')
+    finally:
+        if conexion:
+            conexion.close()
+    return redirect(url_for('membresia_listar'))
 
 # ==================================================
 # RUTAS HTML - RUTINAS
