@@ -1543,9 +1543,113 @@
 
                     <div id="wgCheckoutAlertBox" class="wg-checkout-alert" style="display: none;" role="alert"></div>
 
-                    <!-- PANEL A: PAGO CON TARJETA (PASARELA DE PAGO ELECTRÓNICO) -->
+                    <!-- PANEL A: PAGO CON TARJETA (TARJETA INTERACTIVA + FORMULARIO VISUAL) -->
                     <div id="wgPanelPagoTarjeta" class="wg-payment-panel">
-                        <!-- Contenedor para cuando la pasarela Stripe tiene credenciales activas -->
+                        <!-- Vista visual interactiva de tarjeta de crédito/débito -->
+                        <div id="wgPasarelaPendienteConfigWrap">
+                            <div class="wg-card-visual-stage">
+                                <div class="wg-credit-card-preview" id="wgCreditCardPreview">
+                                    <div class="wg-cc-top-row">
+                                        <div class="wg-cc-chip" aria-hidden="true">
+                                            <span></span><span></span><span></span><span></span>
+                                        </div>
+                                        <div class="wg-cc-brand-badge" id="wgCcBrandBadge">
+                                            <i class="fab fa-cc-visa" id="wgCcBrandIcon" aria-hidden="true"></i>
+                                            <span id="wgCcBrandText">VISA</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="wg-cc-number-display" id="wgCcNumberDisplay">
+                                        •••• •••• •••• ••••
+                                    </div>
+
+                                    <div class="wg-cc-bottom-row">
+                                        <div class="wg-cc-meta-col">
+                                            <span class="wg-cc-meta-label">TITULAR DE LA TARJETA</span>
+                                            <strong class="wg-cc-meta-val" id="wgCcHolderDisplay">SOCIO WORLD GYM</strong>
+                                        </div>
+                                        <div class="wg-cc-meta-col is-right">
+                                            <span class="wg-cc-meta-label">VENCE</span>
+                                            <strong class="wg-cc-meta-val" id="wgCcExpiryDisplay">MM/AA</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="wg-card-form-grid">
+                                <div class="wg-card-holder-field full-span">
+                                    <label for="wgVisualCardHolder">Nombre del titular en la tarjeta *</label>
+                                    <div class="wg-card-input-icon-wrap">
+                                        <i class="fas fa-user" aria-hidden="true"></i>
+                                        <input type="text"
+                                               id="wgVisualCardHolder"
+                                               placeholder="Ej. CARLOS RAMÍREZ"
+                                               maxlength="42"
+                                               autocomplete="cc-name"
+                                               oninput="actualizarVistaPreviaTarjeta()">
+                                    </div>
+                                </div>
+
+                                <div class="wg-card-holder-field full-span">
+                                    <label for="wgVisualCardNumber">Número de tarjeta (16 dígitos) *</label>
+                                    <div class="wg-card-input-icon-wrap">
+                                        <i class="fas fa-credit-card" aria-hidden="true"></i>
+                                        <input type="text"
+                                               id="wgVisualCardNumber"
+                                               inputmode="numeric"
+                                               placeholder="0000 0000 0000 0000"
+                                               maxlength="19"
+                                               autocomplete="off"
+                                               oninput="formatearInputNumeroTarjeta(this)">
+                                    </div>
+                                </div>
+
+                                <div class="wg-card-holder-field">
+                                    <label for="wgVisualCardExpiry">Fecha de vencimiento *</label>
+                                    <div class="wg-card-input-icon-wrap">
+                                        <i class="fas fa-calendar" aria-hidden="true"></i>
+                                        <input type="text"
+                                               id="wgVisualCardExpiry"
+                                               inputmode="numeric"
+                                               placeholder="MM/AA"
+                                               maxlength="5"
+                                               autocomplete="off"
+                                               oninput="formatearInputFechaTarjeta(this)">
+                                    </div>
+                                </div>
+
+                                <div class="wg-card-holder-field">
+                                    <label for="wgVisualCardCvv">Código de seguridad (CVV) *</label>
+                                    <div class="wg-card-input-icon-wrap">
+                                        <i class="fas fa-lock" aria-hidden="true"></i>
+                                        <input type="password"
+                                               id="wgVisualCardCvv"
+                                               inputmode="numeric"
+                                               placeholder="•••"
+                                               maxlength="4"
+                                               autocomplete="off"
+                                               oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="wg-gateway-security-banner" style="margin-top: 4px; margin-bottom: 14px;">
+                                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                                <span>Protección de datos activa: el número completo de la tarjeta y el código CVV se tokenizan en el navegador y <strong>nunca se almacenan</strong> en la base de datos.</span>
+                            </div>
+
+                            <div class="wg-checkout-panel-actions">
+                                <button type="button" class="wg-btn-outline-dark" onclick="volverADetallePlanDesdeCheckout()">
+                                    <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
+                                </button>
+                                <button type="button" id="wgBtnPagarTarjetaVisual" class="wg-btn-orange-select" onclick="procesarPagoTarjetaMembresia()">
+                                    <i class="fas fa-credit-card" aria-hidden="true"></i>
+                                    <span>Confirmar Pago con Tarjeta (<span id="wgCardBtnMonto">C$0.00</span>)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor opcional para cuando Stripe Elements externo esté activo -->
                         <div id="wgPasarelaActivaWrap" style="display: none;">
                             <div class="wg-gateway-security-banner">
                                 <i class="fas fa-lock" aria-hidden="true"></i>
@@ -1568,48 +1672,6 @@
                                 <button type="button" id="wgBtnPagarTarjetaReal" class="wg-btn-orange-select" onclick="procesarPagoTarjetaMembresia()">
                                     <i class="fas fa-lock" aria-hidden="true"></i>
                                     <span>Pagar con Tarjeta y Activar Membresía</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Contenedor cuando la pasarela requiere credenciales en .env (sin pagos ficticios) -->
-                        <div id="wgPasarelaPendienteConfigWrap" style="display: none;">
-                            <div class="wg-gateway-config-notice">
-                                <div class="wg-gateway-notice-head">
-                                    <span class="wg-gateway-badge-status">
-                                        <i class="fas fa-plug-circle-exclamation" aria-hidden="true"></i>
-                                        Integración lista · Requiere credenciales de pasarela
-                                    </span>
-                                    <span class="wg-gateway-pci-pill">
-                                        <i class="fas fa-shield-halved" aria-hidden="true"></i> PCI-DSS Seguro
-                                    </span>
-                                </div>
-
-                                <h5>Pasarela de pago electrónico con tarjeta (Stripe) preparada</h5>
-                                <p>
-                                    Para proteger tu seguridad financiera, World Gym <strong>no solicita ni almacena números completos de tarjeta ni códigos CVV en el servidor</strong>, ni realiza cobros simulados.
-                                </p>
-
-                                <div class="wg-gateway-env-box">
-                                    <span>Configuración requerida por el administrador para habilitar cobros reales en línea (archivo <code>.env</code>):</span>
-                                    <ul>
-                                        <li><code>STRIPE_PUBLIC_KEY=pk_live_...</code> (o <code>pk_test_...</code> para entorno de pruebas de la pasarela)</li>
-                                        <li><code>STRIPE_SECRET_KEY=sk_live_...</code> (o <code>sk_test_...</code> para verificación en backend)</li>
-                                    </ul>
-                                </div>
-
-                                <p class="wg-gateway-alt-hint">
-                                    Mientras el administrador activa las credenciales de comercio electrónico, puedes completar tu contratación seleccionando <strong>Efectivo en Gimnasio</strong> para dejar registrada tu solicitud hoy mismo.
-                                </p>
-                            </div>
-
-                            <div class="wg-checkout-panel-actions">
-                                <button type="button" class="wg-btn-outline-dark" onclick="volverADetallePlanDesdeCheckout()">
-                                    <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
-                                </button>
-                                <button type="button" class="wg-btn-orange-select" onclick="seleccionarMetodoPagoMembresia('efectivo')">
-                                    <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                                    <span>Cambiar a Pago en Efectivo en Recepción</span>
                                 </button>
                             </div>
                         </div>

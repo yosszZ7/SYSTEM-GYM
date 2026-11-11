@@ -1469,6 +1469,151 @@
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Tarjeta visual interactiva en pantalla de confirmación */
+.wg-card-visual-stage {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.wg-credit-card-preview {
+    width: 100%;
+    max-width: 390px;
+    min-height: 196px;
+    padding: 20px 22px;
+    border-radius: 16px;
+    background: radial-gradient(circle at 88% 18%, rgba(245, 130, 32, 0.35) 0%, transparent 48%),
+                linear-gradient(135deg, #1A1F2B 0%, #0E1117 65%, #171B24 100%);
+    border: 1px solid rgba(245, 130, 32, 0.45);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+}
+
+.wg-cc-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wg-cc-chip {
+    width: 44px;
+    height: 32px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #E5C787 0%, #B89047 100%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    padding: 4px;
+}
+
+.wg-cc-chip span {
+    border: 1px solid rgba(15, 18, 24, 0.35);
+    border-radius: 2px;
+}
+
+.wg-cc-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--wg-font-display);
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+
+.wg-cc-brand-badge i {
+    font-size: 1.25rem;
+    color: #F58220;
+}
+
+.wg-cc-number-display {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.28rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #FFFFFF;
+    margin: 16px 0;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.wg-cc-bottom-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.wg-cc-meta-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.wg-cc-meta-col.is-right {
+    text-align: right;
+}
+
+.wg-cc-meta-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #949AA6;
+    text-transform: uppercase;
+}
+
+.wg-cc-meta-val {
+    font-family: var(--wg-font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.wg-card-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.wg-card-form-grid .wg-card-holder-field {
+    margin-bottom: 0;
+}
+
+.wg-card-form-grid .wg-card-holder-field.full-span {
+    grid-column: 1 / -1;
+}
+
+.wg-card-input-icon-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.wg-card-input-icon-wrap i {
+    position: absolute;
+    left: 13px;
+    color: #F58220;
+    font-size: 0.88rem;
+    pointer-events: none;
+}
+
+.wg-card-input-icon-wrap input {
+    padding-left: 36px !important;
+}
+
 @media (max-width: 640px) {
     .wg-payment-methods-tabs,
     .wg-checkout-plan-dates {

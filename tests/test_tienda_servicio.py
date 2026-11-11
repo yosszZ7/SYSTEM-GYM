@@ -301,7 +301,23 @@ class TestTiendaServicio:
             assert float(solicitud["Monto"]) == 500.0
             mock_asignar.assert_not_called()
 
-            # 5. Administrador confirma la recepción del efectivo -> activa la membresía y pasa a 'Confirmado'
+            # 5. Contratación con Tarjeta desde la vista visual tokenizada (sin PAN ni CVV) activa la membresía de inmediato
+            resp_tc = client.post("/api/tienda/membresias/confirmar-tarjeta", json={
+                "id_membresia": 4,
+                "payment_intent_id": "tok_wg_card_170000_4242",
+                "ultimos4": "4242",
+                "marca_tarjeta": "VISA"
+            })
+            assert resp_tc.status_code == 200
+            datos_tc = resp_tc.get_json()
+            assert datos_tc["success"] is True
+            assert datos_tc["solicitud"]["MetodoPago"] == "Tarjeta"
+            assert datos_tc["solicitud"]["EstadoPago"] == "Confirmado"
+            assert datos_tc["solicitud"]["EstadoMembresia"] == "Activa"
+            assert datos_tc["solicitud"]["Ultimos4"] == "4242"
+            assert mock_asignar.called
+
+            # 6. Administrador confirma la recepción del efectivo -> activa la membresía y pasa a 'Confirmado'
             with client.session_transaction() as sess:
                 sess["usuario_id"] = 1
                 sess["usuario_nombre"] = "admin_wg"

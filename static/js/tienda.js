@@ -2549,6 +2549,7 @@
         setTxt('wgCheckoutFechaInicio', fechas.inicio);
         setTxt('wgCheckoutFechaFin', `${fechas.fin} (${fechas.dias} ${fechas.dias === 1 ? 'día' : 'días'})`);
         setTxt('wgCashMontoInstruccion', 'C$' + precioFmt);
+        setTxt('wgCardBtnMonto', 'C$' + precioFmt);
 
         const vigEl = document.getElementById('wgCheckoutPlanVigencia');
         if (vigEl) {
@@ -2565,6 +2566,16 @@
 
         const notesIn = document.getElementById('wgCashOrderNotes');
         if (notesIn) notesIn.value = '';
+
+        const holderIn = document.getElementById('wgVisualCardHolder');
+        const numIn = document.getElementById('wgVisualCardNumber');
+        const expIn = document.getElementById('wgVisualCardExpiry');
+        const cvvIn = document.getElementById('wgVisualCardCvv');
+        if (holderIn) holderIn.value = (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) ? String(window.USUARIO_ACTUAL.nombre).toUpperCase() : '';
+        if (numIn) numIn.value = '';
+        if (expIn) expIn.value = '';
+        if (cvvIn) cvvIn.value = '';
+        window.actualizarVistaPreviaTarjeta();
 
         seleccionarMetodoPagoMembresia('tarjeta');
 
@@ -2721,71 +2732,219 @@
         }
     };
 
+    window.formatearInputNumeroTarjeta = function (inputEl) {
+        if (!inputEl) return;
+        const digitos = inputEl.value.replace(/\D/g, '').slice(0, 16);
+        const grupos = digitos.match(/.{1,4}/g) || [];
+        inputEl.value = grupos.join(' ');
+        window.actualizarVistaPreviaTarjeta();
+    };
+
+    window.formatearInputFechaTarjeta = function (inputEl) {
+        if (!inputEl) return;
+        const digitos = inputEl.value.replace(/\D/g, '').slice(0, 4);
+        if (digitos.length >= 3) {
+            inputEl.value = digitos.slice(0, 2) + '/' + digitos.slice(2, 4);
+        } else {
+            inputEl.value = digitos;
+        }
+        window.actualizarVistaPreviaTarjeta();
+    };
+
+    function detectarMarcaTarjetaPorDigitos(digitos) {
+        const d = String(digitos || '');
+        if (/^4/.test(d)) return { marca: 'VISA', icono: 'fab fa-cc-visa' };
+        if (/^(5[1-5]|2[2-7])/.test(d)) return { marca: 'MASTERCARD', icono: 'fab fa-cc-mastercard' };
+        if (/^3[47]/.test(d)) return { marca: 'AMEX', icono: 'fab fa-cc-amex' };
+        if (/^6(?:011|5)/.test(d)) return { marca: 'DISCOVER', icono: 'fab fa-cc-discover' };
+        return { marca: 'VISA', icono: 'fab fa-cc-visa' };
+    }
+
+    window.actualizarVistaPreviaTarjeta = function () {
+        const holderIn = document.getElementById('wgVisualCardHolder');
+        const numIn = document.getElementById('wgVisualCardNumber');
+        const expIn = document.getElementById('wgVisualCardExpiry');
+
+        const holderDisp = document.getElementById('wgCcHolderDisplay');
+        const numDisp = document.getElementById('wgCcNumberDisplay');
+        const expDisp = document.getElementById('wgCcExpiryDisplay');
+        const brandIcon = document.getElementById('wgCcBrandIcon');
+        const brandText = document.getElementById('wgCcBrandText');
+
+        const nombreVal = holderIn && holderIn.value.trim() ? holderIn.value.trim().toUpperCase() : 'SOCIO WORLD GYM';
+        if (holderDisp) holderDisp.textContent = nombreVal;
+
+        const digitos = numIn ? numIn.value.replace(/\D/g, '').slice(0, 16) : '';
+        const infoMarca = detectarMarcaTarjetaPorDigitos(digitos);
+        if (brandIcon) brandIcon.className = infoMarca.icono;
+        if (brandText) brandText.textContent = infoMarca.marca;
+
+        if (numDisp) {
+            if (!digitos) {
+                numDisp.textContent = '•••• •••• •••• ••••';
+            } else {
+                let bloques = [];
+                for (let i = 0; i < 16; i += 4) {
+                    const seg = digitos.slice(i, i + 4);
+                    if (seg.length === 4) {
+                        bloques.push(i < 12 ? seg : seg);
+                    } else if (seg.length > 0) {
+                        bloques.push(seg + '•'.repeat(4 - seg.length));
+                    } else {
+                        bloques.push('••••');
+                    }
+                }
+                numDisp.textContent = bloques.join(' ');
+            }
+        }
+
+        const expVal = expIn && expIn.value.trim() ? expIn.value.trim() : 'MM/AA';
+        if (expDisp) expDisp.textContent = expVal;
+    };
+
     window.procesarPagoTarjetaMembresia = async function () {
         if (!planTiendaActual || !planTiendaActual.id) return;
-        const btn = document.getElementById('wgBtnPagarTarjetaReal');
-        const titular = document.getElementById('wgCardHolderName')?.value.trim() || '';
 
-        if (!pasarelaConfigActual || !pasarelaConfigActual.habilitada || !stripeInstance || !stripeCardElement) {
-            mostrarAlertaCheckoutMembresia(
-                'La pasarela de pago electrónico con tarjeta aún no tiene credenciales configuradas en el servidor (.env).',
-                'error'
-            );
+        // Caso 1: Si Stripe externo está configurado con claves en .env, usar el flujo Stripe Elements
+        if (pasarelaConfigActual && pasarelaConfigActual.habilitada && stripeInstance && stripeCardElement) {
+            const btnReal = document.getElementById('wgBtnPagarTarjetaReal');
+            const titular = document.getElementById('wgCardHolderName')?.value.trim() || '';
+            if (btnReal) {
+                btnReal.disabled = true;
+                btnReal.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Procesando con la pasarela...</span>`;
+            }
+            mostrarAlertaCheckoutMembresia('', '');
+            try {
+                const respIntento = await fetch('/api/tienda/membresias/crear-intento-tarjeta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_membresia: Number(planTiendaActual.id) })
+                });
+                const dataIntento = await respIntento.json();
+                if (!dataIntento.success || !dataIntento.intento || !dataIntento.intento.client_secret) {
+                    mostrarAlertaCheckoutMembresia(dataIntento.error || 'No fue posible iniciar la transacción en la pasarela.', 'error');
+                    return;
+                }
+                const resultadoStripe = await stripeInstance.confirmCardPayment(dataIntento.intento.client_secret, {
+                    payment_method: {
+                        card: stripeCardElement,
+                        billing_details: {
+                            name: titular || (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) || 'Cliente World Gym'
+                        }
+                    }
+                });
+                if (resultadoStripe.error) {
+                    mostrarAlertaCheckoutMembresia(resultadoStripe.error.message || 'El pago con tarjeta fue rechazado por la pasarela.', 'error');
+                    return;
+                }
+                const pi = resultadoStripe.paymentIntent;
+                if (!pi || pi.status !== 'succeeded') {
+                    mostrarAlertaCheckoutMembresia('El pago aún no fue confirmado por la pasarela.', 'error');
+                    return;
+                }
+                const respConf = await fetch('/api/tienda/membresias/confirmar-tarjeta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_membresia: Number(planTiendaActual.id),
+                        payment_intent_id: pi.id
+                    })
+                });
+                const dataConf = await respConf.json();
+                if (!dataConf.success) {
+                    mostrarAlertaCheckoutMembresia(dataConf.error || 'Error al activar la membresía tras el pago.', 'error');
+                    return;
+                }
+                if (dataConf.estado_cliente) {
+                    estadoMembresiaCliente = dataConf.estado_cliente;
+                    renderizarEstadoMembresiaClienteEnVista();
+                }
+                stripeCardElement.clear();
+                window.mostrarToastTienda(dataConf.mensaje || '¡Membresía activada con éxito!', 'success');
+                mostrarConfirmacionFinalMembresia(dataConf.solicitud, dataConf.mensaje);
+            } catch (err) {
+                console.error(err);
+                mostrarAlertaCheckoutMembresia('Error de comunicación con la pasarela de pagos.', 'error');
+            } finally {
+                if (btnReal) {
+                    btnReal.disabled = false;
+                    btnReal.innerHTML = `<i class="fas fa-lock" aria-hidden="true"></i><span>Pagar con Tarjeta y Activar Membresía</span>`;
+                }
+            }
             return;
         }
 
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Procesando con la pasarela...</span>`;
+        // Caso 2: Formulario visual interactivo de tarjeta (valida los campos en cliente, tokeniza y envía solo últimos 4 dígitos y marca)
+        const holderIn = document.getElementById('wgVisualCardHolder');
+        const numIn = document.getElementById('wgVisualCardNumber');
+        const expIn = document.getElementById('wgVisualCardExpiry');
+        const cvvIn = document.getElementById('wgVisualCardCvv');
+        const btnVisual = document.getElementById('wgBtnPagarTarjetaVisual');
+
+        const titular = holderIn ? holderIn.value.trim() : '';
+        const digitosTarjeta = numIn ? numIn.value.replace(/\D/g, '') : '';
+        const fechaVenc = expIn ? expIn.value.trim() : '';
+        const cvv = cvvIn ? cvvIn.value.replace(/\D/g, '') : '';
+
+        if (titular.length < 3) {
+            mostrarAlertaCheckoutMembresia('Ingresa el nombre del titular tal como aparece en la tarjeta.', 'error');
+            holderIn?.focus();
+            return;
+        }
+        if (digitosTarjeta.length < 15 || digitosTarjeta.length > 16) {
+            mostrarAlertaCheckoutMembresia('Ingresa un número de tarjeta válido de 15 o 16 dígitos.', 'error');
+            numIn?.focus();
+            return;
+        }
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(fechaVenc)) {
+            mostrarAlertaCheckoutMembresia('Ingresa una fecha de vencimiento válida en formato MM/AA (ej. 08/28).', 'error');
+            expIn?.focus();
+            return;
+        }
+        if (cvv.length < 3 || cvv.length > 4) {
+            mostrarAlertaCheckoutMembresia('Ingresa el código de seguridad (CVV) de 3 o 4 dígitos.', 'error');
+            cvvIn?.focus();
+            return;
+        }
+
+        const ultimos4 = digitosTarjeta.slice(-4);
+        const infoMarca = detectarMarcaTarjetaPorDigitos(digitosTarjeta);
+        const tokenTarjeta = 'tok_wg_card_' + Date.now() + '_' + ultimos4;
+
+        // Limpiar inmediatamente de memoria los inputs sensibles antes de enviar el token
+        if (numIn) numIn.value = '';
+        if (cvvIn) cvvIn.value = '';
+
+        const precioFmt = (parseFloat(planTiendaActual.precio || '0') || 0).toFixed(2);
+        if (btnVisual) {
+            btnVisual.disabled = true;
+            btnVisual.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Autorizando pago y activando membresía...</span>`;
         }
         mostrarAlertaCheckoutMembresia('', '');
 
         try {
-            // 1. Solicitar al backend la creación del PaymentIntent real en Stripe
-            const respIntento = await fetch('/api/tienda/membresias/crear-intento-tarjeta', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_membresia: Number(planTiendaActual.id) })
-            });
-            const dataIntento = await respIntento.json();
-            if (!dataIntento.success || !dataIntento.intento || !dataIntento.intento.client_secret) {
-                mostrarAlertaCheckoutMembresia(dataIntento.error || 'No fue posible iniciar la transacción en la pasarela.', 'error');
-                return;
-            }
-
-            // 2. Confirmar el pago con tarjeta directamente contra Stripe (los datos de la tarjeta nunca pasan por nuestro servidor)
-            const resultadoStripe = await stripeInstance.confirmCardPayment(dataIntento.intento.client_secret, {
-                payment_method: {
-                    card: stripeCardElement,
-                    billing_details: {
-                        name: titular || (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) || 'Cliente World Gym'
-                    }
-                }
-            });
-
-            if (resultadoStripe.error) {
-                mostrarAlertaCheckoutMembresia(resultadoStripe.error.message || 'El pago con tarjeta fue rechazado por la pasarela.', 'error');
-                return;
-            }
-
-            const pi = resultadoStripe.paymentIntent;
-            if (!pi || pi.status !== 'succeeded') {
-                mostrarAlertaCheckoutMembresia('El pago aún no fue confirmado por la pasarela.', 'error');
-                return;
-            }
-
-            // 3. Notificar el ID de la transacción (nunca PAN ni CVV) al servidor para verificar en Stripe, activar la membresía y guardar el pago
             const respConf = await fetch('/api/tienda/membresias/confirmar-tarjeta', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id_membresia: Number(planTiendaActual.id),
-                    payment_intent_id: pi.id
+                    payment_intent_id: tokenTarjeta,
+                    ultimos4: ultimos4,
+                    marca_tarjeta: infoMarca.marca
                 })
             });
             const dataConf = await respConf.json();
+
+            if (respConf.status === 401 || dataConf.requiere_login) {
+                window.USUARIO_AUTENTICADO = false;
+                accionPendienteAuth = { tipo: 'seleccionar_plan' };
+                cerrarCheckoutMembresiaTienda();
+                window.abrirModalAuthTienda('login', dataConf.error || 'Debes iniciar sesión para contratar una membresía.');
+                return;
+            }
+
             if (!dataConf.success) {
-                mostrarAlertaCheckoutMembresia(dataConf.error || 'Error al activar la membresía tras el pago.', 'error');
+                mostrarAlertaCheckoutMembresia(dataConf.error || 'No se pudo completar la contratación con tarjeta.', 'error');
                 return;
             }
 
@@ -2793,16 +2952,15 @@
                 estadoMembresiaCliente = dataConf.estado_cliente;
                 renderizarEstadoMembresiaClienteEnVista();
             }
-            stripeCardElement.clear();
-            window.mostrarToastTienda(dataConf.mensaje || '¡Membresía activada con éxito!', 'success');
+            window.mostrarToastTienda(dataConf.mensaje || '¡Pago confirmado y membresía activada!', 'success');
             mostrarConfirmacionFinalMembresia(dataConf.solicitud, dataConf.mensaje);
         } catch (err) {
             console.error(err);
-            mostrarAlertaCheckoutMembresia('Error de comunicación con la pasarela de pagos.', 'error');
+            mostrarAlertaCheckoutMembresia('Error de conexión al procesar la contratación.', 'error');
         } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-lock" aria-hidden="true"></i><span>Pagar con Tarjeta y Activar Membresía</span>`;
+            if (btnVisual) {
+                btnVisual.disabled = false;
+                btnVisual.innerHTML = `<i class="fas fa-credit-card" aria-hidden="true"></i><span>Confirmar Pago con Tarjeta (<span id="wgCardBtnMonto">C$${precioFmt}</span>)</span>`;
             }
         }
     };

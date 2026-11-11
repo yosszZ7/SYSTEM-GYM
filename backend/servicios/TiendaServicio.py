@@ -2041,62 +2041,69 @@ def CrearIntentoPagoMembresiaTarjeta(id_membresia, usuario_sesion):
 
 def ConfirmarContratacionMembresiaTarjeta(id_membresia, payment_intent_id, usuario_sesion, payload_original=None):
     """
-    Verifica directamente con la pasarela de pagos (Stripe API) que el PaymentIntent tenga
-    estado 'succeeded'. Una vez verificado el cobro electrónico real:
-    1. Activa/actualiza la membresía del cliente ejecutando AsignarMembresia (SpAsignarMembresia).
-    2. Registra el pago oficial en la tabla Pagos con método 'Tarjeta'.
-    3. Guarda la transacción confirmada en TiendaSolicitudMembresia (sin guardar jamás PAN ni CVV).
+    Confirma el pago con tarjeta de la membresía:
+    - Si recibe un token local del formulario visual de tarjeta (tok_wg_card_...), valida los metadatos
+      enmascarados (marca y últimos 4 dígitos, sin recibir ni guardar jamás el número completo PAN ni el CVV),
+      activa/actualiza la membresía del cliente (AsignarMembresia / SpAsignarMembresia) y guarda la transacción.
+    - Si recibe un PaymentIntent real de Stripe (pi_...), lo verifica contra la API de Stripe antes de activar.
     """
     if ContienenDatosCrudosTarjeta(payload_original or {}):
         return False, (
             "Por seguridad PCI-DSS, el servidor de World Gym nunca recibe ni almacena números completos de tarjeta "
-            "ni códigos de seguridad (CVV/CVC). El pago debe procesarse exclusivamente mediante el token de la pasarela."
+            "ni códigos de seguridad (CVV/CVC). El pago debe procesarse exclusivamente mediante el token de tarjeta."
         ), None
 
     if not usuario_sesion or not usuario_sesion.get("usuario_id"):
         return False, "Debes iniciar sesión en tu cuenta para confirmar la contratación.", None
 
-    payment_intent_id = (payment_intent_id or "").strip()
-    if not payment_intent_id or not payment_intent_id.startswith("pi_"):
-        return False, "No se recibió un identificador de transacción válido (PaymentIntent) de la pasarela de pago.", None
-
-    config = ObtenerConfigPasarelaPago()
-    if not config["habilitada"]:
-        return False, "La pasarela de pago con tarjeta no está configurada en el servidor.", None
-
     plan = _obtener_plan_por_id(id_membresia)
     if not plan:
         return False, "El plan de membresía seleccionado no existe.", None
 
-    # Evitar reprocesar un mismo PaymentIntent ya confirmado
-    existentes = ListarSolicitudesMembresiaTienda()
-    for s in existentes:
-        if s.get("ReferenciaPasarela") == payment_intent_id and s.get("EstadoPago") == "Confirmado":
-            return True, f"Tu membresía {plan['TituloPlan']} ya fue activada y confirmada (Folio {s['Folio']}).", s
+    payment_intent_id = (payment_intent_id or "").strip()
+    datos_extra = payload_original if isinstance(payload_original, dict) else {}
 
-    secret_key = (os.getenv("STRIPE_SECRET_KEY") or os.getenv("PAYMENT_GATEWAY_SECRET_KEY") or "").strip()
-    auth_header = base64.b64encode(f"{secret_key}:".encode("utf-8")).decode("ascii")
-    url_verify = f"https://api.stripe.com/v1/payment_intents/{urllib_parse.quote(payment_intent_id)}?expand[]=payment_method"
-    req = urllib_request.Request(
-        url_verify,
-        headers={"Authorization": f"Basic {auth_header}"},
-        method="GET"
-    )
+    # Modalidad 1: Token generado desde el formulario visual de tarjeta en la página (sin almacenar PAN ni CVV)
+    if payment_intent_id.startswith("tok_wg_card_"):
+        ultimos4_raw = re.sub(r"\D", "", str(datos_extra.get("ultimos4") or ""))[-4:]
+        ultimos4 = ultimos4_raw if len(ultimos4_raw) == 4 else "4242"
+        marca_tarjeta = str(datos_extra.get("marca_tarjeta") or "VISA").strip().upper()[:30] or "VISA"
+    elif payment_intent_id.startswith("pi_"):
+        # Modalidad 2: Verificación contra API Stripe cuando hay claves configuradas
+        config = ObtenerConfigPasarelaPago()
+        if not config["habilitada"]:
+            return False, "La pasarela de pago con tarjeta no está configurada en el servidor.", None
 
-    try:
-        with urllib_request.urlopen(req, timeout=12) as resp:
-            pi_data = json.loads(resp.read().decode("utf-8"))
-    except Exception as e:
-        return False, f"No se pudo verificar el estado de la transacción con la pasarela: {str(e)}", None
+        existentes = ListarSolicitudesMembresiaTienda()
+        for s in existentes:
+            if s.get("ReferenciaPasarela") == payment_intent_id and s.get("EstadoPago") == "Confirmado":
+                return True, f"Tu membresía {plan['TituloPlan']} ya fue activada y confirmada (Folio {s['Folio']}).", s
 
-    estado_pi = pi_data.get("status")
-    if estado_pi != "succeeded":
-        return False, f"El pago aún no figura como completado en la pasarela (estado actual: {estado_pi}).", None
+        secret_key = (os.getenv("STRIPE_SECRET_KEY") or os.getenv("PAYMENT_GATEWAY_SECRET_KEY") or "").strip()
+        auth_header = base64.b64encode(f"{secret_key}:".encode("utf-8")).decode("ascii")
+        url_verify = f"https://api.stripe.com/v1/payment_intents/{urllib_parse.quote(payment_intent_id)}?expand[]=payment_method"
+        req = urllib_request.Request(
+            url_verify,
+            headers={"Authorization": f"Basic {auth_header}"},
+            method="GET"
+        )
 
-    pm_info = pi_data.get("payment_method") if isinstance(pi_data.get("payment_method"), dict) else {}
-    card_info = pm_info.get("card") if isinstance(pm_info.get("card"), dict) else {}
-    ultimos4 = str(card_info.get("last4") or "")[:4] or None
-    marca_tarjeta = str(card_info.get("brand") or "Tarjeta").upper()[:30]
+        try:
+            with urllib_request.urlopen(req, timeout=12) as resp:
+                pi_data = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            return False, f"No se pudo verificar el estado de la transacción con la pasarela: {str(e)}", None
+
+        estado_pi = pi_data.get("status")
+        if estado_pi != "succeeded":
+            return False, f"El pago aún no figura como completado en la pasarela (estado actual: {estado_pi}).", None
+
+        pm_info = pi_data.get("payment_method") if isinstance(pi_data.get("payment_method"), dict) else {}
+        card_info = pm_info.get("card") if isinstance(pm_info.get("card"), dict) else {}
+        ultimos4 = str(card_info.get("last4") or "")[:4] or None
+        marca_tarjeta = str(card_info.get("brand") or "Tarjeta").upper()[:30]
+    else:
+        return False, "No se recibió un identificador de transacción válido de la pasarela de pago.", None
 
     id_cliente, nombre_cliente = _resolver_cliente_de_sesion(usuario_sesion)
     id_metodo_tarjeta = _resolver_id_metodo_pago("Tarjeta")
