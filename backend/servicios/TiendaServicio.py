@@ -3,6 +3,8 @@ import re
 import json
 import unicodedata
 from datetime import datetime, timedelta
+from urllib import request as urllib_request, parse as urllib_parse, error as urllib_error
+import base64
 from ConexionBD import ConectarBD
 from backend.servicios.ListaDeProductos import ListarProductos
 from backend.servicios.RegistrarProducto import RegistrarProducto
@@ -10,6 +12,10 @@ from backend.servicios.ActualizarProducto import ActualizarProducto
 from backend.servicios.ProcesarVenta import ProcesarVenta
 from backend.servicios.RegistrarVenta import RegistrarVenta
 from backend.servicios.ListaDeClientes import ListarClientes
+from backend.servicios.ListaDeMembresias import ListarMembresias
+from backend.servicios.ListaDeMetodosPago import ListarMetodosPago
+from backend.servicios.AsignarMembresia import AsignarMembresia
+from backend.servicios.ObtenerMembresiaActivaCliente import ObtenerMembresiaActivaCliente
 from backend.servicios.ReporteVentasPorProducto import ReporteVentasPorProducto
 from backend.servicios.ReporteMembresiasActivas import ReporteMembresiasActivas
 from backend.logica_negocio import aplicar_descuento, calcular_nuevo_stock_salida, verificar_alerta_stock_minimo
@@ -17,6 +23,7 @@ from backend.logica_negocio import aplicar_descuento, calcular_nuevo_stock_salid
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 META_JSON_PATH = os.path.join(BASE_DIR, "static", "data", "tienda_meta.json")
 PEDIDOS_JSON_PATH = os.path.join(BASE_DIR, "static", "data", "tienda_pedidos.json")
+SOLICITUDES_MEMBRESIA_JSON_PATH = os.path.join(BASE_DIR, "static", "data", "membresias_solicitudes.json")
 
 # Catálogo de imágenes reales oficiales de suplementos y productos deportivos
 IMAGENES_SUPLEMENTOS = [
@@ -1488,3 +1495,765 @@ def ProcesarPedidoTienda(items_carrito, usuario_sesion=None, notas=""):
         msg_exito = f"¡Pedido generado! Folio {folio}."
 
     return True, msg_exito, comprobante
+
+
+# ==============================================================================
+# CONTRATACIÓN Y PAGO DE MEMBRESÍAS DESDE LA INTERFAZ DEL CLIENTE (WORLD GYM)
+# ==============================================================================
+CAMPOS_TARJETA_PROHIBIDOS = {
+    "cardnumber", "card_number", "numero_tarjeta", "numerotarjeta", "pan",
+    "cvv", "cvc", "codigo_seguridad", "codigoseguridad", "security_code"
+}
+
+
+def ContienenDatosCrudosTarjeta(payload):
+    """
+    Verifica que ningún payload recibido por el servidor intente enviar o almacenar
+    números completos de tarjeta (PAN) ni códigos de seguridad (CVV/CVC).
+    """
+    if not isinstance(payload, dict):
+        return False
+    for k in payload.keys():
+        k_norm = re.sub(r"[\s\-_]", "", str(k or "").lower())
+        if k_norm in {re.sub(r"[\s\-_]", "", c) for c in CAMPOS_TARJETA_PROHIBIDOS}:
+            return True
+    return False
+
+
+def AsegurarTablaSolicitudesMembresia():
+    """
+    Crea la tabla auxiliar TiendaSolicitudMembresia en SQL Server si no existe.
+    Permite registrar contrataciones de membresías iniciadas por el cliente desde la web,
+    tanto pendientes de confirmación en efectivo como confirmadas mediante pasarela de tarjeta.
+    """
+    conexion = None
+    try:
+        conexion = ConectarBD()
+        if not conexion:
+            return False
+        cursor = conexion.cursor()
+        cursor.execute("""
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TiendaSolicitudMembresia')
+            BEGIN
+                CREATE TABLE TiendaSolicitudMembresia (
+                    IdSolicitud INT IDENTITY(1,1) PRIMARY KEY,
+                    Folio NVARCHAR(50) NOT NULL,
+                    IdCliente INT NOT NULL,
+                    NombreCliente NVARCHAR(200) NOT NULL,
+                    IdUsuario INT NULL,
+                    IdMembresia INT NOT NULL,
+                    NombreMembresia NVARCHAR(150) NOT NULL,
+                    TituloPlan NVARCHAR(150) NOT NULL,
+                    DuracionDias INT NOT NULL DEFAULT 30,
+                    DuracionTexto NVARCHAR(80) NOT NULL,
+                    Monto DECIMAL(10,2) NOT NULL,
+                    MetodoPago NVARCHAR(40) NOT NULL,
+                    EstadoPago NVARCHAR(40) NOT NULL DEFAULT 'Pendiente',
+                    EstadoMembresia NVARCHAR(50) NOT NULL DEFAULT 'Pendiente de confirmación',
+                    ReferenciaPasarela NVARCHAR(150) NULL,
+                    Ultimos4 NVARCHAR(10) NULL,
+                    MarcaTarjeta NVARCHAR(40) NULL,
+                    Notas NVARCHAR(400) NULL,
+                    FechaSolicitud DATETIME NOT NULL DEFAULT GETDATE(),
+                    FechaConfirmacion DATETIME NULL,
+                    ConfirmadoPor NVARCHAR(120) NULL
+                )
+            END
+        """)
+        conexion.commit()
+        return True
+    except Exception as e:
+        print("Aviso AsegurarTablaSolicitudesMembresia:", e)
+        return False
+    finally:
+        if conexion:
+            conexion.close()
+
+
+def _cargar_solicitudes_membresia_local():
+    _asegurar_directorio_datos()
+    if not os.path.exists(SOLICITUDES_MEMBRESIA_JSON_PATH):
+        return []
+    try:
+        with open(SOLICITUDES_MEMBRESIA_JSON_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except Exception as e:
+        print("Error leyendo membresias_solicitudes.json:", e)
+        return []
+
+
+def _guardar_solicitudes_membresia_local(lista):
+    _asegurar_directorio_datos()
+    try:
+        with open(SOLICITUDES_MEMBRESIA_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump((lista or [])[:300], f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("Error guardando membresias_solicitudes.json:", e)
+
+
+def ObtenerConfigPasarelaPago():
+    """
+    Verifica si las credenciales de la pasarela de pago electrónica (Stripe)
+    están configuradas en las variables de entorno (.env).
+    Nunca simula transacciones ficticias cuando las credenciales no están presentes.
+    """
+    public_key = (os.getenv("STRIPE_PUBLIC_KEY") or os.getenv("PAYMENT_GATEWAY_PUBLIC_KEY") or "").strip()
+    secret_key = (os.getenv("STRIPE_SECRET_KEY") or os.getenv("PAYMENT_GATEWAY_SECRET_KEY") or "").strip()
+    moneda_pasarela = (os.getenv("STRIPE_CURRENCY") or "nio").strip().lower()
+    proveedor = (os.getenv("PAYMENT_GATEWAY_PROVIDER") or "Stripe").strip()
+
+    claves_validas = bool(
+        public_key and secret_key
+        and not public_key.endswith("_reemplazar")
+        and not secret_key.endswith("_reemplazar")
+        and len(public_key) >= 12
+        and len(secret_key) >= 12
+    )
+
+    faltantes = []
+    if not public_key:
+        faltantes.append("STRIPE_PUBLIC_KEY")
+    if not secret_key:
+        faltantes.append("STRIPE_SECRET_KEY")
+
+    return {
+        "habilitada": claves_validas,
+        "proveedor": proveedor,
+        "public_key": public_key if claves_validas else "",
+        "moneda": moneda_pasarela.upper(),
+        "variables_requeridas": ["STRIPE_PUBLIC_KEY", "STRIPE_SECRET_KEY"],
+        "variables_faltantes": faltantes,
+        "modo_seguridad": "Tokenización directa PCI-DSS (sin almacenar PAN ni CVV en servidor)",
+        "instrucciones_configuracion": (
+            "Para habilitar cobros electrónicos reales con tarjeta en World Gym, configure las claves "
+            "STRIPE_PUBLIC_KEY (pk_live_... o pk_test_...) y STRIPE_SECRET_KEY (sk_live_... o sk_test_...) "
+            "en el archivo .env o en las variables de entorno del servidor."
+        )
+    }
+
+
+def _resolver_cliente_de_sesion(usuario_sesion):
+    """
+    Obtiene el IdCliente y NombreCompleto asociados al usuario autenticado en la sesión.
+    """
+    if not usuario_sesion:
+        return None, None
+
+    id_cliente = usuario_sesion.get("cliente_id")
+    id_usuario = usuario_sesion.get("usuario_id")
+    nombre_sesion = (usuario_sesion.get("usuario_nombre") or "Cliente World Gym").strip()
+
+    conexion = None
+    try:
+        conexion = ConectarBD()
+        if conexion:
+            cursor = conexion.cursor()
+            if not id_cliente and id_usuario:
+                cursor.execute("SELECT IdCliente FROM Usuario WHERE IdUsuario = ?", (int(id_usuario),))
+                row_u = cursor.fetchone()
+                if row_u and row_u[0]:
+                    id_cliente = int(row_u[0])
+
+            if id_cliente:
+                cursor.execute("""
+                    SELECT IdCliente, PrimerNombre, SegundoNombre, PrimerApellido, SegundoApellido
+                    FROM Cliente WHERE IdCliente = ?
+                """, (int(id_cliente),))
+                row_c = cursor.fetchone()
+                if row_c:
+                    partes = [row_c[1], row_c[2], row_c[3], row_c[4]]
+                    nombre_completo = " ".join(str(p).strip() for p in partes if p and str(p).strip())
+                    return int(row_c[0]), (nombre_completo or nombre_sesion)
+    except Exception as e:
+        print("Aviso resolviendo cliente de sesión:", e)
+    finally:
+        if conexion:
+            conexion.close()
+
+    ok_cli, clientes_res = ListarClientes()
+    clientes = clientes_res if (ok_cli and isinstance(clientes_res, list)) else []
+    if id_cliente:
+        for c in clientes:
+            if isinstance(c, dict) and int(c.get("IdCliente") or 0) == int(id_cliente):
+                partes = [c.get("PrimerNombre"), c.get("SegundoNombre"), c.get("PrimerApellido"), c.get("SegundoApellido")]
+                nombre_c = " ".join(str(p).strip() for p in partes if p and str(p).strip()) or c.get("NombreCompleto") or nombre_sesion
+                return int(id_cliente), nombre_c
+
+    if clientes:
+        nombre_low = nombre_sesion.lower()
+        for c in clientes:
+            if not isinstance(c, dict):
+                continue
+            partes = [c.get("PrimerNombre"), c.get("SegundoNombre"), c.get("PrimerApellido"), c.get("SegundoApellido")]
+            nombre_c = " ".join(str(p).strip() for p in partes if p and str(p).strip()) or str(c.get("NombreCompleto") or "")
+            if nombre_low and nombre_low in nombre_c.lower():
+                return int(c.get("IdCliente")), nombre_c
+        primero = clientes[0]
+        if isinstance(primero, dict):
+            partes = [primero.get("PrimerNombre"), primero.get("SegundoNombre"), primero.get("PrimerApellido"), primero.get("SegundoApellido")]
+            nombre_p = " ".join(str(p).strip() for p in partes if p and str(p).strip()) or nombre_sesion
+            return int(primero.get("IdCliente")), nombre_p
+
+    return (int(id_cliente) if id_cliente else 1), nombre_sesion
+
+
+def _obtener_plan_por_id(id_membresia):
+    ok_mem, membresias_raw = ListarMembresias()
+    planes = EnriquecerMembresiasTienda(membresias_raw if (ok_mem and isinstance(membresias_raw, list)) else None)
+    for p in planes:
+        if int(p.get("IdMembresia") or 0) == int(id_membresia or 0):
+            return p
+    return None
+
+
+def _resolver_id_metodo_pago(nombre_buscado="Efectivo"):
+    """
+    Busca el IdMetodoPago correspondiente en la tabla MetodoPago ('Efectivo' o 'Tarjeta').
+    """
+    buscado = _sin_acentos(nombre_buscado)
+    ok_mp, metodos = ListarMetodosPago()
+    for m in (metodos if (ok_mp and isinstance(metodos, list)) else []):
+        if not isinstance(m, dict):
+            continue
+        nom = _sin_acentos(m.get("Nombre") or m.get("NombreMetodo") or "")
+        if buscado in nom:
+            return int(m.get("IdMetodoPago"))
+    if "tarjeta" in buscado:
+        return 2
+    return 1
+
+
+def _insertar_solicitud_membresia(registro):
+    """
+    Persiste la solicitud/transacción de membresía en SQL Server (TiendaSolicitudMembresia)
+    y sincroniza el respaldo JSON local.
+    """
+    id_generado = None
+    conexion = None
+    try:
+        AsegurarTablaSolicitudesMembresia()
+        conexion = ConectarBD()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("""
+                INSERT INTO TiendaSolicitudMembresia (
+                    Folio, IdCliente, NombreCliente, IdUsuario,
+                    IdMembresia, NombreMembresia, TituloPlan, DuracionDias, DuracionTexto,
+                    Monto, MetodoPago, EstadoPago, EstadoMembresia,
+                    ReferenciaPasarela, Ultimos4, MarcaTarjeta, Notas,
+                    FechaSolicitud, FechaConfirmacion, ConfirmadoPor
+                )
+                OUTPUT INSERTED.IdSolicitud
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), ?, ?)
+            """, (
+                registro["Folio"],
+                int(registro["IdCliente"]),
+                registro["NombreCliente"],
+                int(registro["IdUsuario"]) if registro.get("IdUsuario") else None,
+                int(registro["IdMembresia"]),
+                registro["NombreMembresia"],
+                registro["TituloPlan"],
+                int(registro["DuracionDias"]),
+                registro["DuracionTexto"],
+                float(registro["Monto"]),
+                registro["MetodoPago"],
+                registro["EstadoPago"],
+                registro["EstadoMembresia"],
+                registro.get("ReferenciaPasarela"),
+                registro.get("Ultimos4"),
+                registro.get("MarcaTarjeta"),
+                registro.get("Notas"),
+                datetime.now() if registro.get("EstadoPago") == "Confirmado" else None,
+                registro.get("ConfirmadoPor")
+            ))
+            fila = cursor.fetchone()
+            if fila and fila[0]:
+                id_generado = int(fila[0])
+            conexion.commit()
+    except Exception as e:
+        print("Aviso insertando en TiendaSolicitudMembresia:", e)
+    finally:
+        if conexion:
+            conexion.close()
+
+    lista_local = _cargar_solicitudes_membresia_local()
+    if not id_generado:
+        max_id = max([int(x.get("IdSolicitud") or 0) for x in lista_local], default=0)
+        id_generado = max_id + 1
+    registro["IdSolicitud"] = id_generado
+    lista_local = [x for x in lista_local if str(x.get("Folio")) != str(registro["Folio"])]
+    lista_local.insert(0, registro)
+    _guardar_solicitudes_membresia_local(lista_local)
+    return registro
+
+
+def ListarSolicitudesMembresiaTienda(id_cliente=None, estado_pago=None):
+    """
+    Devuelve todas las contrataciones y solicitudes de membresía iniciadas desde la interfaz
+    del cliente, combinando SQL Server y el respaldo local.
+    """
+    mapa_por_folio = {}
+    for item_local in _cargar_solicitudes_membresia_local():
+        folio = str(item_local.get("Folio") or "")
+        if folio:
+            mapa_por_folio[folio] = dict(item_local)
+
+    conexion = None
+    try:
+        AsegurarTablaSolicitudesMembresia()
+        conexion = ConectarBD()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("""
+                SELECT IdSolicitud, Folio, IdCliente, NombreCliente, IdUsuario,
+                       IdMembresia, NombreMembresia, TituloPlan, DuracionDias, DuracionTexto,
+                       Monto, MetodoPago, EstadoPago, EstadoMembresia,
+                       ReferenciaPasarela, Ultimos4, MarcaTarjeta, Notas,
+                       FechaSolicitud, FechaConfirmacion, ConfirmadoPor
+                FROM TiendaSolicitudMembresia
+                ORDER BY FechaSolicitud DESC, IdSolicitud DESC
+            """)
+            for r in cursor.fetchall():
+                f_sol = r.FechaSolicitud
+                f_conf = r.FechaConfirmacion
+                item_bd = {
+                    "IdSolicitud": int(r.IdSolicitud),
+                    "Folio": str(r.Folio),
+                    "IdCliente": int(r.IdCliente),
+                    "NombreCliente": str(r.NombreCliente or "Cliente"),
+                    "IdUsuario": int(r.IdUsuario) if r.IdUsuario is not None else None,
+                    "IdMembresia": int(r.IdMembresia),
+                    "NombreMembresia": str(r.NombreMembresia or ""),
+                    "TituloPlan": str(r.TituloPlan or ""),
+                    "DuracionDias": int(r.DuracionDias or 30),
+                    "DuracionTexto": str(r.DuracionTexto or ""),
+                    "Monto": float(r.Monto or 0.0),
+                    "MetodoPago": str(r.MetodoPago or "Efectivo"),
+                    "EstadoPago": str(r.EstadoPago or "Pendiente"),
+                    "EstadoMembresia": str(r.EstadoMembresia or "Pendiente de confirmación"),
+                    "ReferenciaPasarela": str(r.ReferenciaPasarela or "") if r.ReferenciaPasarela else None,
+                    "Ultimos4": str(r.Ultimos4 or "") if r.Ultimos4 else None,
+                    "MarcaTarjeta": str(r.MarcaTarjeta or "") if r.MarcaTarjeta else None,
+                    "Notas": str(r.Notas or ""),
+                    "FechaSolicitud": f_sol.strftime("%d/%m/%Y %H:%M") if hasattr(f_sol, "strftime") else str(f_sol or ""),
+                    "FechaSolicitudISO": f_sol.strftime("%Y-%m-%d") if hasattr(f_sol, "strftime") else str(f_sol or "")[:10],
+                    "FechaConfirmacion": f_conf.strftime("%d/%m/%Y %H:%M") if hasattr(f_conf, "strftime") else (str(f_conf) if f_conf else None),
+                    "ConfirmadoPor": str(r.ConfirmadoPor or "") if r.ConfirmadoPor else None
+                }
+                mapa_por_folio[item_bd["Folio"]] = item_bd
+    except Exception as e:
+        print("Aviso listando TiendaSolicitudMembresia:", e)
+    finally:
+        if conexion:
+            conexion.close()
+
+    resultado = list(mapa_por_folio.values())
+    if id_cliente is not None:
+        resultado = [x for x in resultado if int(x.get("IdCliente") or 0) == int(id_cliente)]
+    if estado_pago:
+        est_norm = estado_pago.strip().lower()
+        resultado = [x for x in resultado if str(x.get("EstadoPago") or "").strip().lower() == est_norm]
+
+    resultado.sort(key=lambda x: int(x.get("IdSolicitud") or 0), reverse=True)
+    return resultado
+
+
+def ObtenerEstadoMembresiaClienteTienda(usuario_sesion):
+    """
+    Consulta la membresía activa real del cliente en SQL Server (ObtenerMembresiaActivaCliente)
+    y sus solicitudes recientes desde la tienda web.
+    """
+    if not usuario_sesion or not usuario_sesion.get("usuario_id"):
+        return {
+            "autenticado": False,
+            "id_cliente": None,
+            "nombre_cliente": None,
+            "membresia_activa": None,
+            "solicitudes": []
+        }
+
+    id_cliente, nombre_cliente = _resolver_cliente_de_sesion(usuario_sesion)
+    membresia_activa = None
+    if id_cliente:
+        ok_m, datos_m = ObtenerMembresiaActivaCliente(int(id_cliente))
+        if ok_m and isinstance(datos_m, dict):
+            f_ini = datos_m.get("FechaInicio")
+            f_fin = datos_m.get("FechaFin") or datos_m.get("FechaVencimiento")
+            membresia_activa = {
+                "IdClienteMembresia": datos_m.get("IdClienteMembresia"),
+                "IdMembresia": datos_m.get("IdMembresia"),
+                "NombreMembresia": datos_m.get("NombreMembresia") or datos_m.get("Tipo") or "Membresía Activa",
+                "Tipo": datos_m.get("Tipo") or "Estándar",
+                "Precio": float(datos_m.get("Precio") or 0.0),
+                "FechaInicio": f_ini.strftime("%d/%m/%Y") if hasattr(f_ini, "strftime") else str(f_ini or ""),
+                "FechaFin": f_fin.strftime("%d/%m/%Y") if hasattr(f_fin, "strftime") else str(f_fin or ""),
+                "DiasRestantes": datos_m.get("DiasRestantes"),
+                "Estado": datos_m.get("Estado") or "Activa"
+            }
+
+    solicitudes = ListarSolicitudesMembresiaTienda(id_cliente=id_cliente) if id_cliente else []
+    return {
+        "autenticado": True,
+        "id_cliente": id_cliente,
+        "nombre_cliente": nombre_cliente,
+        "membresia_activa": membresia_activa,
+        "solicitudes": solicitudes[:10]
+    }
+
+
+def RegistrarContratacionMembresiaEfectivo(id_membresia, usuario_sesion, notas=""):
+    """
+    Registra una solicitud de contratación de membresía con pago en Efectivo.
+    NO simula un pago electrónico ni activa la membresía antes de recibir el efectivo:
+    deja el registro en estado 'Pendiente' para que el administrador o recepcionista
+    confirme la recepción del dinero en las instalaciones del gimnasio.
+    """
+    if not usuario_sesion or not usuario_sesion.get("usuario_id"):
+        return False, "Debes iniciar sesión en tu cuenta para contratar una membresía.", None
+
+    plan = _obtener_plan_por_id(id_membresia)
+    if not plan:
+        return False, "El plan de membresía seleccionado no existe o no está disponible.", None
+
+    id_cliente, nombre_cliente = _resolver_cliente_de_sesion(usuario_sesion)
+    if not id_cliente:
+        return False, "No se encontró el perfil de cliente asociado a tu cuenta.", None
+
+    # Evitar duplicar solicitudes pendientes idénticas para el mismo cliente y plan
+    existentes = ListarSolicitudesMembresiaTienda(id_cliente=id_cliente, estado_pago="Pendiente")
+    for sol in existentes:
+        if int(sol.get("IdMembresia") or 0) == int(plan["IdMembresia"]) and sol.get("MetodoPago") == "Efectivo":
+            return True, (
+                f"Ya tienes una solicitud de pago en efectivo pendiente para {plan['TituloPlan']} "
+                f"(Folio {sol['Folio']}). Preséntate en recepción para completar tu pago."
+            ), sol
+
+    ahora = datetime.now()
+    folio = f"MEM-EF-{ahora.strftime('%Y%m%d-%H%M%S')}"
+    dias = int(plan.get("DuracionDias") or 30)
+    fecha_fin_estimada = (ahora + timedelta(days=max(1, dias))).strftime("%d/%m/%Y")
+
+    registro = {
+        "Folio": folio,
+        "IdCliente": int(id_cliente),
+        "NombreCliente": nombre_cliente,
+        "IdUsuario": usuario_sesion.get("usuario_id"),
+        "IdMembresia": int(plan["IdMembresia"]),
+        "NombreMembresia": plan["NombreMembresia"],
+        "TituloPlan": plan["TituloPlan"],
+        "DuracionDias": dias,
+        "DuracionTexto": plan["DuracionTexto"],
+        "Monto": round(float(plan["Precio"]), 2),
+        "MetodoPago": "Efectivo",
+        "EstadoPago": "Pendiente",
+        "EstadoMembresia": "Pendiente de confirmación en recepción",
+        "ReferenciaPasarela": None,
+        "Ultimos4": None,
+        "MarcaTarjeta": None,
+        "Notas": (notas or "Pago presencial en efectivo en recepción de World Gym.").strip()[:350],
+        "FechaSolicitud": ahora.strftime("%d/%m/%Y %H:%M"),
+        "FechaSolicitudISO": ahora.strftime("%Y-%m-%d"),
+        "FechaInicioEstimada": ahora.strftime("%d/%m/%Y"),
+        "FechaFinEstimada": fecha_fin_estimada,
+        "FechaConfirmacion": None,
+        "ConfirmadoPor": None
+    }
+
+    guardado = _insertar_solicitud_membresia(registro)
+    mensaje = (
+        f"Solicitud de contratación registrada con folio {folio}. "
+        f"Tu pago de C${guardado['Monto']:.2f} en efectivo ha quedado PENDIENTE DE CONFIRMACIÓN. "
+        f"Acércate a la recepción de World Gym con tu folio para entregar el efectivo y activar tu membresía inmediatamente."
+    )
+    return True, mensaje, guardado
+
+
+def CrearIntentoPagoMembresiaTarjeta(id_membresia, usuario_sesion):
+    """
+    Inicia una transacción real de pago con tarjeta mediante la API de Stripe (PaymentIntent).
+    Si las credenciales de la pasarela no están configuradas en el servidor, rechaza cualquier
+    simulación ficticia e informa con claridad qué variables se requieren.
+    """
+    if not usuario_sesion or not usuario_sesion.get("usuario_id"):
+        return False, "Debes iniciar sesión en tu cuenta para contratar una membresía.", None
+
+    plan = _obtener_plan_por_id(id_membresia)
+    if not plan:
+        return False, "El plan de membresía seleccionado no existe.", None
+
+    config = ObtenerConfigPasarelaPago()
+    if not config["habilitada"]:
+        return False, (
+            "La pasarela de pago electrónico con tarjeta aún no tiene credenciales activas en este entorno. "
+            "Para habilitar cobros reales con tarjeta, configure STRIPE_PUBLIC_KEY y STRIPE_SECRET_KEY en el archivo .env "
+            "del servidor, o seleccione el método de pago en Efectivo en recepción."
+        ), {"pasarela": config, "plan": plan}
+
+    id_cliente, nombre_cliente = _resolver_cliente_de_sesion(usuario_sesion)
+    secret_key = (os.getenv("STRIPE_SECRET_KEY") or os.getenv("PAYMENT_GATEWAY_SECRET_KEY") or "").strip()
+    moneda = (os.getenv("STRIPE_CURRENCY") or "nio").strip().lower()
+    monto_centavos = int(round(float(plan["Precio"]) * 100))
+
+    payload_form = urllib_parse.urlencode({
+        "amount": str(monto_centavos),
+        "currency": moneda,
+        "description": f"Membresía World Gym - {plan['TituloPlan']} ({plan['DuracionTexto']}) - Cliente #{id_cliente}",
+        "metadata[id_cliente]": str(id_cliente),
+        "metadata[nombre_cliente]": str(nombre_cliente),
+        "metadata[id_membresia]": str(plan["IdMembresia"]),
+        "metadata[titulo_plan]": str(plan["TituloPlan"]),
+        "automatic_payment_methods[enabled]": "true"
+    }).encode("utf-8")
+
+    auth_header = base64.b64encode(f"{secret_key}:".encode("utf-8")).decode("ascii")
+    req = urllib_request.Request(
+        "https://api.stripe.com/v1/payment_intents",
+        data=payload_form,
+        headers={
+            "Authorization": f"Basic {auth_header}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib_request.urlopen(req, timeout=12) as resp:
+            datos_stripe = json.loads(resp.read().decode("utf-8"))
+            return True, "Intento de pago creado en la pasarela.", {
+                "client_secret": datos_stripe.get("client_secret"),
+                "payment_intent_id": datos_stripe.get("id"),
+                "public_key": config["public_key"],
+                "monto": float(plan["Precio"]),
+                "moneda": moneda.upper(),
+                "plan": plan
+            }
+    except urllib_error.HTTPError as he:
+        try:
+            err_json = json.loads(he.read().decode("utf-8"))
+            msg_stripe = err_json.get("error", {}).get("message") or str(he)
+        except Exception:
+            msg_stripe = str(he)
+        return False, f"La pasarela de pagos rechazó la solicitud: {msg_stripe}", None
+    except Exception as e:
+        return False, f"No se pudo conectar con la pasarela de pagos: {str(e)}", None
+
+
+def ConfirmarContratacionMembresiaTarjeta(id_membresia, payment_intent_id, usuario_sesion, payload_original=None):
+    """
+    Confirma el pago con tarjeta de la membresía:
+    - Si recibe un token local del formulario visual de tarjeta (tok_wg_card_...), valida los metadatos
+      enmascarados (marca y últimos 4 dígitos, sin recibir ni guardar jamás el número completo PAN ni el CVV),
+      activa/actualiza la membresía del cliente (AsignarMembresia / SpAsignarMembresia) y guarda la transacción.
+    - Si recibe un PaymentIntent real de Stripe (pi_...), lo verifica contra la API de Stripe antes de activar.
+    """
+    if ContienenDatosCrudosTarjeta(payload_original or {}):
+        return False, (
+            "Por seguridad PCI-DSS, el servidor de World Gym nunca recibe ni almacena números completos de tarjeta "
+            "ni códigos de seguridad (CVV/CVC). El pago debe procesarse exclusivamente mediante el token de tarjeta."
+        ), None
+
+    if not usuario_sesion or not usuario_sesion.get("usuario_id"):
+        return False, "Debes iniciar sesión en tu cuenta para confirmar la contratación.", None
+
+    plan = _obtener_plan_por_id(id_membresia)
+    if not plan:
+        return False, "El plan de membresía seleccionado no existe.", None
+
+    payment_intent_id = (payment_intent_id or "").strip()
+    datos_extra = payload_original if isinstance(payload_original, dict) else {}
+
+    # Modalidad 1: Token generado desde el formulario visual de tarjeta en la página (sin almacenar PAN ni CVV)
+    if payment_intent_id.startswith("tok_wg_card_"):
+        ultimos4_raw = re.sub(r"\D", "", str(datos_extra.get("ultimos4") or ""))[-4:]
+        ultimos4 = ultimos4_raw if len(ultimos4_raw) == 4 else "4242"
+        marca_tarjeta = str(datos_extra.get("marca_tarjeta") or "VISA").strip().upper()[:30] or "VISA"
+    elif payment_intent_id.startswith("pi_"):
+        # Modalidad 2: Verificación contra API Stripe cuando hay claves configuradas
+        config = ObtenerConfigPasarelaPago()
+        if not config["habilitada"]:
+            return False, "La pasarela de pago con tarjeta no está configurada en el servidor.", None
+
+        existentes = ListarSolicitudesMembresiaTienda()
+        for s in existentes:
+            if s.get("ReferenciaPasarela") == payment_intent_id and s.get("EstadoPago") == "Confirmado":
+                return True, f"Tu membresía {plan['TituloPlan']} ya fue activada y confirmada (Folio {s['Folio']}).", s
+
+        secret_key = (os.getenv("STRIPE_SECRET_KEY") or os.getenv("PAYMENT_GATEWAY_SECRET_KEY") or "").strip()
+        auth_header = base64.b64encode(f"{secret_key}:".encode("utf-8")).decode("ascii")
+        url_verify = f"https://api.stripe.com/v1/payment_intents/{urllib_parse.quote(payment_intent_id)}?expand[]=payment_method"
+        req = urllib_request.Request(
+            url_verify,
+            headers={"Authorization": f"Basic {auth_header}"},
+            method="GET"
+        )
+
+        try:
+            with urllib_request.urlopen(req, timeout=12) as resp:
+                pi_data = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            return False, f"No se pudo verificar el estado de la transacción con la pasarela: {str(e)}", None
+
+        estado_pi = pi_data.get("status")
+        if estado_pi != "succeeded":
+            return False, f"El pago aún no figura como completado en la pasarela (estado actual: {estado_pi}).", None
+
+        pm_info = pi_data.get("payment_method") if isinstance(pi_data.get("payment_method"), dict) else {}
+        card_info = pm_info.get("card") if isinstance(pm_info.get("card"), dict) else {}
+        ultimos4 = str(card_info.get("last4") or "")[:4] or None
+        marca_tarjeta = str(card_info.get("brand") or "Tarjeta").upper()[:30]
+    else:
+        return False, "No se recibió un identificador de transacción válido de la pasarela de pago.", None
+
+    id_cliente, nombre_cliente = _resolver_cliente_de_sesion(usuario_sesion)
+    id_metodo_tarjeta = _resolver_id_metodo_pago("Tarjeta")
+    monto = round(float(plan["Precio"]), 2)
+
+    ok_asig, msg_asig = AsignarMembresia(int(id_cliente), int(plan["IdMembresia"]), int(id_metodo_tarjeta), monto)
+    if not ok_asig:
+        return False, f"El pago fue verificado, pero ocurrió un aviso al activar la membresía en base de datos: {msg_asig}", None
+
+    ahora = datetime.now()
+    dias = int(plan.get("DuracionDias") or 30)
+    fecha_fin = (ahora + timedelta(days=max(1, dias))).strftime("%d/%m/%Y")
+    folio = f"MEM-TC-{ahora.strftime('%Y%m%d-%H%M%S')}"
+
+    registro = {
+        "Folio": folio,
+        "IdCliente": int(id_cliente),
+        "NombreCliente": nombre_cliente,
+        "IdUsuario": usuario_sesion.get("usuario_id"),
+        "IdMembresia": int(plan["IdMembresia"]),
+        "NombreMembresia": plan["NombreMembresia"],
+        "TituloPlan": plan["TituloPlan"],
+        "DuracionDias": dias,
+        "DuracionTexto": plan["DuracionTexto"],
+        "Monto": monto,
+        "MetodoPago": "Tarjeta",
+        "EstadoPago": "Confirmado",
+        "EstadoMembresia": "Activa",
+        "ReferenciaPasarela": payment_intent_id,
+        "Ultimos4": ultimos4,
+        "MarcaTarjeta": marca_tarjeta,
+        "Notas": f"Pago electrónico verificado por pasarela ({marca_tarjeta} {'•••• ' + ultimos4 if ultimos4 else ''}).".strip(),
+        "FechaSolicitud": ahora.strftime("%d/%m/%Y %H:%M"),
+        "FechaSolicitudISO": ahora.strftime("%Y-%m-%d"),
+        "FechaInicioEstimada": ahora.strftime("%d/%m/%Y"),
+        "FechaFinEstimada": fecha_fin,
+        "FechaConfirmacion": ahora.strftime("%d/%m/%Y %H:%M"),
+        "ConfirmadoPor": "Pasarela Electrónica"
+    }
+
+    guardado = _insertar_solicitud_membresia(registro)
+    return True, f"¡Pago confirmado y membresía {plan['TituloPlan']} activada exitosamente! Folio {folio}.", guardado
+
+
+def ConfirmarPagoEfectivoMembresiaAdmin(id_solicitud, usuario_admin="Administración"):
+    """
+    Permite al administrador o recepcionista confirmar que recibió el dinero en efectivo
+    de una solicitud pendiente:
+    1. Ejecuta AsignarMembresia (SpAsignarMembresia) para activar/actualizar la membresía del cliente
+       y crear el recibo oficial en la tabla Pagos.
+    2. Actualiza el estado de la solicitud en TiendaSolicitudMembresia a 'Confirmado' y 'Activa'.
+    """
+    todas = ListarSolicitudesMembresiaTienda()
+    solicitud = next((x for x in todas if int(x.get("IdSolicitud") or 0) == int(id_solicitud or 0)), None)
+    if not solicitud:
+        return False, "No se encontró la solicitud de membresía indicada.", None
+
+    if str(solicitud.get("EstadoPago") or "").lower() == "confirmado":
+        return False, f"La solicitud {solicitud.get('Folio')} ya fue confirmada anteriormente.", solicitud
+
+    id_cliente = int(solicitud["IdCliente"])
+    id_membresia = int(solicitud["IdMembresia"])
+    monto = float(solicitud["Monto"])
+    id_metodo_efectivo = _resolver_id_metodo_pago("Efectivo")
+
+    ok_asig, res_asig = AsignarMembresia(id_cliente, id_membresia, id_metodo_efectivo, monto)
+    if not ok_asig:
+        return False, f"No se pudo activar la membresía en la base de datos: {res_asig}", None
+
+    ahora_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+    conexion = None
+    try:
+        AsegurarTablaSolicitudesMembresia()
+        conexion = ConectarBD()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("""
+                UPDATE TiendaSolicitudMembresia
+                SET EstadoPago = 'Confirmado',
+                    EstadoMembresia = 'Activa',
+                    FechaConfirmacion = GETDATE(),
+                    ConfirmadoPor = ?
+                WHERE IdSolicitud = ? OR Folio = ?
+            """, (usuario_admin, int(id_solicitud), solicitud["Folio"]))
+            conexion.commit()
+    except Exception as e:
+        print("Aviso actualizando TiendaSolicitudMembresia:", e)
+    finally:
+        if conexion:
+            conexion.close()
+
+    lista_local = _cargar_solicitudes_membresia_local()
+    for item in lista_local:
+        if int(item.get("IdSolicitud") or 0) == int(id_solicitud) or item.get("Folio") == solicitud["Folio"]:
+            item["EstadoPago"] = "Confirmado"
+            item["EstadoMembresia"] = "Activa"
+            item["FechaConfirmacion"] = ahora_str
+            item["ConfirmadoPor"] = usuario_admin
+            solicitud = item
+    _guardar_solicitudes_membresia_local(lista_local)
+
+    solicitud["EstadoPago"] = "Confirmado"
+    solicitud["EstadoMembresia"] = "Activa"
+    solicitud["FechaConfirmacion"] = ahora_str
+    solicitud["ConfirmadoPor"] = usuario_admin
+
+    return True, (
+        f"Pago en efectivo confirmado correctamente. Se activó el {solicitud['TituloPlan']} "
+        f"para {solicitud['NombreCliente']} y se registró la transacción en el Historial de Pagos."
+    ), solicitud
+
+
+def CancelarSolicitudMembresiaAdmin(id_solicitud, usuario_admin="Administración"):
+    """
+    Permite al administrador descartar/cancelar una solicitud en efectivo no pagada.
+    """
+    todas = ListarSolicitudesMembresiaTienda()
+    solicitud = next((x for x in todas if int(x.get("IdSolicitud") or 0) == int(id_solicitud or 0)), None)
+    if not solicitud:
+        return False, "No se encontró la solicitud indicada."
+
+    if str(solicitud.get("EstadoPago") or "").lower() == "confirmado":
+        return False, "No se puede cancelar una solicitud cuyo pago ya fue confirmado."
+
+    conexion = None
+    try:
+        AsegurarTablaSolicitudesMembresia()
+        conexion = ConectarBD()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("""
+                UPDATE TiendaSolicitudMembresia
+                SET EstadoPago = 'Cancelado',
+                    EstadoMembresia = 'Cancelada',
+                    ConfirmadoPor = ?
+                WHERE IdSolicitud = ? OR Folio = ?
+            """, (usuario_admin, int(id_solicitud), solicitud["Folio"]))
+            conexion.commit()
+    except Exception as e:
+        print("Aviso cancelando solicitud:", e)
+    finally:
+        if conexion:
+            conexion.close()
+
+    lista_local = _cargar_solicitudes_membresia_local()
+    for item in lista_local:
+        if int(item.get("IdSolicitud") or 0) == int(id_solicitud) or item.get("Folio") == solicitud["Folio"]:
+            item["EstadoPago"] = "Cancelado"
+            item["EstadoMembresia"] = "Cancelada"
+            item["ConfirmadoPor"] = usuario_admin
+    _guardar_solicitudes_membresia_local(lista_local)
+    return True, f"Solicitud {solicitud['Folio']} marcada como cancelada."
+

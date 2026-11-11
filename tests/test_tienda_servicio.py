@@ -6,6 +6,8 @@ from backend.servicios.TiendaServicio import (
     ObtenerResumenTienda,
     EnriquecerMembresiasTienda,
     ProcesarPedidoTienda,
+    ObtenerConfigPasarelaPago,
+    ContienenDatosCrudosTarjeta,
 )
 
 
@@ -143,11 +145,12 @@ class TestTiendaServicio:
         assert "existencias" in msg_exceso.lower()
 
 
+    @patch("app.ObtenerEstadoMembresiaClienteTienda", return_value={"autenticado": True, "id_cliente": 50, "nombre_cliente": "Cliente", "membresia_activa": None, "solicitudes": []})
     @patch("app.EnriquecerMembresiasTienda", return_value=[])
     @patch("app.ListarMembresias", return_value=(True, []))
     @patch("app.ObtenerResumenTienda", return_value={"categorias": [], "marcas": [], "ofertas_count": 0, "total_productos_unicos": 0, "otros_suplementos_totales": 0})
     @patch("app.ObtenerCatalogoTienda", return_value=[])
-    def test_inicio_muestra_pagina_web_y_controla_permisos_admin(self, _mock_cat, _mock_res, _mock_mem, _mock_enr):
+    def test_inicio_muestra_pagina_web_y_controla_permisos_admin(self, _mock_cat, _mock_res, _mock_mem, _mock_enr, _mock_est):
         """Al iniciar el sistema (/) muestra la página web, exige login para comprar y oculta el panel admin a visitantes y clientes."""
         from app import app
         app.config["TESTING"] = True
@@ -236,3 +239,96 @@ class TestTiendaServicio:
             resp_qr = client.get("/cliente_qr")
             assert resp_qr.status_code == 200
             assert "Credencial QR" in resp_qr.get_data(as_text=True)
+
+    @patch("backend.servicios.TiendaServicio.ObtenerMembresiaActivaCliente", return_value=(True, None))
+    @patch("backend.servicios.TiendaServicio.ListarMetodosPago", return_value=(True, [{"IdMetodoPago": 1, "Nombre": "Efectivo"}, {"IdMetodoPago": 2, "Nombre": "Tarjeta"}]))
+    @patch("backend.servicios.TiendaServicio.ListarClientes", return_value=(True, [{"IdCliente": 10, "PrimerNombre": "Socio", "PrimerApellido": "WorldGym"}]))
+    @patch("backend.servicios.TiendaServicio.ConectarBD", return_value=None)
+    @patch("backend.servicios.TiendaServicio.ListarMembresias", return_value=(True, [
+        {"IdMembresia": 4, "NombreMembresia": "Mensualidad", "Tipo": "Mensual", "Precio": 500.0, "DuracionDias": 30, "DuracionMeses": 1}
+    ]))
+    @patch("backend.servicios.TiendaServicio.AsignarMembresia", return_value=(True, "Membresía asignada"))
+    def test_flujo_contratacion_y_pago_membresias_cliente_y_admin(self, mock_asignar, _mock_mem, _mock_bd, _mock_cli, _mock_mp, _mock_act):
+        """
+        Verifica el flujo completo de contratación de membresías desde la cuenta del cliente:
+        1. Bloqueo de datos crudos de tarjeta (PAN/CVV) por seguridad PCI-DSS.
+        2. Solicitud en Efectivo queda Pendiente de confirmación (sin simular pago electrónico).
+        3. Confirmación de efectivo por el Administrador activa la membresía (AsignarMembresia) y cambia a Confirmado.
+        4. Sin credenciales Stripe no se simulan cobros ficticios con tarjeta.
+        """
+        from app import app
+        app.config["TESTING"] = True
+
+        # 1. Validación PCI-DSS: detectar números de tarjeta o CVV crudos
+        assert ContienenDatosCrudosTarjeta({"card_number": "4111222233334444"}) is True
+        assert ContienenDatosCrudosTarjeta({"cvv": "123"}) is True
+        assert ContienenDatosCrudosTarjeta({"payment_intent_id": "pi_3QaB123"}) is False
+
+        with app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess["usuario_id"] = 25
+                sess["usuario_nombre"] = "socio_worldgym"
+                sess["rol"] = "Cliente"
+                sess["cliente_id"] = 10
+
+            # 2. Intento de enviar PAN/CVV al servidor es rechazado con HTTP 400
+            resp_pci = client.post("/api/tienda/membresias/confirmar-tarjeta", json={
+                "id_membresia": 4,
+                "numero_tarjeta": "4242424242424242",
+                "cvv": "999"
+            })
+            assert resp_pci.status_code == 400
+            assert "seguridad" in resp_pci.get_json()["error"].lower()
+
+            # 3. Sin claves Stripe configuradas, crear-intento-tarjeta informa qué credenciales faltan sin simular pago
+            resp_intento = client.post("/api/tienda/membresias/crear-intento-tarjeta", json={"id_membresia": 4})
+            assert resp_intento.status_code == 400
+            datos_intento = resp_intento.get_json()
+            assert datos_intento["success"] is False
+            assert "STRIPE_PUBLIC_KEY" in datos_intento["error"] or "pasarela" in datos_intento["error"].lower()
+
+            # 4. Contratación en Efectivo crea solicitud en estado 'Pendiente' sin llamar a AsignarMembresia todavía
+            resp_ef = client.post("/api/tienda/membresias/contratar-efectivo", json={
+                "id_membresia": 4,
+                "notas": "Pago hoy en recepción"
+            })
+            assert resp_ef.status_code == 200
+            datos_ef = resp_ef.get_json()
+            assert datos_ef["success"] is True
+            solicitud = datos_ef["solicitud"]
+            assert solicitud["MetodoPago"] == "Efectivo"
+            assert solicitud["EstadoPago"] == "Pendiente"
+            assert float(solicitud["Monto"]) == 500.0
+            mock_asignar.assert_not_called()
+
+            # 5. Contratación con Tarjeta desde la vista visual tokenizada (sin PAN ni CVV) activa la membresía de inmediato
+            resp_tc = client.post("/api/tienda/membresias/confirmar-tarjeta", json={
+                "id_membresia": 4,
+                "payment_intent_id": "tok_wg_card_170000_4242",
+                "ultimos4": "4242",
+                "marca_tarjeta": "VISA"
+            })
+            assert resp_tc.status_code == 200
+            datos_tc = resp_tc.get_json()
+            assert datos_tc["success"] is True
+            assert datos_tc["solicitud"]["MetodoPago"] == "Tarjeta"
+            assert datos_tc["solicitud"]["EstadoPago"] == "Confirmado"
+            assert datos_tc["solicitud"]["EstadoMembresia"] == "Activa"
+            assert datos_tc["solicitud"]["Ultimos4"] == "4242"
+            assert mock_asignar.called
+
+            # 6. Administrador confirma la recepción del efectivo -> activa la membresía y pasa a 'Confirmado'
+            with client.session_transaction() as sess:
+                sess["usuario_id"] = 1
+                sess["usuario_nombre"] = "admin_wg"
+                sess["rol"] = "Administrador"
+
+            id_sol = solicitud["IdSolicitud"]
+            resp_conf = client.post(f"/api/admin/membresias/confirmar-efectivo/{id_sol}")
+            assert resp_conf.status_code == 200
+            datos_conf = resp_conf.get_json()
+            assert datos_conf["success"] is True
+            assert datos_conf["solicitud"]["EstadoPago"] == "Confirmado"
+            assert datos_conf["solicitud"]["EstadoMembresia"] == "Activa"
+            assert mock_asignar.called
+

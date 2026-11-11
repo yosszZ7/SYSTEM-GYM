@@ -4018,6 +4018,68 @@ body.login-page {
     .table-search input {
         width: 100%;
     }
+
+    /* Adaptación móvil para encabezados de página, grillas de filtros y tablas de administración */
+    .page-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .page-header > div:last-child {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .page-header > div:last-child .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .pagos-filtros-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .pagos-filtros-grid button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .table-container {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-pagination {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .toast-container {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+    }
+
+    .toast {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 992px) {
+    .pagos-filtros-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
 }
 
 /* ==========================================================================

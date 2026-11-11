@@ -81,12 +81,145 @@
                 <small style="color: var(--text-secondary, #7B8491); font-size: 0.8rem;">Top: {{ stats.metodo_top }}</small>
             </div>
         </div>
+
+        <!-- KPI 5: Solicitudes Web Pendientes (Efectivo) -->
+        <div class="card" style="padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); background: var(--bg-primary, #FFFFFF); box-shadow: 0 4px 12px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 16px;">
+            <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(245, 158, 11, 0.14); color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div>
+                <span style="font-size: 0.82rem; text-transform: uppercase; font-weight: 700; color: var(--text-secondary, #7B8491); letter-spacing: 0.5px;">Efectivo Pendiente (Web)</span>
+                <div style="font-size: 1.55rem; font-weight: 800; color: #F59E0B; margin-top: 2px;">
+                    {{ stats.solicitudes_pendientes_count or 0 }}
+                </div>
+                <small style="color: var(--text-secondary, #7B8491); font-size: 0.8rem;">Por cobrar: C$ {{ "%.2f"|format(stats.monto_pendiente_efectivo or 0) }}</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN DE CONTRATACIONES DE MEMBRESÍAS DESDE LA INTERFAZ DEL CLIENTE -->
+    <div class="card no-print" id="cardSolicitudesMembresiaWeb" style="margin-bottom: 22px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); overflow: hidden; box-shadow: 0 4px 15px rgba(16, 24, 40, 0.04);">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--border-color, #E8EBEF); background: var(--bg-secondary, #F7F8FA);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="margin: 0; font-size: 1.12rem; color: var(--text, #252B36); font-weight: 700;">
+                    <i class="fas fa-globe" style="color: var(--primary, #F58220);"></i> Contrataciones de Membresías desde la Página del Cliente
+                </h2>
+                <span class="badge badge-info" style="font-size: 12px; padding: 4px 10px; border-radius: 20px;">
+                    {{ (solicitudes_web or [])|length }} solicitud{{ '' if (solicitudes_web or [])|length == 1 else 'es' }}
+                </span>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-secondary, #7B8491);">
+                Los pagos en efectivo quedan <strong>Pendientes de confirmación</strong> hasta recibir el dinero en recepción.
+            </div>
+        </div>
+
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto; width: 100%;">
+                <table class="data-table" style="width: 100%; margin: 0; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg-secondary, #F7F8FA); border-bottom: 2px solid var(--border-color, #E8EBEF);">
+                            <th style="width: 150px; text-align: center; padding: 11px 10px; font-size: 12px;">FOLIO</th>
+                            <th style="width: 140px; text-align: center; padding: 11px 10px; font-size: 12px;">FECHA</th>
+                            <th style="padding: 11px 14px; font-size: 12px;">CLIENTE</th>
+                            <th style="padding: 11px 14px; font-size: 12px;">PLAN CONTRATADO</th>
+                            <th style="width: 125px; text-align: center; padding: 11px 10px; font-size: 12px;">MÉTODO</th>
+                            <th style="width: 120px; text-align: right; padding: 11px 14px; font-size: 12px;">MONTO</th>
+                            <th style="width: 170px; text-align: center; padding: 11px 10px; font-size: 12px;">ESTADO DEL PAGO</th>
+                            <th style="width: 210px; text-align: center; padding: 11px 10px; font-size: 12px;">ACCIÓN RECEPCIÓN / ADMIN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sol in (solicitudes_web or []) %}
+                        {% set est_pago = (sol.EstadoPago or 'Pendiente')|lower %}
+                        <tr id="filaSolicitudWeb_{{ sol.IdSolicitud }}" style="border-bottom: 1px solid var(--border-color, #E8EBEF);">
+                            <td style="text-align: center; padding: 10px 10px; font-size: 12.5px; font-weight: 700; color: var(--primary, #F58220);">
+                                {{ sol.Folio }}
+                            </td>
+                            <td style="text-align: center; padding: 10px 10px; font-size: 12.5px; color: var(--text-secondary, #7B8491); white-space: nowrap;">
+                                {{ sol.FechaSolicitud }}
+                            </td>
+                            <td style="padding: 10px 14px; font-size: 13.5px; font-weight: 700; color: var(--text, #252B36);">
+                                <a href="/cliente_perfil/{{ sol.IdCliente }}" style="color: inherit; text-decoration: none;">
+                                    {{ sol.NombreCliente }} <small style="color: var(--text-secondary, #7B8491);">(#{{ sol.IdCliente }})</small>
+                                </a>
+                            </td>
+                            <td style="padding: 10px 14px; font-size: 13px;">
+                                <div style="font-weight: 700; color: var(--text, #252B36);">{{ sol.TituloPlan or sol.NombreMembresia }}</div>
+                                <small style="color: var(--text-secondary, #7B8491); font-size: 11.5px;">Vigencia: {{ sol.DuracionTexto }}</small>
+                            </td>
+                            <td style="text-align: center; padding: 10px 10px;">
+                                {% if 'tarjeta' in (sol.MetodoPago or '')|lower %}
+                                <span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    <i class="fas fa-credit-card"></i> Tarjeta{% if sol.Ultimos4 %} ({{ sol.Ultimos4 }}){% endif %}
+                                </span>
+                                {% else %}
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    <i class="fas fa-money-bill-wave"></i> Efectivo
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right; padding: 10px 14px; font-size: 14px; font-weight: 800; color: var(--text, #252B36); white-space: nowrap;">
+                                C$ {{ "%.2f"|format(sol.Monto|float) }}
+                            </td>
+                            <td style="text-align: center; padding: 10px 10px;">
+                                {% if est_pago == 'confirmado' %}
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.14); color: #059669; border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">
+                                    <i class="fas fa-circle-check"></i> Confirmado · Activa
+                                </span>
+                                {% elif est_pago == 'cancelado' %}
+                                <span class="badge" style="background: rgba(239, 68, 68, 0.12); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">
+                                    <i class="fas fa-ban"></i> Cancelada
+                                </span>
+                                {% else %}
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.16); color: #D97706; border: 1px solid rgba(245, 158, 11, 0.4); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">
+                                    <i class="fas fa-clock"></i> Pendiente de confirmación
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center; padding: 10px 10px;">
+                                {% if est_pago == 'pendiente' %}
+                                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                                    <button type="button"
+                                            onclick="confirmarRecepcionEfectivoMembresia({{ sol.IdSolicitud }}, '{{ sol.Folio }}', this)"
+                                            class="btn btn-primary btn-sm"
+                                            style="padding: 6px 11px; font-size: 12px; border-radius: 7px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;"
+                                            title="Confirmar que se recibió el efectivo en recepción y activar la membresía del cliente">
+                                        <i class="fas fa-check-double"></i> Confirmar Efectivo
+                                    </button>
+                                    <button type="button"
+                                            onclick="cancelarSolicitudMembresiaWeb({{ sol.IdSolicitud }}, '{{ sol.Folio }}', this)"
+                                            class="btn btn-secondary btn-sm"
+                                            style="padding: 6px 9px; font-size: 12px; border-radius: 7px; cursor: pointer;"
+                                            title="Descartar solicitud no pagada">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {% elif est_pago == 'confirmado' %}
+                                <small style="color: #059669; font-weight: 600; font-size: 12px;">
+                                    <i class="fas fa-user-check"></i> Activada ({{ sol.ConfirmadoPor or 'Sistema' }})
+                                </small>
+                                {% else %}
+                                <small style="color: #9CA3AF; font-size: 12px;">Sin acciones</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 26px 18px; color: var(--text-secondary, #7B8491); font-size: 13.5px;">
+                                Aún no hay solicitudes de membresías iniciadas por clientes desde la tienda web.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- TARJETA DE BÚSQUEDA Y FILTROS -->
     <div class="card card-filtros-impresion" id="cardFiltrosPagos" style="margin-bottom: 20px; border-radius: 14px; border: 1px solid var(--border-color, #E8EBEF); background: var(--bg-primary, #FFFFFF); box-shadow: 0 2px 8px rgba(16, 24, 40, 0.04);">
         <div class="card-body" style="padding: 16px 20px;">
-            <div style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
+            <div class="pagos-filtros-grid" style="display: grid; grid-template-columns: 2fr 1.2fr 1fr 1fr auto; gap: 12px; align-items: flex-end;">
                 <!-- Buscador de texto -->
                 <div class="form-group" style="margin: 0;">
                     <label for="buscarPagos" style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary, #7B8491); display: block; margin-bottom: 5px;">
@@ -688,6 +821,69 @@
         document.getElementById('fechaDesde').value = '';
         document.getElementById('fechaHasta').value = '';
         filtrarTablaPagos();
+    }
+
+    async function confirmarRecepcionEfectivoMembresia(idSolicitud, folio, btnEl) {
+        if (!confirm('¿Confirmar que se recibió el pago en efectivo para la solicitud ' + folio + ' y activar inmediatamente la membresía del cliente?')) {
+            return;
+        }
+        if (btnEl) {
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirmando...';
+        }
+        try {
+            var resp = await fetch('/api/admin/membresias/confirmar-efectivo/' + idSolicitud, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            var data = await resp.json();
+            if (resp.ok && data.success) {
+                mostrarToast(data.mensaje || 'Pago en efectivo confirmado y membresía activada.', 'success');
+                setTimeout(function() {
+                    window.location.reload();
+                }, 800);
+            } else {
+                mostrarToast(data.error || 'No se pudo confirmar la solicitud.', 'error');
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = '<i class="fas fa-check-double"></i> Confirmar Efectivo';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            mostrarToast('Error de conexión con el servidor.', 'error');
+            if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.innerHTML = '<i class="fas fa-check-double"></i> Confirmar Efectivo';
+            }
+        }
+    }
+
+    async function cancelarSolicitudMembresiaWeb(idSolicitud, folio, btnEl) {
+        if (!confirm('¿Desea descartar/cancelar la solicitud pendiente ' + folio + '?')) {
+            return;
+        }
+        if (btnEl) btnEl.disabled = true;
+        try {
+            var resp = await fetch('/api/admin/membresias/cancelar-solicitud/' + idSolicitud, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            var data = await resp.json();
+            if (resp.ok && data.success) {
+                mostrarToast(data.mensaje || 'Solicitud cancelada.', 'info');
+                setTimeout(function() {
+                    window.location.reload();
+                }, 600);
+            } else {
+                mostrarToast(data.error || 'No se pudo cancelar la solicitud.', 'error');
+                if (btnEl) btnEl.disabled = false;
+            }
+        } catch (err) {
+            console.error(err);
+            mostrarToast('Error de conexión con el servidor.', 'error');
+            if (btnEl) btnEl.disabled = false;
+        }
     }
 
     // Modal de Recibo Digital

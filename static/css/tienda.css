@@ -5963,3 +5963,731 @@ html[data-wg-no-motion="1"] body.tienda-fx-ready [data-fade] {
     }
 }
 
+/* ==========================================================================
+   OPTIMIZACIÓN MOBILE-FIRST INTEGRAL (TABLETS Y TELÉFONOS PEQUEÑOS/MEDIANOS/GRANDES)
+   Mantiene 100% intacto el diseño de escritorio (> 1024px) y adapta cada
+   componente, menú, tarjeta, tabla, modal y microinteracción a pantallas táctiles.
+   ========================================================================== */
+
+/* Adaptación de efectos hover y microinteracciones para pantallas táctiles */
+@media (hover: none), (pointer: coarse) {
+    .store-quickview-btn {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    .wg-tier-card .wg-tier-bg-img {
+        filter: blur(1.5px) saturate(0.96);
+        opacity: 0.42;
+        transform: scale(1.04);
+    }
+
+    .wg-tier-card:active {
+        transform: scale(0.99);
+    }
+
+    .store-card:hover {
+        transform: none;
+    }
+
+    .store-card:active {
+        transform: scale(0.99);
+    }
+
+    .store-add-btn:active:not(:disabled),
+    .wg-btn-primary:active,
+    .wg-btn-ghost:active,
+    .wg-tier-cta:active,
+    .store-checkout-btn:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+
+    .wg-cat-carousel {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .wg-cat-carousel::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* Tablets y pantallas medianas (<= 980px) */
+@media (max-width: 980px) {
+    .wg-scrolly-stage {
+        height: clamp(280px, 52vw, 410px);
+    }
+
+    .wg-scrolly-step {
+        opacity: 0.88;
+    }
+
+    .wg-scrolly-step.is-active {
+        transform: none;
+    }
+}
+
+/* Teléfonos grandes y phablets (<= 768px) */
+@media (max-width: 768px) {
+    :root {
+        --wg-section-py: clamp(54px, 8.5vw, 78px);
+    }
+
+    .wg-container {
+        padding-inline: 16px;
+    }
+
+    /* Barra ejecutiva superior compacta y deslizable sin empujar el header */
+    .store-system-bar-inner {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding-block: 5px;
+        min-height: 38px;
+    }
+
+    .store-system-bar-inner::-webkit-scrollbar {
+        display: none;
+    }
+
+    .store-system-status {
+        flex-shrink: 0;
+        font-size: 11px;
+    }
+
+    .store-system-actions {
+        flex-shrink: 0;
+        gap: 6px;
+    }
+
+    .store-back-dashboard,
+    .store-admin-pill {
+        height: 26px;
+        padding: 0 10px;
+        font-size: 11px;
+    }
+
+    /* Navbar flotante optimizado para móvil */
+    .store-topbar {
+        padding: 0 14px;
+        gap: 8px;
+    }
+
+    .store-header-actions {
+        gap: 6px;
+    }
+
+    .store-user-dropdown {
+        right: -36px;
+        width: min(252px, calc(100vw - 24px));
+    }
+
+    /* Buscador flotante adaptado a móvil */
+    .store-search-strip {
+        padding: 0 12px;
+        margin-top: 8px;
+    }
+
+    .store-search-container {
+        padding: 5px 6px 5px 14px;
+        gap: 6px;
+    }
+
+    .store-search-input {
+        font-size: 16px; /* Evita auto-zoom en iOS Safari */
+        height: 36px;
+    }
+
+    .store-search-btn {
+        height: 34px;
+        padding: 0 14px;
+        font-size: 12px;
+    }
+
+    .store-search-close {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Hero proporcionado en pantallas verticales */
+    .wg-hero {
+        min-height: calc(100svh - 0px);
+    }
+
+    .wg-hero-inner {
+        padding-top: 94px;
+        padding-bottom: 34px;
+        gap: 24px;
+    }
+
+    body.has-system-bar .wg-hero-inner {
+        padding-top: 102px;
+    }
+
+    .wg-hero-eyebrow {
+        font-size: 10.5px;
+        letter-spacing: 0.13em;
+        margin-bottom: 14px;
+    }
+
+    .wg-hero-title {
+        font-size: clamp(2.1rem, 8.8vw, 3.1rem);
+        line-height: 1.05;
+    }
+
+    .wg-hero-bottom-grid {
+        margin-top: 18px;
+        gap: 18px;
+    }
+
+    .wg-hero-subtitle {
+        font-size: 0.95rem;
+        line-height: 1.52;
+        margin-bottom: 18px;
+    }
+
+    .wg-hero-floating-card {
+        min-width: 0;
+        padding: 16px 18px;
+        border-radius: 18px;
+    }
+
+    /* Vistas internas */
+    .wg-internal-view {
+        padding-top: 84px;
+        padding-bottom: 52px;
+    }
+
+    body.has-system-bar .wg-internal-view {
+        padding-top: 90px;
+    }
+
+    /* Tabla comparativa de planes con primera columna fija y scroll táctil fluido */
+    .wg-comparison-table-wrap {
+        -webkit-overflow-scrolling: touch;
+        border-radius: 18px;
+    }
+
+    .wg-comparison-table {
+        min-width: 580px;
+    }
+
+    .wg-comparison-table th,
+    .wg-comparison-table td {
+        padding: 12px 14px;
+        font-size: 12.5px;
+    }
+
+    .wg-comparison-table th:first-child,
+    .wg-comparison-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 2;
+        background: var(--wg-white);
+        box-shadow: 2px 0 8px rgba(16, 24, 40, 0.05);
+        min-width: 138px;
+        max-width: 165px;
+    }
+
+    .wg-comparison-table thead th:first-child {
+        background: var(--wg-gray-50);
+    }
+
+    /* Banners contextuales y promocionales */
+    .wg-context-banner {
+        padding: 18px;
+        gap: 14px;
+        border-radius: 18px;
+    }
+
+    .wg-context-banner-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .wg-context-banner-actions .wg-btn-system-outline,
+    .wg-context-banner-actions .store-admin-pill {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .wg-offers-promo-banner {
+        padding: 24px 20px;
+        border-radius: 20px;
+        gap: 18px;
+    }
+
+    .wg-offers-promo-stats {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .wg-offer-stat-pill {
+        min-width: 0;
+        padding: 14px 12px;
+    }
+
+    .wg-final-cta-banner {
+        padding: 24px 20px;
+        border-radius: 20px;
+        gap: 18px;
+    }
+
+    .wg-final-cta-banner .wg-btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Teléfonos medianos y estándar (<= 679px) */
+@media (max-width: 679px) {
+    /* Unificación de grillas de catálogo, destacados y ofertas a 2 columnas limpias */
+    .store-products-grid,
+    .store-featured-grid,
+    .store-grid-4col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .store-card {
+        padding: 12px 11px 12px 11px;
+        border-radius: 16px;
+    }
+
+    .store-card-badges {
+        top: 9px;
+        left: 9px;
+        right: 9px;
+    }
+
+    .store-pill-agotado,
+    .store-pill-oferta,
+    .store-pill-nuevo,
+    .store-pill-ultimas {
+        font-size: 9.5px;
+        padding: 3.5px 8px;
+    }
+
+    .store-quickview-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 11.5px;
+    }
+
+    .store-card-image-wrap {
+        height: 138px;
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 12px;
+    }
+
+    .store-card-brand {
+        font-size: 9.5px;
+        margin-bottom: 2px;
+    }
+
+    .store-card-presentation {
+        font-size: 11px;
+        margin-bottom: 4px;
+        min-height: 14px;
+    }
+
+    .store-card-title {
+        font-size: 13px;
+        line-height: 1.3;
+        min-height: 34px;
+        margin-bottom: 8px;
+    }
+
+    .store-card-footer-block {
+        padding-top: 8px;
+    }
+
+    .store-card-prices {
+        gap: 5px;
+        margin-bottom: 5px;
+        min-height: 22px;
+        flex-wrap: wrap;
+    }
+
+    .store-price-current {
+        font-size: 16px;
+    }
+
+    .store-price-old {
+        font-size: 11.5px;
+    }
+
+    .store-stock-row {
+        font-size: 11px;
+        margin-bottom: 8px;
+        min-height: 16px;
+    }
+
+    .store-add-btn {
+        height: 38px;
+        border-radius: 10px;
+        font-size: 12px;
+        gap: 6px;
+        padding: 0 8px;
+    }
+
+    /* Encabezados de sección apilados limpiamente */
+    .store-section-head,
+    .wg-page-hero-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .store-section-head.is-centered {
+        align-items: center;
+    }
+
+    .store-section-head-actions {
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .store-view-all-link {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .wg-carousel-head-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .wg-carousel-head-controls .store-view-all-link {
+        width: auto;
+        flex: 1;
+    }
+
+    .wg-brands-search-bar {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .wg-brands-search-bar input {
+        font-size: 16px;
+    }
+
+    /* Estadísticas compactas en móvil */
+    .wg-stats-section {
+        padding-block: 32px;
+    }
+
+    .wg-stats-grid {
+        gap: 12px;
+    }
+
+    .wg-stat-block {
+        padding: 20px 22px;
+        border-radius: 18px;
+        gap: 10px;
+    }
+
+    .wg-stat-value {
+        font-size: clamp(2.15rem, 8.5vw, 2.75rem);
+    }
+
+    /* Tarjetas de membresía en móvil */
+    .wg-tier-card {
+        min-height: auto;
+        border-radius: 18px;
+    }
+
+    .wg-tier-content {
+        padding: 22px 20px 20px;
+    }
+
+    .wg-tier-cta {
+        height: 46px;
+        font-size: 13.5px;
+    }
+
+    .wg-membresias-dark-stage {
+        padding: 18px 14px;
+        border-radius: 20px;
+    }
+
+    /* Scrollytelling adaptado a teléfonos */
+    .wg-scrolly-stage {
+        height: clamp(230px, 60vw, 310px);
+        border-radius: 18px;
+    }
+
+    .wg-scrolly-floating-stats {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .wg-scrolly-mini-stat {
+        min-width: 0;
+        padding: 10px 12px;
+        border-radius: 12px;
+    }
+
+    .wg-scrolly-mini-stat strong {
+        font-size: 16.5px;
+    }
+
+    .wg-scrolly-mini-stat span {
+        font-size: 10.5px;
+    }
+
+    .wg-scrolly-step {
+        padding: 18px 16px;
+        border-radius: 16px;
+        gap: 14px;
+    }
+
+    .wg-scrolly-index {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        font-size: 12px;
+    }
+
+    /* Carrusel de categorías en teléfono */
+    .wg-cat-carousel {
+        min-height: 292px;
+        gap: 12px;
+    }
+
+    .wg-cat-expand-card,
+    .wg-cat-expand-card.is-expanded {
+        flex: 0 0 min(260px, 78vw);
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .wg-cat-expand-media {
+        height: 126px;
+        margin-block: 8px;
+    }
+
+    .wg-cat-expand-media img,
+    .wg-cat-expand-card.is-expanded .wg-cat-expand-media img {
+        max-height: 112px;
+    }
+
+    /* Controles de catálogo y filtros móviles */
+    .store-mobile-filters-bar {
+        width: 100%;
+    }
+
+    .store-mobile-filters-btn {
+        width: 100%;
+        justify-content: center;
+        height: 44px;
+    }
+
+    .store-grid-topbar {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    .store-results-counter {
+        width: 100%;
+        font-size: 13px;
+    }
+
+    .store-topbar-right-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .store-select {
+        flex: 1;
+        min-width: 0;
+        height: 40px;
+        font-size: 13px;
+    }
+
+    /* Acordeón FAQ en móvil */
+    .wg-faq-trigger {
+        padding: 15px 16px;
+        font-size: 14px;
+        gap: 12px;
+    }
+
+    .wg-faq-panel-inner,
+    .wg-faq-item.is-open .wg-faq-panel-inner {
+        padding-inline: 16px;
+        font-size: 13.5px;
+    }
+
+    /* Modales (Vista Rápida, Recibo, Acceso) y Carrito en móvil */
+    .store-modal-overlay {
+        padding: 12px;
+    }
+
+    .store-modal-card {
+        padding: 20px 16px;
+        border-radius: 20px;
+        max-height: 90dvh;
+    }
+
+    .store-detail-grid {
+        gap: 18px;
+    }
+
+    .store-detail-img-box {
+        height: 210px;
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .store-detail-purchase-row {
+        flex-wrap: nowrap;
+        gap: 10px;
+    }
+
+    .store-detail-purchase-row .store-add-btn {
+        flex: 1;
+        height: 46px !important;
+        font-size: 13.5px;
+    }
+
+    .store-cart-drawer {
+        max-width: 100%;
+    }
+
+    .store-cart-header {
+        padding: 15px 16px;
+    }
+
+    .store-cart-items {
+        padding: 14px 16px;
+    }
+
+    .store-cart-footer {
+        padding: 15px 16px max(16px, env(safe-area-inset-bottom));
+    }
+
+    /* Toasts centrados en la parte inferior del teléfono */
+    .store-toast-container {
+        left: 14px;
+        right: 14px;
+        bottom: 16px;
+    }
+
+    .store-toast {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
+    /* Footer en móvil */
+    .store-footer {
+        padding-top: 44px;
+    }
+
+    .wg-footer-grid {
+        gap: 26px;
+        padding-bottom: 30px;
+    }
+
+    .wg-footer-legal-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .wg-back-top-btn {
+        width: 100%;
+        justify-content: center;
+        height: 40px;
+    }
+
+    /* Evitar auto-zoom en inputs dentro de modales y filtros en iOS */
+    .store-auth-field input,
+    .store-sidebar-brand-search,
+    .store-sidebar-price-input {
+        font-size: 16px;
+    }
+}
+
+/* Teléfonos compactos (<= 480px) */
+@media (max-width: 480px) {
+    .store-topbar {
+        padding: 0 10px;
+        gap: 6px;
+    }
+
+    .store-brand {
+        padding: 4px 12px 4px 5px;
+        gap: 8px;
+    }
+
+    .store-brand-logo {
+        width: 31px;
+        height: 31px;
+    }
+
+    .store-brand-wordmark {
+        font-size: 15px;
+    }
+
+    .store-utility-capsule {
+        padding: 3px 5px;
+        gap: 1px;
+    }
+
+    .store-icon-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 13.5px;
+    }
+
+    /* El acceso de sesión ya está en el icono de usuario y en el menú móvil */
+    .store-header-auth-slot {
+        display: none;
+    }
+
+    .store-mobile-menu-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .wg-btn-large-catalog {
+        width: 100%;
+        justify-content: center;
+        height: 48px;
+        padding-inline: 20px;
+        font-size: 14px;
+    }
+}
+
+/* Teléfonos pequeños (<= 360px) */
+@media (max-width: 360px) {
+    .store-products-grid,
+    .store-featured-grid,
+    .store-grid-4col {
+        grid-template-columns: 1fr;
+    }
+
+    .store-card-image-wrap {
+        height: 168px;
+    }
+
+    .wg-hero-title {
+        font-size: 1.9rem;
+    }
+
+    .wg-scrolly-floating-stats {
+        grid-template-columns: 1fr;
+    }
+}
+

@@ -194,6 +194,10 @@
     }
 
     function obtenerContenedorModalActivo() {
+        const modalCheckout = document.getElementById('wgModalCheckoutMembresia');
+        if (modalCheckout && modalCheckout.classList.contains('active')) {
+            return modalCheckout.querySelector('.wg-modal-dialog');
+        }
         const modalPlan = document.getElementById('wgModalPlan');
         if (modalPlan && modalPlan.classList.contains('active')) {
             return modalPlan.querySelector('.wg-modal-dialog');
@@ -220,6 +224,7 @@
     function manejarTecladoGlobal(e) {
         if (e.key === 'Escape') {
             if (typeof window.cerrarModalAuthTienda === 'function') window.cerrarModalAuthTienda();
+            if (typeof window.cerrarCheckoutMembresiaTienda === 'function') window.cerrarCheckoutMembresiaTienda();
             cerrarDetalleMembresiaTienda();
             cerrarModalProducto();
             cerrarModalComprobante();
@@ -637,6 +642,8 @@
 
         if (vistaObjetivo === 'inicio') {
             renderizarVistaInicio();
+        } else if (vistaObjetivo === 'membresias') {
+            renderizarEstadoMembresiaClienteEnVista();
         } else if (vistaObjetivo === 'productos') {
             renderizarVistaProductos();
         } else if (vistaObjetivo === 'categorias') {
@@ -2139,8 +2146,163 @@
     };
 
     /* ======================================================================
-        MODAL DE DETALLES DEL PLAN DE MEMBRESÍA (CONTRATACIÓN INTACTA)
+        MODAL DE DETALLES DEL PLAN Y FLUJO DE CONTRATACIÓN Y PAGO DE MEMBRESÍAS
        ====================================================================== */
+    let estadoMembresiaCliente = window.ESTADO_MEMBRESIA_INICIAL || {
+        autenticado: false,
+        id_cliente: null,
+        nombre_cliente: null,
+        membresia_activa: null,
+        solicitudes: []
+    };
+    let pasarelaConfigActual = window.PASARELA_CONFIG || {
+        habilitada: false,
+        proveedor: 'Stripe',
+        public_key: ''
+    };
+    let metodoPagoMembresiaActual = 'tarjeta';
+    let stripeInstance = null;
+    let stripeElementsInstance = null;
+    let stripeCardElement = null;
+    let stripeScriptPromise = null;
+
+    function cargarStripeJsDinamico() {
+        if (window.Stripe) return Promise.resolve(window.Stripe);
+        if (stripeScriptPromise) return stripeScriptPromise;
+        stripeScriptPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            script.async = true;
+            script.onload = () => resolve(window.Stripe);
+            script.onerror = () => reject(new Error('No se pudo cargar el SDK seguro de Stripe.'));
+            document.head.appendChild(script);
+        });
+        return stripeScriptPromise;
+    }
+
+    async function sincronizarEstadoMembresiaServidor() {
+        try {
+            const resp = await fetch('/api/tienda/membresias/estado', { method: 'GET' });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (data.success) {
+                if (data.pasarela) pasarelaConfigActual = data.pasarela;
+                if (data.estado_cliente) estadoMembresiaCliente = data.estado_cliente;
+                renderizarEstadoMembresiaClienteEnVista();
+            }
+        } catch (err) {
+            console.error('Aviso consultando estado de membresía:', err);
+        }
+    }
+
+    function renderizarEstadoMembresiaClienteEnVista() {
+        const wrap = document.getElementById('wgEstadoMembresiaClienteWrap');
+        if (!wrap) return;
+
+        if (!window.USUARIO_AUTENTICADO || !estadoMembresiaCliente) {
+            wrap.style.display = 'none';
+            wrap.innerHTML = '';
+            return;
+        }
+
+        const activa = estadoMembresiaCliente.membresia_activa;
+        const solicitudes = Array.isArray(estadoMembresiaCliente.solicitudes) ? estadoMembresiaCliente.solicitudes : [];
+        const pendientes = solicitudes.filter(s => String(s.EstadoPago || '').toLowerCase() === 'pendiente');
+
+        if (!activa && solicitudes.length === 0) {
+            wrap.style.display = 'none';
+            wrap.innerHTML = '';
+            return;
+        }
+
+        let bloqueSuperiorHtml = '';
+        if (activa) {
+            bloqueSuperiorHtml = `
+                <div class="wg-client-status-top">
+                    <div class="wg-client-status-info">
+                        <div class="wg-client-status-icon is-active">
+                            <i class="fas fa-id-card-clip" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <span class="wg-client-status-kicker">TU MEMBRESÍA EN WORLD GYM</span>
+                            <h3 class="wg-client-status-title">${escaparHtml(activa.NombreMembresia || 'Plan Activo')}</h3>
+                            <p class="wg-client-status-meta">
+                                Vigencia registrada: <strong>${escaparHtml(activa.FechaInicio || '—')}</strong> al <strong>${escaparHtml(activa.FechaFin || '—')}</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <span class="wg-client-status-pill is-active">
+                        <i class="fas fa-circle-check" aria-hidden="true"></i> Membresía Activa
+                    </span>
+                </div>
+            `;
+        } else if (pendientes.length > 0) {
+            const ultPend = pendientes[0];
+            bloqueSuperiorHtml = `
+                <div class="wg-client-status-top">
+                    <div class="wg-client-status-info">
+                        <div class="wg-client-status-icon">
+                            <i class="fas fa-clock" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <span class="wg-client-status-kicker">CONTRATACIÓN EN CURSO</span>
+                            <h3 class="wg-client-status-title">${escaparHtml(ultPend.TituloPlan || ultPend.NombreMembresia)} (${formatearCordobas(ultPend.Monto)})</h3>
+                            <p class="wg-client-status-meta">
+                                Folio <strong>${escaparHtml(ultPend.Folio)}</strong> · Método: <strong>${escaparHtml(ultPend.MetodoPago)}</strong> · Presenta tu folio en recepción para confirmar el pago y activar tu plan.
+                            </p>
+                        </div>
+                    </div>
+                    <span class="wg-client-status-pill is-pending">
+                        <i class="fas fa-hourglass-half" aria-hidden="true"></i> Pendiente de confirmación
+                    </span>
+                </div>
+            `;
+        }
+
+        let historialMiniHtml = '';
+        if (solicitudes.length > 0) {
+            const filas = solicitudes.slice(0, 3).map(s => {
+                const esConf = String(s.EstadoPago || '').toLowerCase() === 'confirmado';
+                const esCanc = String(s.EstadoPago || '').toLowerCase() === 'cancelado';
+                const claseEstado = esConf ? 'is-active' : 'is-pending';
+                const iconoEstado = esConf ? 'fa-circle-check' : (esCanc ? 'fa-ban' : 'fa-clock');
+                const textoEstado = esConf ? 'Pago Confirmado · Activa' : (esCanc ? 'Cancelada' : 'Pendiente de confirmación en recepción');
+                return `
+                    <div class="wg-client-req-row">
+                        <div>
+                            <strong>${escaparHtml(s.TituloPlan || s.NombreMembresia)}</strong>
+                            <span style="color:#949AA6;"> · Folio ${escaparHtml(s.Folio)} · ${escaparHtml(s.FechaSolicitud || '')}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <span>Método: <strong>${escaparHtml(s.MetodoPago)}</strong></span>
+                            <strong style="color:#F58220;">${formatearCordobas(s.Monto)}</strong>
+                            <span class="wg-client-status-pill ${claseEstado}" style="padding:3px 9px; font-size:0.7rem;">
+                                <i class="fas ${iconoEstado}" aria-hidden="true"></i> ${escaparHtml(textoEstado)}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            historialMiniHtml = `
+                <div class="wg-client-requests-mini">
+                    <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#949AA6;">
+                        Tus contrataciones recientes desde la página
+                    </span>
+                    ${filas}
+                </div>
+            `;
+        }
+
+        wrap.innerHTML = `
+            <div class="wg-client-status-banner">
+                ${bloqueSuperiorHtml}
+                ${historialMiniHtml}
+            </div>
+        `;
+        wrap.style.display = 'block';
+    }
+
     window.abrirDetalleMembresiaTienda = function (cardEl) {
         if (!cardEl) return;
         ultimoElementoEnfocado = cardEl;
@@ -2152,7 +2314,7 @@
         const precio = cardEl.getAttribute('data-precio');
         const tipo = cardEl.getAttribute('data-tipo');
         const disponibilidad = cardEl.getAttribute('data-disponibilidad') || 'Disponible • Activación inmediata';
-        const condiciones = cardEl.getAttribute('data-condiciones') || 'Uso personal e intransferible • Contratación en recepción.';
+        const condiciones = cardEl.getAttribute('data-condiciones') || 'Uso personal e intransferible • Contratación desde tu cuenta o en recepción.';
         const esPopular = cardEl.getAttribute('data-popular') === '1';
         const sociosActivos = parseInt(cardEl.getAttribute('data-socios') || '0', 10);
 
@@ -2163,7 +2325,16 @@
             beneficios = [];
         }
 
-        planTiendaActual = { id: id, titulo: titulo, precio: precio, duracion: duracion };
+        planTiendaActual = {
+            id: id,
+            titulo: titulo,
+            nombreDb: nombreDb,
+            precio: precio,
+            duracion: duracion,
+            tipo: tipo,
+            beneficios: beneficios,
+            condiciones: condiciones
+        };
 
         const setTxt = (elId, txt) => {
             const el = document.getElementById(elId);
@@ -2211,7 +2382,7 @@
         overlay.style.display = 'flex';
         setTimeout(() => {
             overlay.classList.add('active');
-            document.getElementById('wgModalCloseBtn')?.focus();
+            document.getElementById('wgModalBtnSeleccionarCliente')?.focus();
         }, 15);
     };
 
@@ -2228,36 +2399,570 @@
         }, 180);
     };
 
+    function mostrarAlertaCheckoutMembresia(mensaje, tipo) {
+        const box = document.getElementById('wgCheckoutAlertBox');
+        if (!box) return;
+        if (!mensaje) {
+            box.style.display = 'none';
+            box.textContent = '';
+            box.className = 'wg-checkout-alert';
+            return;
+        }
+        box.className = 'wg-checkout-alert ' + (tipo === 'success' ? 'is-success' : 'is-error');
+        box.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}" aria-hidden="true"></i><span>${escaparHtml(mensaje)}</span>`;
+        box.style.display = 'flex';
+    }
+
+    function calcularFechasEstimadasPlan(duracionTexto) {
+        const ahora = new Date();
+        let dias = 30;
+        const txt = String(duracionTexto || '').toLowerCase();
+        const mNum = txt.match(/(\d+)/);
+        if (mNum) {
+            dias = parseInt(mNum[1], 10) || 30;
+        } else if (txt.includes('diario') || txt.includes('día') || txt.includes('dia')) {
+            dias = 1;
+        } else if (txt.includes('semanal')) {
+            dias = 7;
+        } else if (txt.includes('quincenal')) {
+            dias = 15;
+        }
+        const fin = new Date(ahora.getTime() + (Math.max(1, dias) * 86400000));
+        const fmt = d => d.toLocaleDateString('es-NI', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        return {
+            inicio: fmt(ahora),
+            fin: fmt(fin),
+            dias: dias
+        };
+    }
+
     window.seleccionarPlanComoCliente = function () {
         if (!window.USUARIO_AUTENTICADO) {
             accionPendienteAuth = { tipo: 'seleccionar_plan' };
             cerrarDetalleMembresiaTienda();
             window.abrirModalAuthTienda(
                 'login',
-                'Para contratar un plan de membresía debes iniciar sesión o registrarte.'
+                'Para contratar un plan de membresía desde tu cuenta debes iniciar sesión o registrarte.'
             );
             return;
         }
         cerrarDetalleMembresiaTienda();
-        const nombreSocio = (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) ? window.USUARIO_ACTUAL.nombre : 'Cliente';
-        const folioMembresia = 'MEM-' + Date.now().toString().slice(-6);
-        const fechaActual = new Date().toLocaleString('es-NI');
-        const msg = `Plan seleccionado (${nombreSocio}): ${planTiendaActual.titulo} (${planTiendaActual.duracion} — C$${planTiendaActual.precio}). Presenta este comprobante en recepción de World Gym para activar tu membresía.`;
-        window.mostrarToastTienda(msg, 'success');
+        abrirPantallaConfirmacionMembresia();
+    };
 
-        mostrarComprobantePedido({
-            Folio: folioMembresia,
-            Fecha: fechaActual,
-            Cliente: nombreSocio,
-            Total: Number(planTiendaActual.precio || 0),
-            Items: [{
-                NombreProducto: planTiendaActual.titulo || 'Plan de Membresía',
-                Marca: 'WORLDGYM MEMBRESÍAS',
-                Presentacion: 'Vigencia: ' + (planTiendaActual.duracion || 'Estándar'),
-                Cantidad: 1,
-                Subtotal: Number(planTiendaActual.precio || 0)
-            }]
-        }, 'Solicitud de membresía registrada. Realiza tu pago y activación inmediata en recepción.');
+    async function prepararPasarelaTarjetaEnModal() {
+        const wrapActiva = document.getElementById('wgPasarelaActivaWrap');
+        const wrapPendiente = document.getElementById('wgPasarelaPendienteConfigWrap');
+        if (!wrapActiva || !wrapPendiente) return;
+
+        await sincronizarEstadoMembresiaServidor();
+
+        if (!pasarelaConfigActual || !pasarelaConfigActual.habilitada || !pasarelaConfigActual.public_key) {
+            wrapActiva.style.display = 'none';
+            wrapPendiente.style.display = 'block';
+            return;
+        }
+
+        wrapPendiente.style.display = 'none';
+        wrapActiva.style.display = 'block';
+
+        try {
+            const StripeConstructor = await cargarStripeJsDinamico();
+            if (!stripeInstance) {
+                stripeInstance = StripeConstructor(pasarelaConfigActual.public_key);
+                stripeElementsInstance = stripeInstance.elements({ locale: 'es' });
+            }
+            const mountEl = document.getElementById('wgStripeCardMount');
+            if (mountEl && !stripeCardElement) {
+                stripeCardElement = stripeElementsInstance.create('card', {
+                    hidePostalCode: true,
+                    style: {
+                        base: {
+                            color: '#FFFFFF',
+                            fontFamily: 'Montserrat, Inter, sans-serif',
+                            fontSize: '15px',
+                            '::placeholder': { color: '#949AA6' }
+                        },
+                        invalid: { color: '#F87171', iconColor: '#F87171' }
+                    }
+                });
+                stripeCardElement.mount('#wgStripeCardMount');
+                stripeCardElement.on('change', function (event) {
+                    const errEl = document.getElementById('wgStripeCardErrors');
+                    if (errEl) errEl.textContent = event.error ? event.error.message : '';
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            mostrarAlertaCheckoutMembresia('No se pudo inicializar el componente seguro de la pasarela de pago.', 'error');
+        }
+    }
+
+    window.seleccionarMetodoPagoMembresia = function (metodo) {
+        metodoPagoMembresiaActual = metodo === 'efectivo' ? 'efectivo' : 'tarjeta';
+        const tabTarjeta = document.getElementById('wgTabMetodoTarjeta');
+        const tabEfectivo = document.getElementById('wgTabMetodoEfectivo');
+        const panelTarjeta = document.getElementById('wgPanelPagoTarjeta');
+        const panelEfectivo = document.getElementById('wgPanelPagoEfectivo');
+
+        mostrarAlertaCheckoutMembresia('', '');
+
+        if (tabTarjeta && tabEfectivo) {
+            const esTarjeta = metodoPagoMembresiaActual === 'tarjeta';
+            tabTarjeta.classList.toggle('active', esTarjeta);
+            tabTarjeta.setAttribute('aria-selected', esTarjeta ? 'true' : 'false');
+            tabEfectivo.classList.toggle('active', !esTarjeta);
+            tabEfectivo.setAttribute('aria-selected', !esTarjeta ? 'true' : 'false');
+        }
+
+        if (panelTarjeta) panelTarjeta.style.display = metodoPagoMembresiaActual === 'tarjeta' ? 'block' : 'none';
+        if (panelEfectivo) panelEfectivo.style.display = metodoPagoMembresiaActual === 'efectivo' ? 'block' : 'none';
+
+        if (metodoPagoMembresiaActual === 'tarjeta') {
+            prepararPasarelaTarjetaEnModal();
+        }
+    };
+
+    function abrirPantallaConfirmacionMembresia() {
+        const overlay = document.getElementById('wgModalCheckoutMembresia');
+        if (!overlay || !planTiendaActual) return;
+
+        const stepForm = document.getElementById('wgCheckoutFormStep');
+        const stepSuccess = document.getElementById('wgCheckoutSuccessStep');
+        if (stepForm) stepForm.style.display = 'flex';
+        if (stepSuccess) stepSuccess.style.display = 'none';
+
+        const setTxt = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+
+        const precioNum = parseFloat(planTiendaActual.precio || '0') || 0;
+        const precioFmt = precioNum.toFixed(2);
+        const fechas = calcularFechasEstimadasPlan(planTiendaActual.duracion);
+
+        setTxt('wgCheckoutEyebrow', 'CONFIRMACIÓN DE CONTRATACIÓN · WORLD GYM');
+        setTxt('wgCheckoutTituloModal', 'Confirmar Plan y Método de Pago');
+        setTxt('wgCheckoutPlanModalidad', 'MODALIDAD ' + String(planTiendaActual.tipo || 'ESTÁNDAR').toUpperCase());
+        setTxt('wgCheckoutPlanNombre', planTiendaActual.titulo || planTiendaActual.nombreDb || 'PLAN DE MEMBRESÍA');
+        setTxt('wgCheckoutPlanPrecio', precioFmt);
+        setTxt('wgCheckoutFechaInicio', fechas.inicio);
+        setTxt('wgCheckoutFechaFin', `${fechas.fin} (${fechas.dias} ${fechas.dias === 1 ? 'día' : 'días'})`);
+        setTxt('wgCashMontoInstruccion', 'C$' + precioFmt);
+        setTxt('wgCardBtnMonto', 'C$' + precioFmt);
+
+        const vigEl = document.getElementById('wgCheckoutPlanVigencia');
+        if (vigEl) {
+            vigEl.innerHTML = `<i class="fas fa-calendar-check" aria-hidden="true"></i><span>Duración: ${escaparHtml(planTiendaActual.duracion || '30 DÍAS')}</span>`;
+        }
+
+        const benUl = document.getElementById('wgCheckoutPlanBeneficios');
+        if (benUl) {
+            const listaBen = Array.isArray(planTiendaActual.beneficios) && planTiendaActual.beneficios.length > 0
+                ? planTiendaActual.beneficios
+                : ['Acceso completo a instalaciones y maquinaria durante la vigencia contratada.', 'Control digital de asistencias vinculado a tu perfil.'];
+            benUl.innerHTML = listaBen.map(b => `<li><i class="fas fa-check" aria-hidden="true"></i><span>${escaparHtml(b)}</span></li>`).join('');
+        }
+
+        const notesIn = document.getElementById('wgCashOrderNotes');
+        if (notesIn) notesIn.value = '';
+
+        const holderIn = document.getElementById('wgVisualCardHolder');
+        const numIn = document.getElementById('wgVisualCardNumber');
+        const expIn = document.getElementById('wgVisualCardExpiry');
+        const cvvIn = document.getElementById('wgVisualCardCvv');
+        if (holderIn) holderIn.value = (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) ? String(window.USUARIO_ACTUAL.nombre).toUpperCase() : '';
+        if (numIn) numIn.value = '';
+        if (expIn) expIn.value = '';
+        if (cvvIn) cvvIn.value = '';
+        window.actualizarVistaPreviaTarjeta();
+
+        seleccionarMetodoPagoMembresia('tarjeta');
+
+        overlay.style.display = 'flex';
+        setTimeout(() => {
+            overlay.classList.add('active');
+            document.getElementById('wgCheckoutCloseBtn')?.focus();
+        }, 15);
+    }
+
+    window.volverADetallePlanDesdeCheckout = function () {
+        cerrarCheckoutMembresiaTienda();
+        const overlay = document.getElementById('wgModalPlan');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 15);
+        }
+    };
+
+    window.cerrarCheckoutMembresiaTienda = function () {
+        const overlay = document.getElementById('wgModalCheckoutMembresia');
+        if (!overlay || overlay.style.display === 'none') return;
+        overlay.classList.remove('active');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 180);
+    };
+
+    function mostrarConfirmacionFinalMembresia(solicitud, mensaje) {
+        const stepForm = document.getElementById('wgCheckoutFormStep');
+        const stepSuccess = document.getElementById('wgCheckoutSuccessStep');
+        const content = document.getElementById('wgCheckoutSuccessContent');
+        if (!stepForm || !stepSuccess || !content || !solicitud) return;
+
+        const esConfirmado = String(solicitud.EstadoPago || '').toLowerCase() === 'confirmado';
+        const colorEstado = esConfirmado ? '#10B981' : '#F59E0B';
+        const bgIcono = esConfirmado ? 'rgba(16, 185, 129, 0.16)' : 'rgba(245, 158, 11, 0.16)';
+        const icono = esConfirmado ? 'fa-circle-check' : 'fa-clock';
+        const tituloExito = esConfirmado
+            ? '¡Membresía Contratada y Activada!'
+            : '¡Solicitud de Contratación Registrada!';
+
+        const setTxt = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+        setTxt('wgCheckoutEyebrow', 'COMPROBANTE DE CONTRATACIÓN · WORLD GYM');
+        setTxt('wgCheckoutTituloModal', tituloExito);
+
+        content.innerHTML = `
+            <div style="text-align:center; margin-bottom:18px;">
+                <div style="width:60px; height:60px; border-radius:50%; background:${bgIcono}; color:${colorEstado}; display:inline-flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:10px; border:1px solid ${colorEstado};">
+                    <i class="fas ${icono}" aria-hidden="true"></i>
+                </div>
+                <h4 style="margin:0 0 6px 0; font-size:1.25rem; font-weight:800; color:#FFFFFF;">${escaparHtml(tituloExito)}</h4>
+                <p style="margin:0; font-size:0.86rem; color:#D5D8DF; line-height:1.5;">${escaparHtml(mensaje)}</p>
+            </div>
+
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px 18px; margin-bottom:18px; font-size:0.85rem; display:flex; flex-direction:column; gap:9px;">
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <span style="color:#949AA6;">Folio de contratación:</span>
+                    <strong style="color:#F58220;">${escaparHtml(solicitud.Folio)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <span style="color:#949AA6;">Socio / Cliente:</span>
+                    <strong style="color:#FFFFFF;">${escaparHtml(solicitud.NombreCliente)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <span style="color:#949AA6;">Plan contratado:</span>
+                    <strong style="color:#FFFFFF;">${escaparHtml(solicitud.TituloPlan || solicitud.NombreMembresia)} (${escaparHtml(solicitud.DuracionTexto)})</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <span style="color:#949AA6;">Método de pago:</span>
+                    <strong style="color:#FFFFFF;">${escaparHtml(solicitud.MetodoPago)}${solicitud.Ultimos4 ? ' (•••• ' + escaparHtml(solicitud.Ultimos4) + ')' : ''}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <span style="color:#949AA6;">Estado del pago:</span>
+                    <strong style="color:${colorEstado};">${escaparHtml(solicitud.EstadoPago)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:10px;">
+                    <span style="color:#949AA6;">Estado de la membresía:</span>
+                    <strong style="color:${colorEstado};">${escaparHtml(solicitud.EstadoMembresia)}</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; gap:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08); font-size:1rem;">
+                    <span style="color:#FFFFFF; font-weight:700;">Monto total:</span>
+                    <strong style="color:#F58220; font-size:1.15rem;">${formatearCordobas(solicitud.Monto)}</strong>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="wg-btn-orange-select" id="wgBtnCerrarExitoMembresia" onclick="cerrarCheckoutMembresiaTienda()">
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                    <span>Entendido</span>
+                </button>
+            </div>
+        `;
+
+        stepForm.style.display = 'none';
+        stepSuccess.style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('wgBtnCerrarExitoMembresia')?.focus();
+        }, 20);
+    }
+
+    window.confirmarContratacionEfectivoMembresia = async function () {
+        if (!planTiendaActual || !planTiendaActual.id) return;
+        const btn = document.getElementById('wgBtnConfirmarEfectivo');
+        const notas = document.getElementById('wgCashOrderNotes')?.value.trim() || '';
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Registrando solicitud...</span>`;
+        }
+        mostrarAlertaCheckoutMembresia('', '');
+
+        try {
+            const resp = await fetch('/api/tienda/membresias/contratar-efectivo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_membresia: Number(planTiendaActual.id),
+                    notas: notas
+                })
+            });
+            const data = await resp.json();
+
+            if (resp.status === 401 || data.requiere_login) {
+                window.USUARIO_AUTENTICADO = false;
+                accionPendienteAuth = { tipo: 'seleccionar_plan' };
+                cerrarCheckoutMembresiaTienda();
+                window.abrirModalAuthTienda('login', data.error || 'Debes iniciar sesión para contratar una membresía.');
+                return;
+            }
+
+            if (!data.success) {
+                mostrarAlertaCheckoutMembresia(data.error || 'No se pudo registrar la solicitud.', 'error');
+                return;
+            }
+
+            if (data.estado_cliente) {
+                estadoMembresiaCliente = data.estado_cliente;
+                renderizarEstadoMembresiaClienteEnVista();
+            }
+            window.mostrarToastTienda(data.mensaje || 'Solicitud de membresía en efectivo registrada.', 'success');
+            mostrarConfirmacionFinalMembresia(data.solicitud, data.mensaje);
+        } catch (err) {
+            console.error(err);
+            mostrarAlertaCheckoutMembresia('Error de conexión al registrar la solicitud en efectivo.', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-check-circle" aria-hidden="true"></i><span>Registrar Contratación con Pago en Efectivo</span>`;
+            }
+        }
+    };
+
+    window.formatearInputNumeroTarjeta = function (inputEl) {
+        if (!inputEl) return;
+        const digitos = inputEl.value.replace(/\D/g, '').slice(0, 16);
+        const grupos = digitos.match(/.{1,4}/g) || [];
+        inputEl.value = grupos.join(' ');
+        window.actualizarVistaPreviaTarjeta();
+    };
+
+    window.formatearInputFechaTarjeta = function (inputEl) {
+        if (!inputEl) return;
+        const digitos = inputEl.value.replace(/\D/g, '').slice(0, 4);
+        if (digitos.length >= 3) {
+            inputEl.value = digitos.slice(0, 2) + '/' + digitos.slice(2, 4);
+        } else {
+            inputEl.value = digitos;
+        }
+        window.actualizarVistaPreviaTarjeta();
+    };
+
+    function detectarMarcaTarjetaPorDigitos(digitos) {
+        const d = String(digitos || '');
+        if (/^4/.test(d)) return { marca: 'VISA', icono: 'fab fa-cc-visa' };
+        if (/^(5[1-5]|2[2-7])/.test(d)) return { marca: 'MASTERCARD', icono: 'fab fa-cc-mastercard' };
+        if (/^3[47]/.test(d)) return { marca: 'AMEX', icono: 'fab fa-cc-amex' };
+        if (/^6(?:011|5)/.test(d)) return { marca: 'DISCOVER', icono: 'fab fa-cc-discover' };
+        return { marca: 'VISA', icono: 'fab fa-cc-visa' };
+    }
+
+    window.actualizarVistaPreviaTarjeta = function () {
+        const holderIn = document.getElementById('wgVisualCardHolder');
+        const numIn = document.getElementById('wgVisualCardNumber');
+        const expIn = document.getElementById('wgVisualCardExpiry');
+
+        const holderDisp = document.getElementById('wgCcHolderDisplay');
+        const numDisp = document.getElementById('wgCcNumberDisplay');
+        const expDisp = document.getElementById('wgCcExpiryDisplay');
+        const brandIcon = document.getElementById('wgCcBrandIcon');
+        const brandText = document.getElementById('wgCcBrandText');
+
+        const nombreVal = holderIn && holderIn.value.trim() ? holderIn.value.trim().toUpperCase() : 'SOCIO WORLD GYM';
+        if (holderDisp) holderDisp.textContent = nombreVal;
+
+        const digitos = numIn ? numIn.value.replace(/\D/g, '').slice(0, 16) : '';
+        const infoMarca = detectarMarcaTarjetaPorDigitos(digitos);
+        if (brandIcon) brandIcon.className = infoMarca.icono;
+        if (brandText) brandText.textContent = infoMarca.marca;
+
+        if (numDisp) {
+            if (!digitos) {
+                numDisp.textContent = '•••• •••• •••• ••••';
+            } else {
+                let bloques = [];
+                for (let i = 0; i < 16; i += 4) {
+                    const seg = digitos.slice(i, i + 4);
+                    if (seg.length === 4) {
+                        bloques.push(i < 12 ? seg : seg);
+                    } else if (seg.length > 0) {
+                        bloques.push(seg + '•'.repeat(4 - seg.length));
+                    } else {
+                        bloques.push('••••');
+                    }
+                }
+                numDisp.textContent = bloques.join(' ');
+            }
+        }
+
+        const expVal = expIn && expIn.value.trim() ? expIn.value.trim() : 'MM/AA';
+        if (expDisp) expDisp.textContent = expVal;
+    };
+
+    window.procesarPagoTarjetaMembresia = async function () {
+        if (!planTiendaActual || !planTiendaActual.id) return;
+
+        // Caso 1: Si Stripe externo está configurado con claves en .env, usar el flujo Stripe Elements
+        if (pasarelaConfigActual && pasarelaConfigActual.habilitada && stripeInstance && stripeCardElement) {
+            const btnReal = document.getElementById('wgBtnPagarTarjetaReal');
+            const titular = document.getElementById('wgCardHolderName')?.value.trim() || '';
+            if (btnReal) {
+                btnReal.disabled = true;
+                btnReal.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Procesando con la pasarela...</span>`;
+            }
+            mostrarAlertaCheckoutMembresia('', '');
+            try {
+                const respIntento = await fetch('/api/tienda/membresias/crear-intento-tarjeta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_membresia: Number(planTiendaActual.id) })
+                });
+                const dataIntento = await respIntento.json();
+                if (!dataIntento.success || !dataIntento.intento || !dataIntento.intento.client_secret) {
+                    mostrarAlertaCheckoutMembresia(dataIntento.error || 'No fue posible iniciar la transacción en la pasarela.', 'error');
+                    return;
+                }
+                const resultadoStripe = await stripeInstance.confirmCardPayment(dataIntento.intento.client_secret, {
+                    payment_method: {
+                        card: stripeCardElement,
+                        billing_details: {
+                            name: titular || (window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) || 'Cliente World Gym'
+                        }
+                    }
+                });
+                if (resultadoStripe.error) {
+                    mostrarAlertaCheckoutMembresia(resultadoStripe.error.message || 'El pago con tarjeta fue rechazado por la pasarela.', 'error');
+                    return;
+                }
+                const pi = resultadoStripe.paymentIntent;
+                if (!pi || pi.status !== 'succeeded') {
+                    mostrarAlertaCheckoutMembresia('El pago aún no fue confirmado por la pasarela.', 'error');
+                    return;
+                }
+                const respConf = await fetch('/api/tienda/membresias/confirmar-tarjeta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_membresia: Number(planTiendaActual.id),
+                        payment_intent_id: pi.id
+                    })
+                });
+                const dataConf = await respConf.json();
+                if (!dataConf.success) {
+                    mostrarAlertaCheckoutMembresia(dataConf.error || 'Error al activar la membresía tras el pago.', 'error');
+                    return;
+                }
+                if (dataConf.estado_cliente) {
+                    estadoMembresiaCliente = dataConf.estado_cliente;
+                    renderizarEstadoMembresiaClienteEnVista();
+                }
+                stripeCardElement.clear();
+                window.mostrarToastTienda(dataConf.mensaje || '¡Membresía activada con éxito!', 'success');
+                mostrarConfirmacionFinalMembresia(dataConf.solicitud, dataConf.mensaje);
+            } catch (err) {
+                console.error(err);
+                mostrarAlertaCheckoutMembresia('Error de comunicación con la pasarela de pagos.', 'error');
+            } finally {
+                if (btnReal) {
+                    btnReal.disabled = false;
+                    btnReal.innerHTML = `<i class="fas fa-lock" aria-hidden="true"></i><span>Pagar con Tarjeta y Activar Membresía</span>`;
+                }
+            }
+            return;
+        }
+
+        // Caso 2: Formulario visual interactivo de tarjeta (valida los campos en cliente, tokeniza y envía solo últimos 4 dígitos y marca)
+        const holderIn = document.getElementById('wgVisualCardHolder');
+        const numIn = document.getElementById('wgVisualCardNumber');
+        const expIn = document.getElementById('wgVisualCardExpiry');
+        const cvvIn = document.getElementById('wgVisualCardCvv');
+        const btnVisual = document.getElementById('wgBtnPagarTarjetaVisual');
+
+        const titular = holderIn ? holderIn.value.trim() : '';
+        const digitosTarjeta = numIn ? numIn.value.replace(/\D/g, '') : '';
+        const fechaVenc = expIn ? expIn.value.trim() : '';
+        const cvv = cvvIn ? cvvIn.value.replace(/\D/g, '') : '';
+
+        if (titular.length < 3) {
+            mostrarAlertaCheckoutMembresia('Ingresa el nombre del titular tal como aparece en la tarjeta.', 'error');
+            holderIn?.focus();
+            return;
+        }
+        if (digitosTarjeta.length < 15 || digitosTarjeta.length > 16) {
+            mostrarAlertaCheckoutMembresia('Ingresa un número de tarjeta válido de 15 o 16 dígitos.', 'error');
+            numIn?.focus();
+            return;
+        }
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(fechaVenc)) {
+            mostrarAlertaCheckoutMembresia('Ingresa una fecha de vencimiento válida en formato MM/AA (ej. 08/28).', 'error');
+            expIn?.focus();
+            return;
+        }
+        if (cvv.length < 3 || cvv.length > 4) {
+            mostrarAlertaCheckoutMembresia('Ingresa el código de seguridad (CVV) de 3 o 4 dígitos.', 'error');
+            cvvIn?.focus();
+            return;
+        }
+
+        const ultimos4 = digitosTarjeta.slice(-4);
+        const infoMarca = detectarMarcaTarjetaPorDigitos(digitosTarjeta);
+        const tokenTarjeta = 'tok_wg_card_' + Date.now() + '_' + ultimos4;
+
+        // Limpiar inmediatamente de memoria los inputs sensibles antes de enviar el token
+        if (numIn) numIn.value = '';
+        if (cvvIn) cvvIn.value = '';
+
+        const precioFmt = (parseFloat(planTiendaActual.precio || '0') || 0).toFixed(2);
+        if (btnVisual) {
+            btnVisual.disabled = true;
+            btnVisual.innerHTML = `<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Autorizando pago y activando membresía...</span>`;
+        }
+        mostrarAlertaCheckoutMembresia('', '');
+
+        try {
+            const respConf = await fetch('/api/tienda/membresias/confirmar-tarjeta', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_membresia: Number(planTiendaActual.id),
+                    payment_intent_id: tokenTarjeta,
+                    ultimos4: ultimos4,
+                    marca_tarjeta: infoMarca.marca
+                })
+            });
+            const dataConf = await respConf.json();
+
+            if (respConf.status === 401 || dataConf.requiere_login) {
+                window.USUARIO_AUTENTICADO = false;
+                accionPendienteAuth = { tipo: 'seleccionar_plan' };
+                cerrarCheckoutMembresiaTienda();
+                window.abrirModalAuthTienda('login', dataConf.error || 'Debes iniciar sesión para contratar una membresía.');
+                return;
+            }
+
+            if (!dataConf.success) {
+                mostrarAlertaCheckoutMembresia(dataConf.error || 'No se pudo completar la contratación con tarjeta.', 'error');
+                return;
+            }
+
+            if (dataConf.estado_cliente) {
+                estadoMembresiaCliente = dataConf.estado_cliente;
+                renderizarEstadoMembresiaClienteEnVista();
+            }
+            window.mostrarToastTienda(dataConf.mensaje || '¡Pago confirmado y membresía activada!', 'success');
+            mostrarConfirmacionFinalMembresia(dataConf.solicitud, dataConf.mensaje);
+        } catch (err) {
+            console.error(err);
+            mostrarAlertaCheckoutMembresia('Error de conexión al procesar la contratación.', 'error');
+        } finally {
+            if (btnVisual) {
+                btnVisual.disabled = false;
+                btnVisual.innerHTML = `<i class="fas fa-credit-card" aria-hidden="true"></i><span>Confirmar Pago con Tarjeta (<span id="wgCardBtnMonto">C$${precioFmt}</span>)</span>`;
+            }
+        }
     };
 
     /* ======================================================================
@@ -3124,19 +3829,27 @@
             const idPlan = encodeURIComponent(planTiendaActual.id || '1');
             modalPlanFooter.innerHTML = `
                 <div class="wg-modal-admin-links">
+                    <button type="button" class="wg-btn-outline-dark" onclick="cerrarDetalleMembresiaTienda()">
+                        Cerrar
+                    </button>
+                    <a href="/cliente_membresia?id_membresia=${idPlan}" id="wgModalBtnSeleccionar" class="wg-btn-outline-dark" title="Asignar en panel administrativo">
+                        <i class="fas fa-user-check"></i> Panel Admin
+                    </a>
                     <a href="/membresia_actualizar?id=${idPlan}" id="wgModalBtnEditar" class="wg-btn-outline-dark" title="Editar membresía">
                         <i class="fas fa-edit"></i> Editar
                     </a>
                     <a href="/membresia_eliminar?id=${idPlan}" id="wgModalBtnEliminar" class="wg-btn-outline-dark danger" title="Eliminar membresía">
-                        <i class="fas fa-trash"></i> Eliminar
+                        <i class="fas fa-trash"></i>
                     </a>
                 </div>
-                <a href="/cliente_membresia?id_membresia=${idPlan}" id="wgModalBtnSeleccionar" class="wg-btn-orange-select">
+                <button type="button" id="wgModalBtnSeleccionarCliente" class="wg-btn-orange-select" onclick="seleccionarPlanComoCliente()">
                     <span>Continuar con la contratación</span>
                     <span aria-hidden="true">&rarr;</span>
-                </a>
+                </button>
             `;
         }
+
+        sincronizarEstadoMembresiaServidor();
     }
 
     function ejecutarAccionPendienteAuth() {

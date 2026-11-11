@@ -150,7 +150,12 @@
         const umbralTope = 90;
 
         const searchOpen = Boolean(document.getElementById('searchStrip') && document.getElementById('searchStrip').classList.contains('is-open'));
-        const drawerOpen = Boolean(document.getElementById('storeMobileNavDrawer') && document.getElementById('storeMobileNavDrawer').classList.contains('is-open'));
+        const navDrawerEl = document.getElementById('storeMobileNavDrawer');
+        const filtersSidebarEl = document.getElementById('storeFiltersSidebar');
+        const drawerOpen = Boolean(
+            (navDrawerEl && (navDrawerEl.classList.contains('open') || navDrawerEl.classList.contains('is-open'))) ||
+            (filtersSidebarEl && filtersSidebarEl.classList.contains('open'))
+        );
 
         if (scrollY <= umbralTope || searchOpen || drawerOpen) {
             header.classList.remove('is-hidden');
@@ -453,7 +458,7 @@
                 }).scrollTrigger);
             }
 
-            if (heroInner) {
+            if (heroInner && window.innerWidth > 768) {
                 registrarTrigger(window.gsap.to(heroInner, {
                     yPercent: -12,
                     scale: 0.97,
