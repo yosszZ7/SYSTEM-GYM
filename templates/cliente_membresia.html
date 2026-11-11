@@ -104,9 +104,90 @@
             </form>
         </div>
     </div>
+
+    {% if solicitudes_pendientes and solicitudes_pendientes|length > 0 %}
+    <div class="card" style="margin-top: 22px;">
+        <div class="card-header">
+            <h2><i class="fas fa-clock" style="color: #F59E0B;"></i> Solicitudes de Membresía en Efectivo Pendientes de Confirmación (Web)</h2>
+            <span class="badge badge-warning">{{ solicitudes_pendientes|length }} pendiente{{ '' if solicitudes_pendientes|length == 1 else 's' }}</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="overflow-x: auto;">
+                <table class="data-table" style="width: 100%; margin: 0;">
+                    <thead>
+                        <tr>
+                            <th>FOLIO</th>
+                            <th>FECHA</th>
+                            <th>CLIENTE</th>
+                            <th>PLAN SOLICITADO</th>
+                            <th>MONTO</th>
+                            <th>ESTADO</th>
+                            <th style="text-align: center;">ACCIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sol in solicitudes_pendientes %}
+                        <tr>
+                            <td><strong>{{ sol.Folio }}</strong></td>
+                            <td>{{ sol.FechaSolicitud }}</td>
+                            <td><strong>{{ sol.NombreCliente }}</strong> (#{{ sol.IdCliente }})</td>
+                            <td>{{ sol.TituloPlan or sol.NombreMembresia }} ({{ sol.DuracionTexto }})</td>
+                            <td><strong>C$ {{ "%.2f"|format(sol.Monto|float) }}</strong></td>
+                            <td>
+                                <span class="badge badge-warning">Pendiente de efectivo</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button"
+                                        class="btn btn-primary btn-sm"
+                                        onclick="confirmarEfectivoDesdeAsignar({{ sol.IdSolicitud }}, '{{ sol.Folio }}', this)">
+                                    <i class="fas fa-check-double"></i> Confirmar Recepción y Activar
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <script>
+    async function confirmarEfectivoDesdeAsignar(idSolicitud, folio, btnEl) {
+        if (!confirm('¿Confirmar recepción de efectivo en recepción para ' + folio + ' y activar su membresía?')) {
+            return;
+        }
+        if (btnEl) {
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activando...';
+        }
+        try {
+            var resp = await fetch('/api/admin/membresias/confirmar-efectivo/' + idSolicitud, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            var data = await resp.json();
+            if (resp.ok && data.success) {
+                alert(data.mensaje || 'Membresía activada y pago registrado exitosamente.');
+                window.location.href = '/pago_historial';
+            } else {
+                alert(data.error || 'No se pudo confirmar la solicitud.');
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = '<i class="fas fa-check-double"></i> Confirmar Recepción y Activar';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error de conexión con el servidor.');
+            if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.innerHTML = '<i class="fas fa-check-double"></i> Confirmar Recepción y Activar';
+            }
+        }
+    }
+
     function actualizarPrecioPlanSeleccionado(selectEl) {
         if (!selectEl) return;
         var opt = selectEl.options[selectEl.selectedIndex];

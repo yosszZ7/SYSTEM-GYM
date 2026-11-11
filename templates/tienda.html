@@ -877,7 +877,7 @@
                     <div>
                         <span class="wg-section-eyebrow">ACCESO OFICIAL WORLDGYM</span>
                         <h1 class="store-display-heading store-page-heading">Planes de <em>membresía</em></h1>
-                        <p class="wg-section-lead">Cuatro modalidades flexibles en córdobas sin cargos ocultos, con activación directa en recepción.</p>
+                        <p class="wg-section-lead">Cuatro modalidades flexibles en córdobas sin cargos ocultos, con contratación directa desde tu cuenta.</p>
                     </div>
                     {% if es_admin_o_staff %}
                     <div class="store-admin-direct-links">
@@ -885,9 +885,16 @@
                             <i class="fas fa-user-check" aria-hidden="true"></i>
                             <span>Asignar Plan</span>
                         </a>
+                        <a href="/pago_historial" class="wg-btn-system-action" title="Ver historial y solicitudes de pago">
+                            <i class="fas fa-receipt" aria-hidden="true"></i>
+                            <span>Pagos y Solicitudes</span>
+                        </a>
                     </div>
                     {% endif %}
                 </header>
+
+                <!-- Estado actual de la membresía y solicitudes del cliente autenticado -->
+                <div id="wgEstadoMembresiaClienteWrap" class="wg-client-membership-status-wrap" style="display: none;" data-fade="panel"></div>
 
                 <!-- Los 4 planes en tarjetas grandes oscuras + acento naranja -->
                 <div class="wg-membresias-dark-stage" data-fade="panel">
@@ -1423,30 +1430,236 @@
             </div>
 
             <div class="wg-modal-footer" id="wgModalPlanFooter">
-                {% if es_admin_o_staff %}
-                <div class="wg-modal-admin-links">
-                    <a href="#" id="wgModalBtnEditar" class="wg-btn-outline-dark" title="Editar membresía">
-                        <i class="fas fa-edit"></i> Editar
-                    </a>
-                    <a href="#" id="wgModalBtnEliminar" class="wg-btn-outline-dark danger" title="Eliminar membresía">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </a>
-                </div>
-                <a href="#" id="wgModalBtnSeleccionar" class="wg-btn-orange-select">
-                    <span>Continuar con la contratación</span>
-                    <span aria-hidden="true">&rarr;</span>
-                </a>
-                {% else %}
                 <div class="wg-modal-admin-links">
                     <button type="button" class="wg-btn-outline-dark" onclick="cerrarDetalleMembresiaTienda()">
                         Cerrar
                     </button>
+                    {% if es_admin_o_staff %}
+                    <a href="#" id="wgModalBtnSeleccionar" class="wg-btn-outline-dark" title="Asignar en panel administrativo">
+                        <i class="fas fa-user-check"></i> Panel Admin
+                    </a>
+                    <a href="#" id="wgModalBtnEditar" class="wg-btn-outline-dark" title="Editar membresía">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="#" id="wgModalBtnEliminar" class="wg-btn-outline-dark danger" title="Eliminar membresía">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                    {% endif %}
                 </div>
                 <button type="button" id="wgModalBtnSeleccionarCliente" class="wg-btn-orange-select" onclick="seleccionarPlanComoCliente()">
                     <span>Continuar con la contratación</span>
                     <span aria-hidden="true">&rarr;</span>
                 </button>
-                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================================================================
+         PANTALLA / MODAL DE CONFIRMACIÓN Y PAGO DE MEMBRESÍA (CLIENTE)
+         ================================================================== -->
+    <div id="wgModalCheckoutMembresia" class="wg-modal-overlay wg-checkout-overlay" onclick="if(event.target === this) cerrarCheckoutMembresiaTienda();">
+        <div class="wg-modal-dialog wg-checkout-dialog" role="dialog" aria-modal="true" aria-labelledby="wgCheckoutTituloModal" data-lenis-prevent>
+            <div class="wg-modal-header wg-checkout-header">
+                <div>
+                    <span class="wg-modal-eyebrow" id="wgCheckoutEyebrow">CONFIRMACIÓN DE CONTRATACIÓN · WORLD GYM</span>
+                    <h3 class="wg-modal-title" id="wgCheckoutTituloModal">Finalizar Contratación de Membresía</h3>
+                </div>
+                <button type="button" class="wg-modal-close" id="wgCheckoutCloseBtn" onclick="cerrarCheckoutMembresiaTienda()" title="Cerrar" aria-label="Cerrar ventana de contratación">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="wg-modal-body wg-checkout-body" id="wgCheckoutFormStep">
+                <!-- 1. Resumen detallado del plan seleccionado -->
+                <div class="wg-checkout-plan-summary">
+                    <div class="wg-checkout-plan-main">
+                        <div>
+                            <span class="wg-checkout-plan-kicker" id="wgCheckoutPlanModalidad">MODALIDAD MENSUAL</span>
+                            <h4 class="wg-checkout-plan-name" id="wgCheckoutPlanNombre">PLAN MENSUAL</h4>
+                            <p class="wg-checkout-plan-duration" id="wgCheckoutPlanVigencia">
+                                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                                <span>Duración: 30 DÍAS</span>
+                            </p>
+                        </div>
+                        <div class="wg-checkout-plan-price-box">
+                            <span class="wg-checkout-price-caption">Total del plan</span>
+                            <div class="wg-checkout-price-amount">
+                                <span>C$</span><strong id="wgCheckoutPlanPrecio">0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wg-checkout-plan-dates">
+                        <div class="wg-checkout-date-pill">
+                            <span>Inicio estimado:</span>
+                            <strong id="wgCheckoutFechaInicio">Hoy</strong>
+                        </div>
+                        <div class="wg-checkout-date-pill">
+                            <span>Cobertura de vigencia:</span>
+                            <strong id="wgCheckoutFechaFin">+30 días</strong>
+                        </div>
+                    </div>
+
+                    <div class="wg-checkout-benefits-wrap">
+                        <span class="wg-checkout-sub-label">Beneficios incluidos en tu contratación:</span>
+                        <ul class="wg-modal-list" id="wgCheckoutPlanBeneficios"></ul>
+                    </div>
+                </div>
+
+                <!-- 2. Selector de Método de Pago (Tarjeta vs Efectivo) -->
+                <div class="wg-checkout-payment-section">
+                    <span class="wg-checkout-step-title">
+                        <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                        Selecciona tu método de pago
+                    </span>
+
+                    <div class="wg-payment-methods-tabs" role="tablist" aria-label="Métodos de pago disponibles">
+                        <button type="button"
+                                role="tab"
+                                id="wgTabMetodoTarjeta"
+                                class="wg-payment-method-tab active"
+                                aria-selected="true"
+                                onclick="seleccionarMetodoPagoMembresia('tarjeta')">
+                            <div class="wg-pm-tab-icon"><i class="fas fa-credit-card" aria-hidden="true"></i></div>
+                            <div class="wg-pm-tab-text">
+                                <strong>Tarjeta de Crédito o Débito</strong>
+                                <small>Pago electrónico con pasarela y activación inmediata</small>
+                            </div>
+                        </button>
+
+                        <button type="button"
+                                role="tab"
+                                id="wgTabMetodoEfectivo"
+                                class="wg-payment-method-tab"
+                                aria-selected="false"
+                                onclick="seleccionarMetodoPagoMembresia('efectivo')">
+                            <div class="wg-pm-tab-icon"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></div>
+                            <div class="wg-pm-tab-text">
+                                <strong>Efectivo en Gimnasio</strong>
+                                <small>Pago presencial en recepción de World Gym</small>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div id="wgCheckoutAlertBox" class="wg-checkout-alert" style="display: none;" role="alert"></div>
+
+                    <!-- PANEL A: PAGO CON TARJETA (PASARELA DE PAGO ELECTRÓNICO) -->
+                    <div id="wgPanelPagoTarjeta" class="wg-payment-panel">
+                        <!-- Contenedor para cuando la pasarela Stripe tiene credenciales activas -->
+                        <div id="wgPasarelaActivaWrap" style="display: none;">
+                            <div class="wg-gateway-security-banner">
+                                <i class="fas fa-lock" aria-hidden="true"></i>
+                                <span>Conexión cifrada SSL/TLS con pasarela de pago <strong>Stripe</strong>. World Gym nunca almacena los dígitos completos de tu tarjeta ni tu código CVV.</span>
+                            </div>
+
+                            <div class="wg-card-holder-field">
+                                <label for="wgCardHolderName">Nombre del titular en la tarjeta</label>
+                                <input type="text" id="wgCardHolderName" placeholder="Nombre y apellido como aparece en la tarjeta" autocomplete="cc-name">
+                            </div>
+
+                            <div class="wg-stripe-element-label">Datos de la tarjeta (procesados de forma segura por la pasarela)</div>
+                            <div id="wgStripeCardMount" class="wg-stripe-card-mount"></div>
+                            <div id="wgStripeCardErrors" class="wg-stripe-card-errors" role="alert"></div>
+
+                            <div class="wg-checkout-panel-actions">
+                                <button type="button" class="wg-btn-outline-dark" onclick="volverADetallePlanDesdeCheckout()">
+                                    <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
+                                </button>
+                                <button type="button" id="wgBtnPagarTarjetaReal" class="wg-btn-orange-select" onclick="procesarPagoTarjetaMembresia()">
+                                    <i class="fas fa-lock" aria-hidden="true"></i>
+                                    <span>Pagar con Tarjeta y Activar Membresía</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Contenedor cuando la pasarela requiere credenciales en .env (sin pagos ficticios) -->
+                        <div id="wgPasarelaPendienteConfigWrap" style="display: none;">
+                            <div class="wg-gateway-config-notice">
+                                <div class="wg-gateway-notice-head">
+                                    <span class="wg-gateway-badge-status">
+                                        <i class="fas fa-plug-circle-exclamation" aria-hidden="true"></i>
+                                        Integración lista · Requiere credenciales de pasarela
+                                    </span>
+                                    <span class="wg-gateway-pci-pill">
+                                        <i class="fas fa-shield-halved" aria-hidden="true"></i> PCI-DSS Seguro
+                                    </span>
+                                </div>
+
+                                <h5>Pasarela de pago electrónico con tarjeta (Stripe) preparada</h5>
+                                <p>
+                                    Para proteger tu seguridad financiera, World Gym <strong>no solicita ni almacena números completos de tarjeta ni códigos CVV en el servidor</strong>, ni realiza cobros simulados.
+                                </p>
+
+                                <div class="wg-gateway-env-box">
+                                    <span>Configuración requerida por el administrador para habilitar cobros reales en línea (archivo <code>.env</code>):</span>
+                                    <ul>
+                                        <li><code>STRIPE_PUBLIC_KEY=pk_live_...</code> (o <code>pk_test_...</code> para entorno de pruebas de la pasarela)</li>
+                                        <li><code>STRIPE_SECRET_KEY=sk_live_...</code> (o <code>sk_test_...</code> para verificación en backend)</li>
+                                    </ul>
+                                </div>
+
+                                <p class="wg-gateway-alt-hint">
+                                    Mientras el administrador activa las credenciales de comercio electrónico, puedes completar tu contratación seleccionando <strong>Efectivo en Gimnasio</strong> para dejar registrada tu solicitud hoy mismo.
+                                </p>
+                            </div>
+
+                            <div class="wg-checkout-panel-actions">
+                                <button type="button" class="wg-btn-outline-dark" onclick="volverADetallePlanDesdeCheckout()">
+                                    <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
+                                </button>
+                                <button type="button" class="wg-btn-orange-select" onclick="seleccionarMetodoPagoMembresia('efectivo')">
+                                    <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
+                                    <span>Cambiar a Pago en Efectivo en Recepción</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL B: PAGO EN EFECTIVO (PRESENCIAL EN INSTALACIONES DEL GIMNASIO) -->
+                    <div id="wgPanelPagoEfectivo" class="wg-payment-panel" style="display: none;">
+                        <div class="wg-cash-instructions-box">
+                            <div class="wg-cash-head">
+                                <i class="fas fa-building-circle-check" aria-hidden="true"></i>
+                                <div>
+                                    <h5>Instrucciones para pago presencial en efectivo</h5>
+                                    <p>Sin introducir datos bancarios ni simular cobros electrónicos.</p>
+                                </div>
+                            </div>
+
+                            <ol class="wg-cash-steps-list">
+                                <li>
+                                    <strong>Confirma tu solicitud aquí:</strong> El sistema registrará tu contratación con estado <em>Pendiente de confirmación</em> y te asignará un folio único.
+                                </li>
+                                <li>
+                                    <strong>Acércate a la recepción de World Gym:</strong> Presenta tu nombre de socio o el número de folio en la caja del gimnasio.
+                                </li>
+                                <li>
+                                    <strong>Realiza el pago en efectivo (<span id="wgCashMontoInstruccion">C$0.00</span>):</strong> Una vez que el administrador o recepcionista reciba el dinero y lo confirme en el sistema, tu membresía quedará <strong>Activa</strong> de inmediato.
+                                </li>
+                            </ol>
+
+                            <div class="wg-cash-notes-field">
+                                <label for="wgCashOrderNotes">Nota opcional para recepción</label>
+                                <input type="text" id="wgCashOrderNotes" maxlength="250" placeholder="Ej: Pasaré hoy a las 5:00 PM a cancelar en recepción">
+                            </div>
+                        </div>
+
+                        <div class="wg-checkout-panel-actions">
+                            <button type="button" class="wg-btn-outline-dark" onclick="volverADetallePlanDesdeCheckout()">
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver
+                            </button>
+                            <button type="button" id="wgBtnConfirmarEfectivo" class="wg-btn-orange-select" onclick="confirmarContratacionEfectivoMembresia()">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <span>Registrar Contratación con Pago en Efectivo</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO FINAL: CONFIRMACIÓN DE CONTRATACIÓN EXITOSA -->
+            <div class="wg-modal-body wg-checkout-body" id="wgCheckoutSuccessStep" style="display: none;">
+                <div id="wgCheckoutSuccessContent"></div>
             </div>
         </div>
     </div>
@@ -1726,6 +1939,8 @@
         window.USUARIO_AUTENTICADO = {{ 'true' if autenticado else 'false' }};
         window.USUARIO_ACTUAL = {{ ({'nombre': usuario, 'rol': usuario_rol, 'es_admin': es_admin_o_staff} if autenticado else none) | tojson | safe }};
         window.ES_ADMIN_TIENDA = {{ 'true' if es_admin_o_staff else 'false' }};
+        window.PASARELA_CONFIG = {{ (pasarela_config if pasarela_config is defined else {'habilitada': false, 'proveedor': 'Stripe', 'public_key': ''}) | tojson | safe }};
+        window.ESTADO_MEMBRESIA_INICIAL = {{ (estado_membresia_cliente if estado_membresia_cliente is defined else {'autenticado': false, 'membresia_activa': none, 'solicitudes': []}) | tojson | safe }};
     </script>
 
     <!-- Librerías ligeras por CDN: Lenis (Smooth Scroll) + GSAP + ScrollTrigger -->

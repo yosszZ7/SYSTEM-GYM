@@ -110,7 +110,16 @@ from backend.servicios.TiendaServicio import (
     SincronizarCatalogoBaseEnBD,
     ProcesarPedidoTienda,
     IMAGENES_SUPLEMENTOS,
-    InferirImagenSuplemento
+    InferirImagenSuplemento,
+    ObtenerConfigPasarelaPago,
+    ObtenerEstadoMembresiaClienteTienda,
+    RegistrarContratacionMembresiaEfectivo,
+    CrearIntentoPagoMembresiaTarjeta,
+    ConfirmarContratacionMembresiaTarjeta,
+    ListarSolicitudesMembresiaTienda,
+    ConfirmarPagoEfectivoMembresiaAdmin,
+    CancelarSolicitudMembresiaAdmin,
+    ContienenDatosCrudosTarjeta
 )
 from werkzeug.utils import secure_filename
 import base64
@@ -271,6 +280,14 @@ def _renderizar_pagina_web_tienda():
     es_admin_o_staff = _tiene_permiso_admin()
     rol_actual = str(session.get('rol') or 'Cliente') if autenticado else 'Visitante'
     nombre_usuario = session.get('usuario_nombre') if autenticado else None
+    pasarela_config = ObtenerConfigPasarelaPago()
+    estado_membresia_cliente = ObtenerEstadoMembresiaClienteTienda(session) if autenticado else {
+        'autenticado': False,
+        'id_cliente': None,
+        'nombre_cliente': None,
+        'membresia_activa': None,
+        'solicitudes': []
+    }
     return render_template(
         'tienda.html',
         autenticado=autenticado,
@@ -279,7 +296,9 @@ def _renderizar_pagina_web_tienda():
         es_admin_o_staff=es_admin_o_staff,
         catalogo=catalogo,
         resumen_tienda=resumen_tienda,
-        membresias=membresias_enriquecidas
+        membresias=membresias_enriquecidas,
+        pasarela_config=pasarela_config,
+        estado_membresia_cliente=estado_membresia_cliente
     )
 
 @app.route('/')
@@ -1921,7 +1940,15 @@ def cliente_membresia():
     _, clientes = ListarClientes()
     _, membresias = ListarMembresias()
     _, metodos_pago = ListarMetodosPago()
-    return render_template('cliente_membresia.html', usuario=session.get('usuario_nombre'), clientes=clientes or [], membresias=membresias or [], metodos_pago=metodos_pago or [])
+    solicitudes_pendientes = ListarSolicitudesMembresiaTienda(estado_pago='Pendiente')
+    return render_template(
+        'cliente_membresia.html',
+        usuario=session.get('usuario_nombre'),
+        clientes=clientes or [],
+        membresias=membresias or [],
+        metodos_pago=metodos_pago or [],
+        solicitudes_pendientes=solicitudes_pendientes
+    )
 
 @app.route('/pago_historial')
 @app.route('/pagos_historial')
@@ -1929,6 +1956,9 @@ def cliente_membresia():
 def pago_historial():
     _, pagos = ListarPagos()
     pagos = pagos or []
+    solicitudes_membresia_web = ListarSolicitudesMembresiaTienda()
+    solicitudes_pendientes_count = sum(1 for s in solicitudes_membresia_web if str(s.get('EstadoPago') or '').lower() == 'pendiente')
+    monto_pendiente_efectivo = sum(float(s.get('Monto') or 0) for s in solicitudes_membresia_web if str(s.get('EstadoPago') or '').lower() == 'pendiente')
 
     # Calcular métricas y estadísticas clave (KPIs)
     total_recaudado = sum(float(p.get('Monto') or 0) for p in pagos)
@@ -1957,7 +1987,9 @@ def pago_historial():
         'pagos_mes_count': pagos_mes_count,
         'total_pagos': total_pagos,
         'ticket_promedio': ticket_promedio,
-        'metodo_top': metodo_top
+        'metodo_top': metodo_top,
+        'solicitudes_pendientes_count': solicitudes_pendientes_count,
+        'monto_pendiente_efectivo': monto_pendiente_efectivo
     }
 
     _, metodos_pago = ListarMetodosPago()
@@ -1967,7 +1999,8 @@ def pago_historial():
         usuario=session.get('usuario_nombre'),
         pagos=pagos,
         metodos_pago=metodos_pago or [],
-        stats=stats
+        stats=stats,
+        solicitudes_web=solicitudes_membresia_web
     )
 
 @app.route('/cliente_asistencia', methods=['GET', 'POST'])
@@ -2201,6 +2234,128 @@ def api_tienda_checkout():
             'catalogo': catalogo_actualizado,
             'resumen': resumen_actualizado
         })
+    return jsonify({'success': False, 'error': msg}), 400
+
+# ==================================================
+# API CONTRATACIÓN Y PAGO DE MEMBRESÍAS (CLIENTE Y ADMIN)
+# ==================================================
+@app.route('/api/tienda/membresias/estado', methods=['GET'])
+def api_tienda_membresia_estado():
+    pasarela = ObtenerConfigPasarelaPago()
+    estado = ObtenerEstadoMembresiaClienteTienda(session) if 'usuario_id' in session else {
+        'autenticado': False,
+        'id_cliente': None,
+        'nombre_cliente': None,
+        'membresia_activa': None,
+        'solicitudes': []
+    }
+    return jsonify({
+        'success': True,
+        'pasarela': pasarela,
+        'estado_cliente': estado
+    })
+
+@app.route('/api/tienda/membresias/contratar-efectivo', methods=['POST'])
+@tienda_login_required
+def api_tienda_contratar_efectivo():
+    data = request.json or {}
+    if ContienenDatosCrudosTarjeta(data):
+        return jsonify({
+            'success': False,
+            'error': 'Para pagos en efectivo no se deben enviar datos de tarjeta.'
+        }), 400
+
+    id_membresia = data.get('id_membresia') or data.get('IdMembresia')
+    notas = data.get('notas') or ''
+    if not id_membresia:
+        return jsonify({'success': False, 'error': 'Debes seleccionar un plan de membresía válido.'}), 400
+
+    ok, msg, solicitud = RegistrarContratacionMembresiaEfectivo(int(id_membresia), session, notas=notas)
+    if ok:
+        estado_actualizado = ObtenerEstadoMembresiaClienteTienda(session)
+        return jsonify({
+            'success': True,
+            'mensaje': msg,
+            'solicitud': solicitud,
+            'estado_cliente': estado_actualizado
+        })
+    return jsonify({'success': False, 'error': msg}), 400
+
+@app.route('/api/tienda/membresias/crear-intento-tarjeta', methods=['POST'])
+@tienda_login_required
+def api_tienda_crear_intento_tarjeta():
+    data = request.json or {}
+    if ContienenDatosCrudosTarjeta(data):
+        return jsonify({
+            'success': False,
+            'error': 'Por seguridad PCI-DSS, nunca envíes números de tarjeta ni CVV directamente al servidor. Usa el formulario seguro de la pasarela.'
+        }), 400
+
+    id_membresia = data.get('id_membresia') or data.get('IdMembresia')
+    if not id_membresia:
+        return jsonify({'success': False, 'error': 'Debes seleccionar un plan de membresía válido.'}), 400
+
+    ok, msg, info = CrearIntentoPagoMembresiaTarjeta(int(id_membresia), session)
+    if ok:
+        return jsonify({
+            'success': True,
+            'mensaje': msg,
+            'intento': info
+        })
+    return jsonify({
+        'success': False,
+        'error': msg,
+        'pasarela': (info or {}).get('pasarela') if isinstance(info, dict) else ObtenerConfigPasarelaPago()
+    }), 400
+
+@app.route('/api/tienda/membresias/confirmar-tarjeta', methods=['POST'])
+@tienda_login_required
+def api_tienda_confirmar_tarjeta():
+    data = request.json or {}
+    id_membresia = data.get('id_membresia') or data.get('IdMembresia')
+    payment_intent_id = data.get('payment_intent_id') or data.get('paymentIntentId')
+    if not id_membresia:
+        return jsonify({'success': False, 'error': 'Falta el identificador del plan de membresía.'}), 400
+
+    ok, msg, solicitud = ConfirmarContratacionMembresiaTarjeta(
+        int(id_membresia),
+        payment_intent_id,
+        session,
+        payload_original=data
+    )
+    if ok:
+        estado_actualizado = ObtenerEstadoMembresiaClienteTienda(session)
+        return jsonify({
+            'success': True,
+            'mensaje': msg,
+            'solicitud': solicitud,
+            'estado_cliente': estado_actualizado
+        })
+    return jsonify({'success': False, 'error': msg}), 400
+
+@app.route('/api/admin/membresias/solicitudes', methods=['GET'])
+@login_required
+def api_admin_listar_solicitudes_membresia():
+    estado = request.args.get('estado')
+    lista = ListarSolicitudesMembresiaTienda(estado_pago=estado)
+    return jsonify({'success': True, 'solicitudes': lista})
+
+@app.route('/api/admin/membresias/confirmar-efectivo/<int:id_solicitud>', methods=['POST'])
+@login_required
+def api_admin_confirmar_efectivo_membresia(id_solicitud):
+    usuario_admin = session.get('usuario_nombre') or 'Administración'
+    ok, msg, solicitud = ConfirmarPagoEfectivoMembresiaAdmin(id_solicitud, usuario_admin=usuario_admin)
+    if ok:
+        return jsonify({'success': True, 'mensaje': msg, 'solicitud': solicitud})
+    return jsonify({'success': False, 'error': msg}), 400
+
+@app.route('/api/admin/membresias/cancelar-solicitud/<int:id_solicitud>', methods=['POST'])
+@login_required
+def api_admin_cancelar_solicitud_membresia(id_solicitud):
+    usuario_admin = session.get('usuario_nombre') or 'Administración'
+    ok, msg = CancelarSolicitudMembresiaAdmin(id_solicitud, usuario_admin=usuario_admin)
+    if ok:
+        return jsonify({'success': True, 'mensaje': msg})
     return jsonify({'success': False, 'error': msg}), 400
 
 @app.route('/api/tienda/visibilidad/<int:id>', methods=['POST'])

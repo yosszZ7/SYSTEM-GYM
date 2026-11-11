@@ -905,3 +905,581 @@
         transform: none !important;
     }
 }
+
+/* ==========================================================================
+   FLUJO DE CONTRATACIÓN Y PAGO DE MEMBRESÍAS DESDE LA INTERFAZ DEL CLIENTE
+   (Tarjetas de estado del socio, resumen de plan, selector Tarjeta / Efectivo)
+   ========================================================================== */
+.wg-client-membership-status-wrap {
+    margin: 0 0 28px 0;
+}
+
+.wg-client-status-banner {
+    background: linear-gradient(135deg, #12151C 0%, #0D0F14 100%);
+    border: 1px solid rgba(245, 130, 32, 0.38);
+    border-radius: 14px;
+    padding: 20px 24px;
+    color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+}
+
+.wg-client-status-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.wg-client-status-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.wg-client-status-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(245, 130, 32, 0.16);
+    border: 1px solid rgba(245, 130, 32, 0.4);
+    color: #F58220;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.wg-client-status-icon.is-active {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #10B981;
+}
+
+.wg-client-status-kicker {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #F58220;
+    margin-bottom: 3px;
+}
+
+.wg-client-status-title {
+    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 800;
+    color: #FFFFFF;
+}
+
+.wg-client-status-meta {
+    margin: 3px 0 0 0;
+    font-size: 0.84rem;
+    color: #B4B9C2;
+}
+
+.wg-client-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.wg-client-status-pill.is-active {
+    background: rgba(16, 185, 129, 0.16);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: #34D399;
+}
+
+.wg-client-status-pill.is-pending {
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #FBBF24;
+}
+
+.wg-client-requests-mini {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.wg-client-req-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 0.83rem;
+}
+
+/* Modal de Confirmación y Pago (#wgModalCheckoutMembresia) */
+.wg-checkout-dialog {
+    max-width: 650px;
+    border: 1px solid rgba(245, 130, 32, 0.55);
+    border-radius: 14px;
+    background: #101319;
+}
+
+.wg-checkout-body {
+    padding: 22px 26px 26px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.wg-checkout-plan-summary {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
+    border: 1px solid rgba(245, 130, 32, 0.3);
+    border-radius: 12px;
+    padding: 18px 20px;
+}
+
+.wg-checkout-plan-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wg-checkout-plan-kicker {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: #F58220;
+    margin-bottom: 4px;
+}
+
+.wg-checkout-plan-name {
+    margin: 0;
+    font-family: var(--wg-font-display);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: 0.02em;
+}
+
+.wg-checkout-plan-duration {
+    margin: 5px 0 0 0;
+    font-size: 0.84rem;
+    color: #D5D8DF;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.wg-checkout-plan-duration i {
+    color: #F58220;
+}
+
+.wg-checkout-plan-price-box {
+    text-align: right;
+}
+
+.wg-checkout-price-caption {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #949AA6;
+    margin-bottom: 2px;
+}
+
+.wg-checkout-price-amount {
+    font-family: var(--wg-font-display);
+    font-size: 1.85rem;
+    font-weight: 900;
+    color: #FFFFFF;
+    line-height: 1.05;
+}
+
+.wg-checkout-price-amount span {
+    color: #F58220;
+    font-size: 1.15rem;
+    margin-right: 3px;
+}
+
+.wg-checkout-plan-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.wg-checkout-date-pill {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+}
+
+.wg-checkout-date-pill span {
+    color: #949AA6;
+}
+
+.wg-checkout-date-pill strong {
+    color: #FFFFFF;
+}
+
+.wg-checkout-benefits-wrap {
+    margin-top: 12px;
+}
+
+.wg-checkout-sub-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #949AA6;
+    margin-bottom: 6px;
+}
+
+.wg-checkout-payment-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.wg-checkout-step-title {
+    font-family: var(--wg-font-display);
+    font-size: 0.84rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wg-checkout-step-title i {
+    color: #F58220;
+}
+
+.wg-payment-methods-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.wg-payment-method-tab {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 11px;
+    padding: 13px 14px;
+    color: #D5D8DF;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wg-payment-method-tab:hover {
+    border-color: rgba(245, 130, 32, 0.45);
+    background: rgba(245, 130, 32, 0.05);
+}
+
+.wg-payment-method-tab.active {
+    border-color: #F58220;
+    background: rgba(245, 130, 32, 0.12);
+    color: #FFFFFF;
+    box-shadow: 0 0 0 1px rgba(245, 130, 32, 0.35);
+}
+
+.wg-pm-tab-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #F58220;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.wg-payment-method-tab.active .wg-pm-tab-icon {
+    background: #F58220;
+    color: #0D0F13;
+}
+
+.wg-pm-tab-text strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 2px;
+}
+
+.wg-pm-tab-text small {
+    display: block;
+    font-size: 0.75rem;
+    color: #949AA6;
+    line-height: 1.35;
+}
+
+.wg-checkout-alert {
+    padding: 11px 14px;
+    border-radius: 9px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.wg-checkout-alert.is-error {
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #FCA5A5;
+}
+
+.wg-checkout-alert.is-success {
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: #6EE7B7;
+}
+
+.wg-payment-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.wg-gateway-security-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 13px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 8px;
+    font-size: 0.79rem;
+    color: #A7F3D0;
+    margin-bottom: 14px;
+}
+
+.wg-card-holder-field,
+.wg-cash-notes-field {
+    margin-bottom: 14px;
+}
+
+.wg-card-holder-field label,
+.wg-cash-notes-field label,
+.wg-stripe-element-label {
+    display: block;
+    font-size: 0.77rem;
+    font-weight: 700;
+    color: #D5D8DF;
+    margin-bottom: 6px;
+}
+
+.wg-card-holder-field input,
+.wg-cash-notes-field input {
+    width: 100%;
+    height: 42px;
+    padding: 0 13px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #0B0D11;
+    color: #FFFFFF;
+    font-size: 0.86rem;
+    outline: none;
+}
+
+.wg-card-holder-field input:focus,
+.wg-cash-notes-field input:focus {
+    border-color: #F58220;
+}
+
+.wg-stripe-card-mount {
+    padding: 13px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: #0B0D11;
+    min-height: 44px;
+}
+
+.wg-stripe-card-errors {
+    color: #F87171;
+    font-size: 0.8rem;
+    margin-top: 6px;
+    min-height: 18px;
+}
+
+.wg-gateway-config-notice {
+    background: rgba(245, 130, 32, 0.06);
+    border: 1px solid rgba(245, 130, 32, 0.32);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.wg-gateway-notice-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.wg-gateway-badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.16);
+    color: #FBBF24;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.wg-gateway-pci-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.14);
+    color: #34D399;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.wg-gateway-config-notice h5 {
+    margin: 0 0 6px 0;
+    font-size: 0.96rem;
+    color: #FFFFFF;
+}
+
+.wg-gateway-config-notice p {
+    margin: 0 0 10px 0;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: #D5D8DF;
+}
+
+.wg-gateway-env-box {
+    background: #090B0E;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 13px;
+    margin-bottom: 10px;
+    font-size: 0.78rem;
+    color: #B4B9C2;
+}
+
+.wg-gateway-env-box ul {
+    margin: 6px 0 0 18px;
+    padding: 0;
+}
+
+.wg-gateway-env-box code {
+    color: #F58220;
+    font-family: monospace;
+}
+
+.wg-gateway-alt-hint {
+    margin: 0 !important;
+    color: #FBBF24 !important;
+    font-size: 0.8rem !important;
+}
+
+.wg-cash-instructions-box {
+    margin-bottom: 16px;
+}
+
+.wg-cash-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.wg-cash-head i {
+    font-size: 1.45rem;
+    color: #10B981;
+}
+
+.wg-cash-head h5 {
+    margin: 0;
+    font-size: 0.96rem;
+    color: #FFFFFF;
+}
+
+.wg-cash-head p {
+    margin: 2px 0 0 0;
+    font-size: 0.79rem;
+    color: #949AA6;
+}
+
+.wg-cash-steps-list {
+    margin: 0 0 14px 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.83rem;
+    line-height: 1.5;
+    color: #D5D8DF;
+}
+
+.wg-cash-steps-list strong {
+    color: #FFFFFF;
+}
+
+.wg-checkout-panel-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+    .wg-payment-methods-tabs,
+    .wg-checkout-plan-dates {
+        grid-template-columns: 1fr;
+    }
+    .wg-checkout-panel-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .wg-checkout-panel-actions button {
+        justify-content: center;
+        width: 100%;
+    }
+}

@@ -27,7 +27,7 @@ def ConectarBD():
         if 'somee.com' in server:
             conexion_str += 'TrustServerCertificate=yes;'
             
-        Conexion = pyodbc.connect(conexion_str)
+        Conexion = pyodbc.connect(conexion_str, timeout=4)
         print ("Conexion exitosa")
         return Conexion
     except Exception as Error:
