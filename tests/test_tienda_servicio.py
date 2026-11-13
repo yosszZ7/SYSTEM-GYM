@@ -205,7 +205,8 @@ class TestTiendaServicio:
             resp_admin_store = client.get("/")
             assert resp_admin_store.status_code == 200
             html_admin = resp_admin_store.get_data(as_text=True)
-            assert 'id="storeSystemBar"' in html_admin
+            assert 'id="storeSystemBar"' not in html_admin
+            assert "Vista Tienda sincronizada con inventario en vivo" not in html_admin
             assert "Panel de Administrador" in html_admin
             assert "window.USUARIO_AUTENTICADO = true;" in html_admin
             assert "window.ES_ADMIN_TIENDA = true;" in html_admin

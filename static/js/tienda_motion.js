@@ -357,7 +357,6 @@
         const bgImg = document.getElementById('wgHeroBgImg');
         const mediaWrap = document.getElementById('wgHeroMedia');
         const heroInner = hero.querySelector('.wg-hero-inner');
-        const scrollInd = hero.querySelector('.wg-scroll-indicator');
 
         hero.classList.add('is-hero-ready');
 
@@ -420,24 +419,13 @@
             });
         }
 
-        // 4. Mini-tarjeta flotante
+        // 4. Tarjeta de membresía integrada
         if (floatCard) {
             window.gsap.from(floatCard, {
                 y: 28,
                 opacity: 0,
                 duration: 0.75,
                 delay: 0.32,
-                ease: 'power3.out',
-                clearProps: 'all'
-            });
-        }
-
-        if (scrollInd) {
-            window.gsap.from(scrollInd, {
-                y: 16,
-                opacity: 0,
-                duration: 0.6,
-                delay: 0.5,
                 ease: 'power3.out',
                 clearProps: 'all'
             });
@@ -644,6 +632,75 @@
     /* ======================================================================
        10. SCROLLYTELLING: PIN REAL EN ESCRITORIO + CORTINA CONTINUA CLIP-PATH
        ====================================================================== */
+    let ultimoPasoInfoScrolly = -1;
+
+    function actualizarInfoContextualScrolly(indice, forzar) {
+        const infoBar = document.getElementById('wgScrollyInfoBar');
+        if (!infoBar) return;
+
+        const idx = Math.max(0, Math.min(2, Number(indice) || 0));
+        if (!forzar && ultimoPasoInfoScrolly === idx) return;
+        ultimoPasoInfoScrolly = idx;
+
+        const stockTotal = infoBar.getAttribute('data-scrolly-stock') || '0';
+        const marcasTotal = infoBar.getAttribute('data-scrolly-brands') || '0';
+
+        const contenidosPorPaso = [
+            {
+                primary: {
+                    title: 'Fuerza & Peso Libre',
+                    subtitle: 'Racks, barras y maquinaria completa'
+                },
+                accent: {
+                    title: 'Control Técnico',
+                    subtitle: 'Mantenimiento preventivo en sistema'
+                }
+            },
+            {
+                primary: {
+                    title: 'Por Grupo Muscular',
+                    subtitle: 'Rutinas estructuradas a tu nivel'
+                },
+                accent: {
+                    title: 'Registro de Asistencia',
+                    subtitle: 'Seguimiento continuo de tu progreso'
+                }
+            },
+            {
+                primary: {
+                    title: `${stockTotal} En stock hoy`,
+                    subtitle: 'Suplementación lista en recepción'
+                },
+                accent: {
+                    title: `${marcasTotal} Marcas oficiales`,
+                    subtitle: 'Nutrición certificada para entrenar'
+                }
+            }
+        ];
+
+        const dataPaso = contenidosPorPaso[idx] || contenidosPorPaso[0];
+        const aplicarDatos = function (selector, payload) {
+            const box = infoBar.querySelector(selector);
+            if (!box) return;
+            const titleEl = box.querySelector('[data-scrolly-title]');
+            const subEl = box.querySelector('[data-scrolly-subtitle]');
+            if (titleEl) titleEl.textContent = payload.title;
+            if (subEl) subEl.textContent = payload.subtitle;
+        };
+
+        if (!forzar && !movimientoDesactivado()) {
+            infoBar.classList.add('is-swapping');
+            window.setTimeout(function () {
+                aplicarDatos('[data-scrolly-stat-primary]', dataPaso.primary);
+                aplicarDatos('[data-scrolly-stat-accent]', dataPaso.accent);
+                infoBar.classList.remove('is-swapping');
+            }, 130);
+        } else {
+            aplicarDatos('[data-scrolly-stat-primary]', dataPaso.primary);
+            aplicarDatos('[data-scrolly-stat-accent]', dataPaso.accent);
+        }
+    }
+
     function activarPasoScrollyFallback(indice) {
         const pasos = document.querySelectorAll('#wgScrollyLayout [data-scrolly-step]');
         const frames = document.querySelectorAll('#wgScrollyStage [data-scrolly-frame]');
@@ -661,6 +718,8 @@
             frame.classList.toggle('is-active', idx <= indice);
             frame.classList.toggle('is-top', idx === indice);
         });
+
+        actualizarInfoContextualScrolly(indice);
     }
 
     function aplicarProgresoContinuoScrolly(progreso) {
@@ -698,6 +757,8 @@
             paso.classList.toggle('is-active', idx === idxActivo);
             paso.style.setProperty('--step-progress', progPasos[idx].toFixed(3));
         });
+
+        actualizarInfoContextualScrolly(idxActivo);
     }
 
     window.activarPasoScrollyManual = function (indice) {
@@ -726,6 +787,8 @@
         if (!secScrolly || !layout || !stage) return;
 
         secScrolly.classList.remove('is-gsap-pinned');
+        ultimoPasoInfoScrolly = -1;
+        actualizarInfoContextualScrolly(0, true);
 
         if (movimientoDesactivado() || !tieneScrollTrigger()) {
             activarPasoScrollyFallback(0);
@@ -774,6 +837,10 @@
     /* ======================================================================
        11. CARRUSEL HORIZONTAL EXPANDIBLE DE CATEGORÍAS (00:19–00:22)
        ====================================================================== */
+    function esAcordeonCategoriasActivo() {
+        return window.innerWidth > 1180;
+    }
+
     window.expandirTarjetaCategoria = function (indice) {
         const carrusel = document.getElementById('wgCatCarousel');
         if (!carrusel) return;
@@ -785,11 +852,13 @@
         indiceCatExpandida = idxSeguro;
 
         tarjetas.forEach(function (card, i) {
-            card.classList.toggle('is-expanded', i === idxSeguro);
+            const esActiva = i === idxSeguro;
+            card.classList.toggle('is-expanded', esActiva);
+            card.setAttribute('aria-expanded', esActiva ? 'true' : 'false');
         });
 
-        // Floración interna suave al expandir en escritorio
-        if (cambioReal && tieneGSAP() && !movimientoDesactivado() && window.innerWidth > 980) {
+        // Floración interna suave al expandir en escritorio (animación original)
+        if (cambioReal && tieneGSAP() && !movimientoDesactivado() && esAcordeonCategoriasActivo()) {
             const activa = tarjetas[idxSeguro];
             if (!activa) return;
 
@@ -832,7 +901,7 @@
         window.expandirTarjetaCategoria(nuevoIdx);
 
         const tarjetaActiva = tarjetas[nuevoIdx];
-        if (tarjetaActiva && carrusel.scrollWidth > carrusel.clientWidth + 8) {
+        if (tarjetaActiva && carrusel.scrollWidth > carrusel.clientWidth + 6) {
             tarjetaActiva.scrollIntoView({
                 behavior: movimientoDesactivado() ? 'auto' : 'smooth',
                 inline: 'center',
@@ -846,7 +915,7 @@
         if (!carrusel) return;
         const tarjeta = carrusel.querySelector(`[data-cat-expand="${indice}"]`);
 
-        if (tarjeta && !tarjeta.classList.contains('is-expanded') && window.innerWidth > 980) {
+        if (tarjeta && !tarjeta.classList.contains('is-expanded') && esAcordeonCategoriasActivo()) {
             if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
             window.expandirTarjetaCategoria(indice);
             return;
@@ -859,17 +928,19 @@
     function configurarCarruselCategorias() {
         const carrusel = document.getElementById('wgCatCarousel');
         if (!carrusel) return;
-        indiceCatExpandida = 0;
+        window.expandirTarjetaCategoria(indiceCatExpandida >= 0 ? indiceCatExpandida : 0);
 
         if (!carrusel.hasAttribute('data-drag-bound')) {
             carrusel.setAttribute('data-drag-bound', '1');
             let arrastrando = false;
+            let huboArrastre = false;
             let startX = 0;
             let scrollInicial = 0;
 
             carrusel.addEventListener('mousedown', function (e) {
                 if (carrusel.scrollWidth <= carrusel.clientWidth + 4) return;
                 arrastrando = true;
+                huboArrastre = false;
                 startX = e.pageX - carrusel.offsetLeft;
                 scrollInicial = carrusel.scrollLeft;
                 carrusel.classList.add('is-dragging');
@@ -879,14 +950,25 @@
                 if (!arrastrando) return;
                 arrastrando = false;
                 carrusel.classList.remove('is-dragging');
+                if (huboArrastre) {
+                    window.setTimeout(function () { huboArrastre = false; }, 40);
+                }
             });
 
             carrusel.addEventListener('mousemove', function (e) {
                 if (!arrastrando) return;
-                e.preventDefault();
                 const x = e.pageX - carrusel.offsetLeft;
+                if (Math.abs(x - startX) > 6) huboArrastre = true;
+                e.preventDefault();
                 carrusel.scrollLeft = scrollInicial - (x - startX) * 1.4;
             });
+
+            carrusel.addEventListener('click', function (e) {
+                if (!huboArrastre) return;
+                e.preventDefault();
+                e.stopPropagation();
+                huboArrastre = false;
+            }, true);
         }
 
         if (movimientoDesactivado() || !tieneScrollTrigger()) return;

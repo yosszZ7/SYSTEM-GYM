@@ -18,10 +18,10 @@
     <link rel="preload" as="image" href="{{ url_for('static', filename='image/tienda/hero_worldgym.webp') }}" type="image/webp">
 
     <!-- Hojas de estilo de WorldGym Store -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=5.2.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/membresias.css') }}?v=5.2.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tienda.css') }}?v=5.3.7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/membresias.css') }}?v=5.3.7">
 </head>
-<body class="tienda-body {% if es_admin_o_staff %}has-system-bar{% endif %}" data-current-view="inicio">
+<body class="tienda-body{% if es_admin_o_staff %} is-staff{% endif %}" data-current-view="inicio">
 
     <!-- Barra superior delgada de progreso de scroll en naranja de marca -->
     <div class="wg-scroll-progress" id="wgScrollProgress" aria-hidden="true"></div>
@@ -92,36 +92,6 @@
         'Bebidas energéticas': 'Hidratación isotónica, electrolitos y bebidas energizantes listas para entrenar.',
         'Accesorios': 'Equipamiento de apoyo, agarre y accesorios deportivos para tus rutinas.'
     } %}
-
-    <!-- ==================================================================
-         BARRA DE INTEGRACIÓN EJECUTIVA CON SYSTEM-GYM (SOLO STAFF / ADMIN)
-         Ubicada en el tope superior sin superponerse nunca a los contenidos
-         ================================================================== -->
-    {% if es_admin_o_staff %}
-    <div class="store-system-bar" id="storeSystemBar" role="region" aria-label="Accesos rápidos al sistema de gestión">
-        <div class="wg-container store-system-bar-inner">
-            <div class="store-system-status">
-                <span class="store-system-dot" aria-hidden="true"></span>
-                <span><strong>SYSTEM-GYM</strong> · Vista Tienda sincronizada con inventario en vivo</span>
-                <span class="store-system-role-pill">{{ usuario_rol or 'Administrador' }}</span>
-            </div>
-            <div class="store-system-actions">
-                <a href="/dashboard" class="store-back-dashboard" title="Regresar al Panel de Administrador">
-                    <i class="fas fa-gauge-high" aria-hidden="true"></i>
-                    <span>Panel de Administrador</span>
-                </a>
-                <a href="/membresia_listar" class="store-admin-pill" title="Ir al panel administrativo de membresías">
-                    <i class="fas fa-id-card" aria-hidden="true"></i>
-                    <span>Administrar Membresías</span>
-                </a>
-                <a href="/producto_listar" class="store-admin-pill" title="Ir al panel administrativo de productos">
-                    <i class="fas fa-sliders" aria-hidden="true"></i>
-                    <span>Administrar Productos</span>
-                </a>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- ==================================================================
          NAVBAR FLOTANTE TIPO "PILL" CON GLASSMORPHISM, SCROLL-SPY Y AUTO-HIDE
@@ -224,7 +194,7 @@
                     <!-- Icono Perfil de Usuario y Accesos del Sistema -->
                     <div class="store-user-wrapper">
                         <button type="button" class="store-icon-btn" id="storeUserBtn" title="{% if autenticado %}Mi cuenta ({{ usuario }}){% else %}Iniciar sesión o registrarse{% endif %}" aria-label="Menú de usuario">
-                            <i class="{% if autenticado %}fas fa-user-check{% else %}far fa-user{% endif %}" id="storeUserBtnIcon"></i>
+                            <i class="{% if autenticado %}fas fa-user-check{% else %}fas fa-user{% endif %}" id="storeUserBtnIcon"></i>
                         </button>
 
                         <div class="store-user-dropdown" id="storeUserDropdown">
@@ -279,10 +249,10 @@
                     <!-- Icono Ofertas -->
                     <button type="button" class="store-icon-btn" onclick="navegarVistaTienda('ofertas')" title="Ver ofertas especiales" aria-label="Ver ofertas">
                         <i class="fas fa-tag"></i>
-                        <span class="store-icon-badge is-subtle" id="storeOffersBadge">{{ resumen_tienda.ofertas_count if resumen_tienda is defined else (catalogo | selectattr('EnOferta') | list | length) }}</span>
+                        <span class="store-icon-badge" id="storeOffersBadge">{{ resumen_tienda.ofertas_count if resumen_tienda is defined else (catalogo | selectattr('EnOferta') | list | length) }}</span>
                     </button>
 
-                    <!-- Icono Carrito con Contador Circular Naranja -->
+                    <!-- Icono Carrito con Contador -->
                     <button type="button" class="store-icon-btn" id="storeCartTriggerBtn" onclick="abrirCarrito()" title="Abrir carrito de compras" aria-label="Abrir carrito de compras">
                         <i class="fas fa-cart-shopping"></i>
                         <span class="store-icon-badge" id="storeCartBadge">0</span>
@@ -293,7 +263,7 @@
                 <div id="storeHeaderAuthSlot" class="store-header-auth-slot">
                     {% if not autenticado %}
                     <button type="button" class="store-header-login-btn" id="storeHeaderLoginBtn" onclick="abrirModalAuthTienda('login')">
-                        <i class="fas fa-user-lock" aria-hidden="true"></i>
+                        <i class="fas fa-user" aria-hidden="true"></i>
                         <span>Iniciar sesión</span>
                     </button>
                     {% elif es_admin_o_staff %}
@@ -554,7 +524,7 @@
                                 class="wg-hero-floating-card"
                                 data-hero-card
                                 onclick="abrirDetalleMembresiaTienda(this)"
-                                aria-label="Ver detalles de {{ plan_hero.TituloPlan }} por C${{ hero_precio_limpio }}"
+                                aria-label="Conocer detalles de {{ plan_hero.TituloPlan }} por C${{ hero_precio_limpio }}"
                                 data-id="{{ plan_hero.IdMembresia }}"
                                 data-titulo="{{ plan_hero.TituloPlan }}"
                                 data-nombre-db="{{ plan_hero.NombreMembresia }}"
@@ -569,36 +539,31 @@
                             <div class="wg-floating-card-top">
                                 <span class="wg-live-dot" aria-hidden="true"></span>
                                 <span class="wg-floating-card-kicker">Plan más popular</span>
-                                <i class="fas fa-arrow-up-right-from-square wg-floating-card-icon" aria-hidden="true"></i>
                             </div>
                             <div class="wg-floating-card-main">
-                                <strong>{{ plan_hero.TituloPlan | title }}</strong>
-                                <span class="wg-floating-card-sep" aria-hidden="true">·</span>
+                                <strong class="wg-floating-card-title">{{ plan_hero.TituloPlan | title }}</strong>
                                 <span class="wg-floating-card-price">C${{ hero_precio_limpio }} <small>/ {{ hero_unidad }}</small></span>
                             </div>
                             <div class="wg-floating-card-meta">
                                 {{ plan_hero.DuracionTexto }} · Activación inmediata en recepción
                             </div>
+                            <div class="wg-floating-card-footer">
+                                <span class="wg-floating-card-cta">
+                                    <span>Conocer plan</span>
+                                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                </span>
+                            </div>
                         </button>
                         {% endif %}
                     </div>
                 </div>
-
-                <button type="button"
-                        class="wg-scroll-indicator"
-                        onclick="desplazarASiguienteSeccion()"
-                        aria-label="Desplazar hacia abajo">
-                    <span class="wg-scroll-label">Explorar</span>
-                    <span class="wg-scroll-line" aria-hidden="true">
-                        <span class="wg-scroll-line-runner"></span>
-                    </span>
-                </button>
             </section>
 
             <!-- 2. CONTADORES / ESTADÍSTICAS REALES DE LA TIENDA Y EL GIMNASIO -->
             <section class="wg-stats-section wg-theme-light" id="homeStatsSection" aria-label="Indicadores reales de WorldGym Store">
                 <div class="wg-container">
-                    <div class="wg-stats-grid">
+                    {# STAFF / ADMIN: indicadores internos del sistema #}
+                    <div class="wg-stats-grid wg-for-staff">
                         <article class="wg-stat-block" data-fade="card">
                             <div class="wg-stat-number-wrap">
                                 <span class="wg-stat-value" data-counter-target="{{ total_productos_reales }}" data-stat-live="productos">{{ total_productos_reales }}</span>
@@ -626,6 +591,39 @@
                             <div class="wg-stat-info">
                                 <strong>Planes de membresía</strong>
                                 <span>Modalidades diaria, semanal, quincenal y mensual</span>
+                            </div>
+                        </article>
+                    </div>
+
+                    {# CLIENTES Y VISITANTES: información útil para entrenar (sin métricas internas de inventario) #}
+                    <div class="wg-stats-grid wg-for-client">
+                        <article class="wg-stat-block" data-fade="card">
+                            <div class="wg-stat-number-wrap">
+                                <span class="wg-stat-value">Retira</span>
+                            </div>
+                            <div class="wg-stat-info">
+                                <strong>Compra en línea, retira en recepción</strong>
+                                <span>Confirma tu pedido y recibe un folio para recoger tus suplementos en el gimnasio.</span>
+                            </div>
+                        </article>
+
+                        <article class="wg-stat-block" data-fade="card">
+                            <div class="wg-stat-number-wrap">
+                                <span class="wg-stat-value">Renueva</span>
+                            </div>
+                            <div class="wg-stat-info">
+                                <strong>Sin perder tu historial</strong>
+                                <span>Al terminar tu pase puedes pasar al Plan Mensual conservando tus asistencias y tu rutina.</span>
+                            </div>
+                        </article>
+
+                        <article class="wg-stat-block is-accent" data-fade="card">
+                            <div class="wg-stat-number-wrap">
+                                <span class="wg-stat-value">Progresa</span>
+                            </div>
+                            <div class="wg-stat-info">
+                                <strong>Rutina y asistencias</strong>
+                                <span>Programación por grupo muscular y control de asistencias para medir tu avance.</span>
                             </div>
                         </article>
                     </div>
@@ -703,15 +701,22 @@
                                     <img src="{{ url_for('static', filename='image/tienda/scrolly_suplementos.webp') }}" alt="Suplementación deportiva oficial en WorldGym" loading="lazy" onerror="this.src='/static/image/productos/optimum_gold_standard_whey.webp'">
                                 </div>
 
-                                <!-- 2 mini-estadísticas reales superpuestas -->
-                                <div class="wg-scrolly-floating-stats">
-                                    <div class="wg-scrolly-mini-stat">
-                                        <strong>{{ total_disponibles_reales }}</strong>
-                                        <span>Productos con stock hoy</span>
+                                <!-- 2 indicadores contextuales sincronizados con cada pilar del gimnasio -->
+                                <div class="wg-scrolly-floating-stats"
+                                     id="wgScrollyInfoBar"
+                                     data-scrolly-stock="{{ total_disponibles_reales }}"
+                                     data-scrolly-brands="{{ total_marcas_reales }}">
+                                    <div class="wg-scrolly-mini-stat" data-scrolly-stat-primary>
+                                        <div class="wg-scrolly-mini-head">
+                                            <strong data-scrolly-title>Fuerza &amp; Peso Libre</strong>
+                                        </div>
+                                        <span data-scrolly-subtitle>Racks, barras y maquinaria completa</span>
                                     </div>
-                                    <div class="wg-scrolly-mini-stat is-accent">
-                                        <strong>C$50</strong>
-                                        <span>Acceso desde pase diario</span>
+                                    <div class="wg-scrolly-mini-stat is-accent" data-scrolly-stat-accent>
+                                        <div class="wg-scrolly-mini-head">
+                                            <strong data-scrolly-title>Control Técnico</strong>
+                                        </div>
+                                        <span data-scrolly-subtitle>Mantenimiento preventivo en sistema</span>
                                     </div>
                                 </div>
                             </div>
@@ -750,8 +755,10 @@
                         <article class="wg-cat-expand-card {% if loop.first %}is-expanded{% endif %}"
                                  data-cat-expand="{{ loop.index0 }}"
                                  data-cat-clave="{{ cat.clave }}"
+                                 aria-expanded="{{ 'true' if loop.first else 'false' }}"
                                  tabindex="0"
                                  onmouseenter="expandirTarjetaCategoria({{ loop.index0 }})"
+                                 onfocus="expandirTarjetaCategoria({{ loop.index0 }})"
                                  onclick="manejarClickTarjetaCategoria(event, {{ loop.index0 }}, '{{ cat.clave }}')"
                                  onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirCategoriaDesdeMenu('{{ cat.clave }}');}">
                             <div class="wg-cat-expand-top">
@@ -2011,7 +2018,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 
     <!-- Motor de interacción cinematográfica + Lógica funcional de la tienda -->
-    <script src="{{ url_for('static', filename='js/tienda_motion.js') }}?v=5.2.0" defer></script>
-    <script src="{{ url_for('static', filename='js/tienda.js') }}?v=5.2.0" defer></script>
+    <script src="{{ url_for('static', filename='js/tienda_motion.js') }}?v=5.3.7" defer></script>
+    <script src="{{ url_for('static', filename='js/tienda.js') }}?v=5.3.7" defer></script>
 </body>
 </html>

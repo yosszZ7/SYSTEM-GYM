@@ -3708,6 +3708,7 @@
         window.USUARIO_AUTENTICADO = true;
         window.USUARIO_ACTUAL = { nombre: nombre, rol: rol, es_admin: esAdmin };
         window.ES_ADMIN_TIENDA = esAdmin;
+        document.body.classList.toggle('is-staff', esAdmin);
 
         // 1. Icono y menú desplegable de usuario en el header
         const userBtn = document.getElementById('storeUserBtn');
@@ -3761,41 +3762,10 @@
             ` : '';
         }
 
-        // 3. Barra superior ejecutiva SYSTEM-GYM (solo si tiene permisos administrativos)
-        let sysBar = document.getElementById('storeSystemBar');
-        if (esAdmin) {
-            document.body.classList.add('has-system-bar');
-            if (!sysBar) {
-                sysBar = document.createElement('div');
-                sysBar.className = 'store-system-bar';
-                sysBar.id = 'storeSystemBar';
-                sysBar.setAttribute('role', 'region');
-                sysBar.setAttribute('aria-label', 'Accesos rápidos al sistema de gestión');
-                sysBar.innerHTML = `
-                    <div class="wg-container store-system-bar-inner">
-                        <div class="store-system-status">
-                            <span class="store-system-dot" aria-hidden="true"></span>
-                            <span><strong>SYSTEM-GYM</strong> · Vista Tienda sincronizada con inventario en vivo</span>
-                            <span class="store-system-role-pill">${escaparHtml(rol)}</span>
-                        </div>
-                        <div class="store-system-actions">
-                            <a href="/dashboard" class="store-back-dashboard" title="Regresar al Panel de Administrador">
-                                <i class="fas fa-gauge-high" aria-hidden="true"></i>
-                                <span>Panel de Administrador</span>
-                            </a>
-                            <a href="/producto_listar" class="store-admin-pill store-only-productos" title="Ir al panel administrativo de productos">
-                                <i class="fas fa-sliders" aria-hidden="true"></i>
-                                <span>Administrar Productos</span>
-                            </a>
-                        </div>
-                    </div>
-                `;
-                document.body.insertBefore(sysBar, document.body.firstChild);
-            }
-        } else {
-            document.body.classList.remove('has-system-bar');
-            if (sysBar) sysBar.remove();
-        }
+        // 3. La barra superior SYSTEM-GYM fue retirada: los accesos admin viven en el header y el menú de perfil.
+        document.body.classList.remove('has-system-bar');
+        const sysBarLegacy = document.getElementById('storeSystemBar');
+        if (sysBarLegacy) sysBarLegacy.remove();
 
         // 4. Menú móvil y Footer
         const mobileAuth = document.getElementById('storeMobileNavAuth');
