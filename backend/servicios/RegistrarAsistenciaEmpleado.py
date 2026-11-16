@@ -1,5 +1,12 @@
 from ConexionBD import ConectarBD
 
+# ==============================================================================
+# [HU-024] Historia de Usuario: Registrar asistencia del empleado
+# Módulo: Gestión de empleados (5 SP) — Sprint 8 (Semana 8: Octubre 5-9)
+# Responsable: Juan Carlos Reyes Riveras (Developer)
+# Descripción: Registra la asistencia diaria del personal (hora de entrada y
+#              hora de salida) mediante el procedimiento SpRegistrarAsistenciaEmpleado.
+# ==============================================================================
 def RegistrarAsistenciaEmpleado(IdEmpleado, HoraEntrada, HoraSalida):
     """
     Registra la asistencia de un empleado (fecha actual, hora entrada y salida).

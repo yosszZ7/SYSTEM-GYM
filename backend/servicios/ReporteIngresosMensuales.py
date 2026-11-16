@@ -1,5 +1,13 @@
 from ConexionBD import ConectarBD
 
+# ==============================================================================
+# [HU-028] Historia de Usuario: Generar reportes administrativos
+# Módulo: Administración y reportes (7 SP) — Sprint 10 (Semana 10: Octubre 19-23)
+# Responsable: Juan Carlos Reyes Riveras (Developer)
+# Descripción: Genera los reportes ejecutivos y financieros de World Gym
+#              (ingresos mensuales, ventas por producto, membresías activas,
+#              rutinas activas y asistencias mensuales).
+# ==============================================================================
 def ReporteIngresosMensuales():
     """
     Retorna el reporte de ingresos mensuales (suma de pagos por mes).

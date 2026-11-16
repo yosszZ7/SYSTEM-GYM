@@ -1,5 +1,12 @@
 from ConexionBD import ConectarBD
 
+# ==============================================================================
+# [HU-023] Historia de Usuario: Buscar empleado
+# Módulo: Gestión de empleados (1 SP) — Sprint 8 (Semana 8: Octubre 5-9)
+# Responsable: Juan Carlos Reyes Riveras (Developer)
+# Descripción: Permite buscar empleados por nombre y/o apellidos ignorando
+#              mayúsculas y acentos (COLLATE Latin1_General_CI_AI) junto con su cargo.
+# ==============================================================================
 def BuscarEmpleadoPorNombre(Nombre):
     if not Nombre or not Nombre.strip():
         return False, "Debe ingresar un nombre."
