@@ -1,5 +1,12 @@
 from ConexionBD import ConectarBD
 
+# ==============================================================================
+# [HU-025] Historia de Usuario: Asignar entrenador al cliente
+# Módulo: Entrenamiento (3 SP) — Sprint 8 (Semana 8: Octubre 5-9)
+# Responsable: Juan Carlos Reyes Riveras (Developer)
+# Descripción: Vincula un entrenador activo a un socio del gimnasio y actualiza
+#              el indicador RequiereEntrenador mediante SpAsignarEntrenadorCliente.
+# ==============================================================================
 def AsignarEntrenadorCliente(IdCliente, IdEntrenador):
     """
     Asigna un entrenador a un cliente (actualiza los campos RequiereEntrenador y IdEntrenador).

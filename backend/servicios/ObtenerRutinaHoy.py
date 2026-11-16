@@ -1,5 +1,12 @@
 from ConexionBD import ConectarBD
 
+# ==============================================================================
+# [HU-027] Historia de Usuario: Consultar rutina del día
+# Módulo: Entrenamiento (3 SP) — Sprint 10 (Semana 10: Octubre 19-23)
+# Responsable: Juan Carlos Reyes Riveras (Developer)
+# Descripción: Consulta la rutina asignada al cliente para el día actual del
+#              sistema ejecutando SpObtenerRutinaHoy (cabecera + lista de ejercicios).
+# ==============================================================================
 def ObtenerRutinaHoy(IdCliente):
     """
     Obtiene la rutina completa para el día actual (según la fecha del sistema).

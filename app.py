@@ -1900,6 +1900,7 @@ def cliente_buscar():
         _, clientes = BuscarClientePorNombre(nombre)
     return render_template('cliente_buscar.html', usuario=session.get('usuario_nombre'), clientes=clientes)
 
+# [HU-025] Historia de Usuario: Asignar entrenador al cliente (Entrenamiento - 3 SP, Sprint 8)
 @app.route('/cliente_asignar_entrenador', methods=['GET', 'POST'])
 @login_required
 def cliente_asignar_entrenador():
@@ -2107,6 +2108,7 @@ def empleado_actualizar(id=None):
     _, cargos = ListarCargos()
     return render_template('empleado_actualizar.html', usuario=session.get('usuario_nombre'), empleado=empleado, cargos=cargos or [])
 
+# [HU-023] Historia de Usuario: Buscar empleado (Gestión de empleados - 1 SP, Sprint 8)
 @app.route('/empleado_buscar')
 @login_required
 def empleado_buscar():
@@ -2116,6 +2118,7 @@ def empleado_buscar():
         _, empleados = BuscarEmpleadoPorNombre(nombre)
     return render_template('empleado_buscar.html', usuario=session.get('usuario_nombre'), empleados=empleados)
 
+# [HU-024] Historia de Usuario: Registrar asistencia del empleado (Gestión de empleados - 5 SP, Sprint 8)
 @app.route('/empleado_asistencias')
 @login_required
 def empleado_asistencias():
@@ -3098,6 +3101,7 @@ def membresia_eliminar(id=None):
 # ==================================================
 # RUTAS HTML - RUTINAS
 # ==================================================
+# [HU-026] Historia de Usuario: Asignar rutina al cliente (Entrenamiento - 7 SP, Sprint 9)
 @app.route('/rutina_asignar', methods=['GET', 'POST'])
 @login_required
 def rutina_asignar():
@@ -3177,6 +3181,7 @@ def api_rutina_finalizar():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# [HU-027] Historia de Usuario: Consultar rutina del día (Entrenamiento - 3 SP, Sprint 10)
 @app.route('/rutina_hoy')
 @login_required
 def rutina_hoy():
@@ -3257,6 +3262,7 @@ def rutina_agregar_ejercicio():
 
 # ==================================================
 # RUTAS HTML - REPORTES
+# [HU-028] Historia de Usuario: Generar reportes administrativos (Administración y reportes - 7 SP, Sprint 10)
 # ==================================================
 @app.route('/reporte_ingresos')
 @login_required

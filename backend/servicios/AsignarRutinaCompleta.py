@@ -1,3 +1,11 @@
+# ==============================================================================
+# [HU-026] Historia de Usuario: Asignar rutina al cliente
+# Módulo: Entrenamiento (7 SP) — Sprint 9 (Semana 9: Octubre 12-16)
+# Responsable: Juan Carlos Reyes Riveras (Developer)
+# Descripción: Registra la cabecera de rutina del cliente, configura los días
+#              de entrenamiento con hasta 3 enfoques musculares y asigna los
+#              ejercicios con series, repeticiones, peso recomendado y descanso.
+# ==============================================================================
 try:
     from backend.servicios.AsignarRutinaCliente import AsignarRutinaCliente
     from backend.servicios.DefinirDiaRutina import DefinirDiaRutina
